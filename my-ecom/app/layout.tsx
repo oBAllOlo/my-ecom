@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
+import { AuthProvider } from "@/context/AuthContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -26,13 +27,15 @@ export default function RootLayout({
   return (
     <html lang="th">
       <body className={`${inter.variable} antialiased`}>
-        <CartProvider>
-          <div className="page-container">
-            <Header />
-            <main className="main-content">{children}</main>
-            <Footer />
-          </div>
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <div className="page-container">
+              <Header />
+              <main className="main-content">{children}</main>
+              <Footer />
+            </div>
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );
