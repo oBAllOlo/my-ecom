@@ -76,6 +76,15 @@ export default function Header() {
                     <span className="user-dropdown-email">{user?.email}</span>
                   </div>
                   <div className="user-dropdown-divider"></div>
+                  {user?.role === "admin" && (
+                    <Link
+                      href="/admin"
+                      className="user-dropdown-item admin"
+                      onClick={() => setShowUserMenu(false)}
+                    >
+                      🛠️ Admin Panel
+                    </Link>
+                  )}
                   <Link
                     href="/profile"
                     className="user-dropdown-item"
@@ -163,7 +172,19 @@ export default function Header() {
             <>
               <div className="mobile-user-info">
                 <span>👤 {user?.name}</span>
+                {user?.role === "admin" && (
+                  <span className="admin-badge">Admin</span>
+                )}
               </div>
+              {user?.role === "admin" && (
+                <Link
+                  href="/admin"
+                  className="mobile-nav-link admin"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  🛠️ Admin Panel
+                </Link>
+              )}
               <Link
                 href="/profile"
                 className="mobile-nav-link"

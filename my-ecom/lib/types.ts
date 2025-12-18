@@ -35,11 +35,16 @@ export interface Category {
   productCount: number;
 }
 
+export type UserRole = "user" | "admin";
+
 export interface User {
   _id: string;
   name: string;
   email: string;
+  role: UserRole;
+  avatar?: string;
   address?: Address;
+  createdAt?: Date;
 }
 
 export interface Address {
