@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -166,8 +167,8 @@ export default function AdminProducts() {
         )}
       </main>
 
-      {/* Add/Edit Modal */}
-      {(showAddModal || editingProduct) && (
+      {/* Add/Edit Modal - rendered via Portal */}
+      {(showAddModal || editingProduct) && typeof window !== 'undefined' && createPortal(
         <ProductModal
           product={editingProduct}
           onClose={() => {
@@ -179,7 +180,8 @@ export default function AdminProducts() {
             setShowAddModal(false);
             setEditingProduct(null);
           }}
-        />
+        />,
+        document.body
       )}
 
       <style jsx>{`
@@ -424,6 +426,69 @@ function ProductModal({ product, onClose, onSave }: ProductModalProps) {
     isFeatured: product?.isFeatured || false,
   });
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      alert("กรุณาเลือกไฟล์รูปภาพเท่านั้น");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("ไฟล์ต้องมีขนาดไม่เกิน 5MB");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append("file", file);
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formDataUpload,
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setFormData({ ...formData, image: data.url });
+      } else {
+        alert(data.error || "อัพโหลดรูปไม่สำเร็จ");
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      alert("เกิดข้อผิดพลาดในการอัพโหลด");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleImageUpload(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleImageUpload(e.target.files[0]);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -457,8 +522,35 @@ function ProductModal({ product, onClose, onSave }: ProductModalProps) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+    <div 
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.85)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 99999,
+        padding: '1rem',
+      }}
+      onClick={onClose}
+    >
+      <div 
+        style={{
+          background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+          border: '1px solid rgba(139, 92, 246, 0.3)',
+          borderRadius: '24px',
+          maxWidth: '600px',
+          width: '100%',
+          maxHeight: '85vh',
+          overflowY: 'auto',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="modal-header">
           <h2>{product ? "✏️ แก้ไขสินค้า" : "➕ เพิ่มสินค้าใหม่"}</h2>
           <button onClick={onClose} className="modal-close">✕</button>
@@ -538,13 +630,54 @@ function ProductModal({ product, onClose, onSave }: ProductModalProps) {
                 <option value="minimal">มินิมอล</option>
               </select>
             </div>
-            <div className="form-group">
-              <label>URL รูปภาพ *</label>
+          </div>
+
+          {/* Image Upload Zone */}
+          <div className="form-group">
+            <label>รูปภาพสินค้า *</label>
+            <div 
+              className={`upload-zone ${dragActive ? 'active' : ''} ${uploading ? 'uploading' : ''}`}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                style={{ display: 'none' }}
+              />
+              {uploading ? (
+                <div className="upload-loading">
+                  <div className="upload-spinner"></div>
+                  <p>กำลังอัพโหลด...</p>
+                </div>
+              ) : formData.image ? (
+                <div className="upload-preview">
+                  <img src={formData.image} alt="Preview" />
+                  <div className="upload-overlay">
+                    <span>📷 คลิกหรือลากไฟล์ใหม่</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="upload-placeholder">
+                  <span className="upload-icon">📷</span>
+                  <p>คลิกหรือลากไฟล์มาวางที่นี่</p>
+                  <span className="upload-hint">รองรับ JPG, PNG, WEBP (สูงสุด 5MB)</span>
+                </div>
+              )}
+            </div>
+            {/* Fallback URL input */}
+            <div className="url-fallback">
+              <label>หรือใส่ URL รูปภาพ:</label>
               <input
                 type="url"
-                required
                 value={formData.image}
                 onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                placeholder="https://example.com/image.jpg"
               />
             </div>
           </div>
@@ -585,21 +718,39 @@ function ProductModal({ product, onClose, onSave }: ProductModalProps) {
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
-            padding: 2rem;
+            z-index: 9999;
+            padding: 1rem;
+            animation: fadeIn 0.2s ease;
+          }
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
           }
           .modal-content {
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
             border: 1px solid rgba(139, 92, 246, 0.3);
             border-radius: 24px;
-            max-width: 700px;
+            max-width: 600px;
             width: 100%;
-            max-height: 90vh;
+            max-height: 85vh;
             overflow-y: auto;
+            position: relative;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(139, 92, 246, 0.1);
+          }
+          @keyframes popIn {
+            from {
+              opacity: 0;
+              transform: scale(0.9) translateY(-20px);
+            }
+            to {
+              opacity: 1;
+              transform: scale(1) translateY(0);
+            }
           }
           .modal-header {
             display: flex;
@@ -718,6 +869,119 @@ function ProductModal({ product, onClose, onSave }: ProductModalProps) {
           .btn-submit:disabled {
             opacity: 0.6;
             cursor: not-allowed;
+          }
+          /* Upload Zone Styles */
+          .upload-zone {
+            border: 2px dashed rgba(139, 92, 246, 0.4);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(139, 92, 246, 0.05);
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .upload-zone:hover, .upload-zone.active {
+            border-color: #8b5cf6;
+            background: rgba(139, 92, 246, 0.1);
+          }
+          .upload-zone.uploading {
+            pointer-events: none;
+            opacity: 0.7;
+          }
+          .upload-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+          }
+          .upload-icon {
+            font-size: 3rem;
+          }
+          .upload-placeholder p {
+            color: #f8fafc;
+            font-weight: 500;
+            margin: 0;
+          }
+          .upload-hint {
+            color: #64748b;
+            font-size: 0.85rem;
+          }
+          .upload-preview {
+            position: relative;
+            width: 100%;
+            max-width: 300px;
+          }
+          .upload-preview img {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            max-height: 200px;
+            object-fit: cover;
+          }
+          .upload-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+          }
+          .upload-preview:hover .upload-overlay {
+            opacity: 1;
+          }
+          .upload-overlay span {
+            color: white;
+            font-weight: 600;
+          }
+          .upload-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+          }
+          .upload-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(139, 92, 246, 0.2);
+            border-top-color: #8b5cf6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+          }
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+          .upload-loading p {
+            color: #a78bfa;
+            margin: 0;
+          }
+          .url-fallback {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+          }
+          .url-fallback label {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+          }
+          .url-fallback input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            color: #f8fafc;
+            font-size: 0.9rem;
           }
         `}</style>
       </div>
