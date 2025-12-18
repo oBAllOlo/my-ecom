@@ -27,11 +27,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users storage (simulating database)
-interface StoredUser extends User {
-  password: string;
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,48 +39,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(JSON.parse(savedUser));
       } catch (e) {
         console.error("Error loading user:", e);
+        localStorage.removeItem("currentUser");
       }
     }
     setIsLoading(false);
   }, []);
 
-  // Get stored users from localStorage
-  const getStoredUsers = (): StoredUser[] => {
-    const users = localStorage.getItem("users");
-    return users ? JSON.parse(users) : [];
-  };
-
-  // Save users to localStorage
-  const saveUsers = (users: StoredUser[]) => {
-    localStorage.setItem("users", JSON.stringify(users));
-  };
-
   const login = async (
     email: string,
     password: string
   ): Promise<{ success: boolean; error?: string }> => {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    const users = getStoredUsers();
-    const foundUser = users.find(
-      (u) => u.email.toLowerCase() === email.toLowerCase()
-    );
+      const data = await res.json();
 
-    if (!foundUser) {
-      return { success: false, error: "ไม่พบบัญชีผู้ใช้นี้" };
+      if (!data.success) {
+        return { success: false, error: data.error };
+      }
+
+      setUser(data.data);
+      localStorage.setItem("currentUser", JSON.stringify(data.data));
+
+      return { success: true };
+    } catch (error) {
+      console.error("Login error:", error);
+      return { success: false, error: "เกิดข้อผิดพลาดในการเข้าสู่ระบบ" };
     }
-
-    if (foundUser.password !== password) {
-      return { success: false, error: "รหัสผ่านไม่ถูกต้อง" };
-    }
-
-    // Remove password before storing in state
-    const { password: _, ...userWithoutPassword } = foundUser;
-    setUser(userWithoutPassword);
-    localStorage.setItem("currentUser", JSON.stringify(userWithoutPassword));
-
-    return { success: true };
   };
 
   const register = async (
@@ -93,39 +77,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string
   ): Promise<{ success: boolean; error?: string }> => {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
 
-    const users = getStoredUsers();
+      const data = await res.json();
 
-    // Check if email already exists
-    if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
-      return { success: false, error: "อีเมลนี้ถูกใช้งานแล้ว" };
+      if (!data.success) {
+        return { success: false, error: data.error };
+      }
+
+      setUser(data.data);
+      localStorage.setItem("currentUser", JSON.stringify(data.data));
+
+      return { success: true };
+    } catch (error) {
+      console.error("Register error:", error);
+      return { success: false, error: "เกิดข้อผิดพลาดในการสมัครสมาชิก" };
     }
-
-    // Validate password
-    if (password.length < 6) {
-      return { success: false, error: "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร" };
-    }
-
-    // Create new user
-    const newUser: StoredUser = {
-      _id: Date.now().toString(),
-      name,
-      email,
-      password,
-    };
-
-    // Save to "database"
-    users.push(newUser);
-    saveUsers(users);
-
-    // Auto login after register
-    const { password: _, ...userWithoutPassword } = newUser;
-    setUser(userWithoutPassword);
-    localStorage.setItem("currentUser", JSON.stringify(userWithoutPassword));
-
-    return { success: true };
   };
 
   const logout = () => {
