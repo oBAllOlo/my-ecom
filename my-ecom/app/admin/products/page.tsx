@@ -18,10 +18,17 @@ interface Product {
   isNew?: boolean;
 }
 
+interface Category {
+  _id: string;
+  name: string;
+  icon: string;
+}
+
 export default function AdminProducts() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -49,8 +56,21 @@ export default function AdminProducts() {
   useEffect(() => {
     if (user?.role === "admin") {
       fetchProducts();
+      fetchCategories();
     }
   }, [user]);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch("/api/categories");
+      const data = await res.json();
+      if (data.success) {
+        setCategories(data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
 
   const handleDelete = async (id: string) => {
     if (!confirm("ต้องการลบสินค้านี้หรือไม่?")) return;
@@ -171,6 +191,7 @@ export default function AdminProducts() {
       {(showAddModal || editingProduct) && typeof window !== 'undefined' && createPortal(
         <ProductModal
           product={editingProduct}
+          categories={categories}
           onClose={() => {
             setShowAddModal(false);
             setEditingProduct(null);
@@ -403,17 +424,19 @@ export default function AdminProducts() {
 
 interface ProductModalProps {
   product: Product | null;
+  categories: Category[];
   onClose: () => void;
   onSave: () => void;
 }
 
-function ProductModal({ product, onClose, onSave }: ProductModalProps) {
+function ProductModal({ product, categories, onClose, onSave }: ProductModalProps) {
   const [formData, setFormData] = useState({
     name: product?.name || "",
     description: "",
     price: product?.price || 0,
     originalPrice: 0,
     image: product?.image || "",
+    images: [] as string[],
     category: product?.category || "",
     brand: product?.brand || "",
     stock: product?.stock || 0,
@@ -428,6 +451,7 @@ function ProductModal({ product, onClose, onSave }: ProductModalProps) {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleImageUpload = async (file: File) => {
@@ -453,7 +477,14 @@ function ProductModal({ product, onClose, onSave }: ProductModalProps) {
 
       const data = await res.json();
       if (data.success) {
-        setFormData({ ...formData, image: data.url });
+        // Add to images array
+        const newImages = [...formData.images, data.url];
+        // Set first image as main if no main image yet
+        if (!formData.image) {
+          setFormData({ ...formData, image: data.url, images: newImages });
+        } else {
+          setFormData({ ...formData, images: newImages });
+        }
       } else {
         alert(data.error || "อัพโหลดรูปไม่สำเร็จ");
       }
@@ -463,6 +494,21 @@ function ProductModal({ product, onClose, onSave }: ProductModalProps) {
     } finally {
       setUploading(false);
     }
+  };
+
+  const removeImage = (indexToRemove: number) => {
+    const newImages = formData.images.filter((_, i) => i !== indexToRemove);
+    // If removed image was main, set first remaining as main
+    const removedUrl = formData.images[indexToRemove];
+    if (formData.image === removedUrl) {
+      setFormData({ ...formData, image: newImages[0] || "", images: newImages });
+    } else {
+      setFormData({ ...formData, images: newImages });
+    }
+  };
+
+  const setAsMainImage = (url: string) => {
+    setFormData({ ...formData, image: url });
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -592,16 +638,18 @@ function ProductModal({ product, onClose, onSave }: ProductModalProps) {
               <input
                 type="number"
                 required
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                min="0"
+                value={formData.price || ""}
+                onChange={(e) => setFormData({ ...formData, price: e.target.value ? Number(e.target.value) : 0 })}
               />
             </div>
             <div className="form-group">
               <label>ราคาเดิม</label>
               <input
                 type="number"
-                value={formData.originalPrice}
-                onChange={(e) => setFormData({ ...formData, originalPrice: Number(e.target.value) })}
+                min="0"
+                value={formData.originalPrice || ""}
+                onChange={(e) => setFormData({ ...formData, originalPrice: e.target.value ? Number(e.target.value) : 0 })}
               />
             </div>
             <div className="form-group">
@@ -609,8 +657,9 @@ function ProductModal({ product, onClose, onSave }: ProductModalProps) {
               <input
                 type="number"
                 required
-                value={formData.stock}
-                onChange={(e) => setFormData({ ...formData, stock: Number(e.target.value) })}
+                min="0"
+                value={formData.stock || ""}
+                onChange={(e) => setFormData({ ...formData, stock: e.target.value ? Number(e.target.value) : 0 })}
               />
             </div>
           </div>
@@ -624,17 +673,16 @@ function ProductModal({ product, onClose, onSave }: ProductModalProps) {
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
               >
                 <option value="">เลือกหมวดหมู่</option>
-                <option value="gaming">เกมมิ่ง</option>
-                <option value="wireless">ไร้สาย</option>
-                <option value="mechanical">Mechanical</option>
-                <option value="minimal">มินิมอล</option>
+                {categories.map((cat) => (
+                  <option key={cat._id} value={cat.name}>{cat.icon} {cat.name}</option>
+                ))}
               </select>
             </div>
           </div>
 
           {/* Image Upload Zone */}
           <div className="form-group">
-            <label>รูปภาพสินค้า *</label>
+            <label>รูปภาพสินค้า * (สามารถเพิ่มได้หลายรูป)</label>
             <div 
               className={`upload-zone ${dragActive ? 'active' : ''} ${uploading ? 'uploading' : ''}`}
               onDragEnter={handleDrag}
@@ -655,30 +703,150 @@ function ProductModal({ product, onClose, onSave }: ProductModalProps) {
                   <div className="upload-spinner"></div>
                   <p>กำลังอัพโหลด...</p>
                 </div>
-              ) : formData.image ? (
-                <div className="upload-preview">
-                  <img src={formData.image} alt="Preview" />
-                  <div className="upload-overlay">
-                    <span>📷 คลิกหรือลากไฟล์ใหม่</span>
-                  </div>
-                </div>
               ) : (
                 <div className="upload-placeholder">
                   <span className="upload-icon">📷</span>
                   <p>คลิกหรือลากไฟล์มาวางที่นี่</p>
-                  <span className="upload-hint">รองรับ JPG, PNG, WEBP (สูงสุด 5MB)</span>
+                  <span className="upload-hint">รองรับ JPG, PNG, WEBP (สูงสุด 5MB ต่อรูป)</span>
                 </div>
               )}
             </div>
+            
+            {/* Image Gallery */}
+            {formData.images.length > 0 && (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+                gap: '0.75rem',
+                marginTop: '1rem'
+              }}>
+                {formData.images.map((img, index) => (
+                  <div 
+                    key={index}
+                    style={{
+                      position: 'relative',
+                      aspectRatio: '1',
+                      borderRadius: '12px',
+                      overflow: 'hidden',
+                      border: formData.image === img ? '3px solid #8b5cf6' : '1px solid rgba(255,255,255,0.1)',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => setPreviewImage(img)}
+                  >
+                    <img 
+                      src={img} 
+                      alt={`Product ${index + 1}`}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                    {formData.image === img && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '4px',
+                        left: '4px',
+                        background: '#8b5cf6',
+                        color: 'white',
+                        fontSize: '0.65rem',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        fontWeight: 600
+                      }}>
+                        หลัก
+                      </div>
+                    )}
+                    <div style={{
+                      position: 'absolute',
+                      top: '4px',
+                      right: '4px',
+                      background: 'rgba(0,0,0,0.6)',
+                      color: 'white',
+                      fontSize: '0.75rem',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                    }}>
+                      🔍
+                    </div>
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '0',
+                      left: '0',
+                      right: '0',
+                      display: 'flex',
+                      gap: '2px'
+                    }}>
+                      {formData.image !== img && (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setAsMainImage(img); }}
+                          style={{
+                            flex: 1,
+                            padding: '4px',
+                            background: 'rgba(139, 92, 246, 0.9)',
+                            border: 'none',
+                            color: 'white',
+                            fontSize: '0.65rem',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          ตั้งเป็นหลัก
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); removeImage(index); }}
+                        style={{
+                          flex: formData.image === img ? 1 : 0.5,
+                          padding: '4px',
+                          background: 'rgba(239, 68, 68, 0.9)',
+                          border: 'none',
+                          color: 'white',
+                          fontSize: '0.65rem',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        ลบ
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
             {/* Fallback URL input */}
             <div className="url-fallback">
               <label>หรือใส่ URL รูปภาพ:</label>
-              <input
-                type="url"
-                value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                placeholder="https://example.com/image.jpg"
-              />
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <input
+                  type="url"
+                  id="urlInput"
+                  placeholder="https://example.com/image.jpg"
+                  style={{ flex: 1 }}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const input = document.getElementById('urlInput') as HTMLInputElement;
+                    if (input.value) {
+                      const newImages = [...formData.images, input.value];
+                      if (!formData.image) {
+                        setFormData({ ...formData, image: input.value, images: newImages });
+                      } else {
+                        setFormData({ ...formData, images: newImages });
+                      }
+                      input.value = '';
+                    }
+                  }}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    background: '#8b5cf6',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: 'white',
+                    cursor: 'pointer'
+                  }}
+                >
+                  เพิ่ม
+                </button>
+              </div>
             </div>
           </div>
 
@@ -710,6 +878,59 @@ function ProductModal({ product, onClose, onSave }: ProductModalProps) {
             </button>
           </div>
         </form>
+
+        {/* Image Preview Lightbox */}
+        {previewImage && (
+          <div 
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.95)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 100001,
+              padding: '2rem'
+            }}
+            onClick={() => setPreviewImage(null)}
+          >
+            <button
+              onClick={() => setPreviewImage(null)}
+              style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                background: 'rgba(255,255,255,0.2)',
+                border: 'none',
+                color: 'white',
+                fontSize: '2rem',
+                width: '50px',
+                height: '50px',
+                borderRadius: '50%',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              ✕
+            </button>
+            <img 
+              src={previewImage} 
+              alt="Preview"
+              style={{
+                maxWidth: '90%',
+                maxHeight: '90%',
+                objectFit: 'contain',
+                borderRadius: '12px'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        )}
 
         <style jsx>{`
           .modal-overlay {

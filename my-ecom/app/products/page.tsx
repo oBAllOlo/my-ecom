@@ -1,15 +1,42 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useEffect, useMemo, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
-import { products, categories } from "@/lib/mockData";
 
-export default function ProductsPage() {
+interface Product {
+  _id: string;
+  name: string;
+  description: string;
+  price: number;
+  originalPrice?: number;
+  image: string;
+  category: string;
+  brand: string;
+  stock: number;
+  rating: number;
+  reviews: number;
+  isNew?: boolean;
+  isFeatured?: boolean;
+}
+
+interface Category {
+  _id: string;
+  name: string;
+  icon: string;
+}
+
+function ProductsContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get("category");
   const searchParam = searchParams.get("search");
   const newParam = searchParams.get("new");
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState(searchParam || "");
 
   const [selectedCategory, setSelectedCategory] = useState<string>(
     categoryParam || ""
@@ -18,76 +45,62 @@ export default function ProductsPage() {
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
   const [sortBy, setSortBy] = useState<string>("featured");
 
-  // Get unique brands
-  const brands = useMemo(() => {
-    return [...new Set(products.map((p) => p.brand))].sort();
+  // Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch("/api/categories");
+        const data = await res.json();
+        if (data.success) {
+          setCategories(data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+    fetchCategories();
   }, []);
 
-  // Filter and sort products
+  // Fetch products
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams();
+        if (selectedCategory) params.append("category", selectedCategory);
+        if (searchParam) params.append("search", searchParam);
+        if (newParam === "true") params.append("new", "true");
+        if (priceRange.min) params.append("minPrice", priceRange.min);
+        if (priceRange.max) params.append("maxPrice", priceRange.max);
+        if (sortBy !== "featured") params.append("sort", sortBy);
+
+        const res = await fetch(`/api/products?${params.toString()}`);
+        const data = await res.json();
+        if (data.success) {
+          setProducts(data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, [selectedCategory, searchParam, newParam, priceRange.min, priceRange.max, sortBy]);
+
+  // Get unique brands from fetched products
+  const brands = useMemo(() => {
+    return [...new Set(products.map((p) => p.brand))].sort();
+  }, [products]);
+
+  // Apply client-side brand filter
   const filteredProducts = useMemo(() => {
     let result = [...products];
-
-    // Filter by category
-    if (selectedCategory) {
-      result = result.filter((p) => p.category === selectedCategory);
-    }
-
-    // Filter by brand
     if (selectedBrands.length > 0) {
       result = result.filter((p) => selectedBrands.includes(p.brand));
     }
-
-    // Filter by price range
-    if (priceRange.min) {
-      result = result.filter((p) => p.price >= Number(priceRange.min));
-    }
-    if (priceRange.max) {
-      result = result.filter((p) => p.price <= Number(priceRange.max));
-    }
-
-    // Filter by search
-    if (searchParam) {
-      const search = searchParam.toLowerCase();
-      result = result.filter(
-        (p) =>
-          p.name.toLowerCase().includes(search) ||
-          p.brand.toLowerCase().includes(search) ||
-          p.description.toLowerCase().includes(search)
-      );
-    }
-
-    // Filter by new
-    if (newParam === "true") {
-      result = result.filter((p) => p.isNew);
-    }
-
-    // Sort
-    switch (sortBy) {
-      case "price-low":
-        result.sort((a, b) => a.price - b.price);
-        break;
-      case "price-high":
-        result.sort((a, b) => b.price - a.price);
-        break;
-      case "rating":
-        result.sort((a, b) => b.rating - a.rating);
-        break;
-      case "newest":
-        result.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0));
-        break;
-      default:
-        result.sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
-    }
-
     return result;
-  }, [
-    selectedCategory,
-    selectedBrands,
-    priceRange,
-    sortBy,
-    searchParam,
-    newParam,
-  ]);
+  }, [products, selectedBrands]);
 
   const handleBrandChange = (brand: string) => {
     setSelectedBrands((prev) =>
@@ -95,11 +108,31 @@ export default function ProductsPage() {
     );
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchInput.trim()) {
+      router.push(`/products?search=${encodeURIComponent(searchInput.trim())}`);
+    } else {
+      router.push("/products");
+    }
+  };
+
+  const handleCategoryChange = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    if (categoryId) {
+      router.push(`/products?category=${categoryId}`);
+    } else {
+      router.push("/products");
+    }
+  };
+
   const clearFilters = () => {
     setSelectedCategory("");
     setSelectedBrands([]);
     setPriceRange({ min: "", max: "" });
     setSortBy("featured");
+    setSearchInput("");
+    router.push("/products");
   };
 
   return (
@@ -111,7 +144,7 @@ export default function ProductsPage() {
             : newParam
             ? "สินค้ามาใหม่"
             : selectedCategory
-            ? categories.find((c) => c.slug === selectedCategory)?.name ||
+            ? categories.find((c) => c._id === selectedCategory)?.name ||
               "สินค้าทั้งหมด"
             : "สินค้าทั้งหมด"}
         </h1>
@@ -130,7 +163,7 @@ export default function ProductsPage() {
                   type="radio"
                   name="category"
                   checked={selectedCategory === ""}
-                  onChange={() => setSelectedCategory("")}
+                  onChange={() => handleCategoryChange("")}
                 />
                 <span>ทั้งหมด</span>
               </label>
@@ -139,8 +172,8 @@ export default function ProductsPage() {
                   <input
                     type="radio"
                     name="category"
-                    checked={selectedCategory === category.slug}
-                    onChange={() => setSelectedCategory(category.slug)}
+                    checked={selectedCategory === category._id}
+                    onChange={() => handleCategoryChange(category._id)}
                   />
                   <span>
                     {category.icon} {category.name}
@@ -257,7 +290,12 @@ export default function ProductsPage() {
 
         {/* Products Grid */}
         <div className="products-grid">
-          {filteredProducts.length > 0 ? (
+          {loading ? (
+            <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "4rem" }}>
+              <div className="admin-loading-spinner" style={{ margin: "0 auto 1rem" }}></div>
+              <p style={{ color: "#64748b" }}>กำลังโหลดสินค้า...</p>
+            </div>
+          ) : filteredProducts.length > 0 ? (
             filteredProducts.map((product) => (
               <ProductCard key={product._id} product={product} />
             ))
@@ -276,5 +314,17 @@ export default function ProductsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "50vh" }}>
+        <div className="admin-loading-spinner"></div>
+      </div>
+    }>
+      <ProductsContent />
+    </Suspense>
   );
 }

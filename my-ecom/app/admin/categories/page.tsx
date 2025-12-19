@@ -8,7 +8,6 @@ import { useAuth } from "@/context/AuthContext";
 interface Category {
   _id: string;
   name: string;
-  slug: string;
   icon: string;
   productCount: number;
   createdAt: string;
@@ -23,7 +22,6 @@ export default function AdminCategoriesPage() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [formData, setFormData] = useState({
     name: "",
-    slug: "",
     icon: "📁",
   });
   const [saving, setSaving] = useState(false);
@@ -58,12 +56,11 @@ export default function AdminCategoriesPage() {
       setEditingCategory(category);
       setFormData({
         name: category.name,
-        slug: category.slug,
         icon: category.icon,
       });
     } else {
       setEditingCategory(null);
-      setFormData({ name: "", slug: "", icon: "📁" });
+      setFormData({ name: "", icon: "📁" });
     }
     setShowModal(true);
     setMessage({ type: "", content: "" });
@@ -72,26 +69,8 @@ export default function AdminCategoriesPage() {
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingCategory(null);
-    setFormData({ name: "", slug: "", icon: "📁" });
+    setFormData({ name: "", icon: "📁" });
     setMessage({ type: "", content: "" });
-  };
-
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^\w\-]+/g, "")
-      .replace(/\-\-+/g, "-")
-      .trim();
-  };
-
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const name = e.target.value;
-    setFormData({
-      ...formData,
-      name,
-      slug: generateSlug(name),
-    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -370,7 +349,6 @@ export default function AdminCategoriesPage() {
                     </div>
                     <div style={{ flex: 1 }}>
                       <h4 style={{ color: "white", fontWeight: 600, marginBottom: "0.25rem" }}>{category.name}</h4>
-                      <p style={{ color: "#64748b", fontSize: "0.75rem", fontFamily: "monospace" }}>/{category.slug}</p>
                     </div>
                   </div>
 
@@ -502,14 +480,14 @@ export default function AdminCategoriesPage() {
                 </div>
               </div>
 
-              <div style={{ marginBottom: "1.25rem" }}>
+              <div style={{ marginBottom: "1.5rem" }}>
                 <label style={{ display: "block", color: "#94a3b8", fontSize: "0.875rem", marginBottom: "0.5rem", fontWeight: 500 }}>
                   ชื่อหมวดหมู่
                 </label>
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={handleNameChange}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
                   style={{
                     width: "100%",
@@ -521,31 +499,7 @@ export default function AdminCategoriesPage() {
                     fontSize: "1rem",
                     outline: "none",
                   }}
-                  placeholder="เช่น คีย์บอร์ด"
-                />
-              </div>
-
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label style={{ display: "block", color: "#94a3b8", fontSize: "0.875rem", marginBottom: "0.5rem", fontWeight: 500 }}>
-                  Slug (URL)
-                </label>
-                <input
-                  type="text"
-                  value={formData.slug}
-                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                  required
-                  style={{
-                    width: "100%",
-                    padding: "0.875rem 1rem",
-                    background: "rgba(15, 23, 42, 0.5)",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                    borderRadius: "12px",
-                    color: "white",
-                    fontSize: "1rem",
-                    outline: "none",
-                    fontFamily: "monospace",
-                  }}
-                  placeholder="keyboard"
+                  placeholder="เช่น คีย์บอร์ด, เมาส์, หูฟัง"
                 />
               </div>
 
