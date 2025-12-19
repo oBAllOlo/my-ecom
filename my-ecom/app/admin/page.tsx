@@ -1,16 +1,56 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 
 interface DashboardStats {
   totalProducts: number;
   totalOrders: number;
   totalUsers: number;
   pendingOrders: number;
+  totalRevenue: number;
 }
+
+interface Order {
+  _id: string;
+  userId: { name: string; email: string } | string;
+  items: Array<{ name: string; quantity: number; price: number }>;
+  total: number;
+  status: string;
+  createdAt: string;
+}
+
+interface Product {
+  _id: string;
+  name: string;
+  price: number;
+  stock: number;
+  image: string;
+}
+
+interface ChartData {
+  name: string;
+  revenue: number;
+  orders: number;
+}
+
+type TimeRange = 'day' | 'week' | 'month' | 'year';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -20,9 +60,15 @@ export default function AdminDashboard() {
     totalOrders: 0,
     totalUsers: 0,
     pendingOrders: 0,
+    totalRevenue: 0,
   });
+  const [allOrders, setAllOrders] = useState<Order[]>([]);
+  const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+  const [lowStockProducts, setLowStockProducts] = useState<Product[]>([]);
+  const [statusData, setStatusData] = useState<{ name: string; value: number; color: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [timeRange, setTimeRange] = useState<TimeRange>('week');
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== "admin")) {
@@ -48,11 +94,46 @@ export default function AdminDashboard() {
         const orders = await ordersRes.json();
         const users = await usersRes.json();
 
+        const fetchedOrders: Order[] = orders.data || [];
+        const allProducts: Product[] = products.data || [];
+
+        setAllOrders(fetchedOrders);
+
+        // Calculate total revenue
+        const totalRevenue = fetchedOrders.reduce((sum: number, order: Order) => sum + order.total, 0);
+
+        // Get recent orders (last 5)
+        const sortedOrders = [...fetchedOrders].sort((a: Order, b: Order) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        setRecentOrders(sortedOrders.slice(0, 5));
+
+        // Get low stock products (stock < 10)
+        const lowStock = allProducts.filter((p: Product) => p.stock < 10);
+        setLowStockProducts(lowStock.slice(0, 5));
+
+        // Order status distribution
+        const statusCounts = {
+          pending: fetchedOrders.filter((o: Order) => o.status === 'pending').length,
+          processing: fetchedOrders.filter((o: Order) => o.status === 'processing').length,
+          shipped: fetchedOrders.filter((o: Order) => o.status === 'shipped').length,
+          delivered: fetchedOrders.filter((o: Order) => o.status === 'delivered').length,
+          cancelled: fetchedOrders.filter((o: Order) => o.status === 'cancelled').length,
+        };
+        setStatusData([
+          { name: 'รอชำระ', value: statusCounts.pending, color: '#f59e0b' },
+          { name: 'กำลังจัด', value: statusCounts.processing, color: '#3b82f6' },
+          { name: 'จัดส่งแล้ว', value: statusCounts.shipped, color: '#8b5cf6' },
+          { name: 'สำเร็จ', value: statusCounts.delivered, color: '#10b981' },
+          { name: 'ยกเลิก', value: statusCounts.cancelled, color: '#ef4444' },
+        ]);
+
         setStats({
-          totalProducts: products.data?.length || 0,
-          totalOrders: orders.data?.length || 0,
+          totalProducts: allProducts.length || 0,
+          totalOrders: fetchedOrders.length || 0,
           totalUsers: users.data?.length || 0,
-          pendingOrders: orders.data?.filter((o: { status: string }) => o.status === "pending")?.length || 0,
+          pendingOrders: statusCounts.pending,
+          totalRevenue,
         });
       } catch (error) {
         console.error("Error fetching stats:", error);
@@ -65,6 +146,127 @@ export default function AdminDashboard() {
       fetchStats();
     }
   }, [user]);
+
+  // Generate chart data based on time range
+  const chartData = useMemo(() => {
+    const data: ChartData[] = [];
+    const now = new Date();
+
+    switch (timeRange) {
+      case 'day': {
+        // Last 24 hours, group by hour
+        for (let i = 23; i >= 0; i--) {
+          const hour = new Date(now);
+          hour.setHours(now.getHours() - i, 0, 0, 0);
+          const hourEnd = new Date(hour);
+          hourEnd.setHours(hour.getHours() + 1);
+          
+          const hourOrders = allOrders.filter((o: Order) => {
+            const orderDate = new Date(o.createdAt);
+            return orderDate >= hour && orderDate < hourEnd;
+          });
+          const hourRevenue = hourOrders.reduce((sum: number, o: Order) => sum + o.total, 0);
+          
+          data.push({
+            name: `${hour.getHours().toString().padStart(2, '0')}:00`,
+            revenue: hourRevenue,
+            orders: hourOrders.length,
+          });
+        }
+        break;
+      }
+      case 'week': {
+        // Last 7 days
+        for (let i = 6; i >= 0; i--) {
+          const date = new Date(now);
+          date.setDate(now.getDate() - i);
+          date.setHours(0, 0, 0, 0);
+          const nextDate = new Date(date);
+          nextDate.setDate(date.getDate() + 1);
+          
+          const dayOrders = allOrders.filter((o: Order) => {
+            const orderDate = new Date(o.createdAt);
+            return orderDate >= date && orderDate < nextDate;
+          });
+          const dayRevenue = dayOrders.reduce((sum: number, o: Order) => sum + o.total, 0);
+          
+          data.push({
+            name: date.toLocaleDateString('th-TH', { weekday: 'short' }),
+            revenue: dayRevenue,
+            orders: dayOrders.length,
+          });
+        }
+        break;
+      }
+      case 'month': {
+        // Last 30 days, group by day
+        for (let i = 29; i >= 0; i--) {
+          const date = new Date(now);
+          date.setDate(now.getDate() - i);
+          date.setHours(0, 0, 0, 0);
+          const nextDate = new Date(date);
+          nextDate.setDate(date.getDate() + 1);
+          
+          const dayOrders = allOrders.filter((o: Order) => {
+            const orderDate = new Date(o.createdAt);
+            return orderDate >= date && orderDate < nextDate;
+          });
+          const dayRevenue = dayOrders.reduce((sum: number, o: Order) => sum + o.total, 0);
+          
+          data.push({
+            name: `${date.getDate()}/${date.getMonth() + 1}`,
+            revenue: dayRevenue,
+            orders: dayOrders.length,
+          });
+        }
+        break;
+      }
+      case 'year': {
+        // Last 12 months
+        for (let i = 11; i >= 0; i--) {
+          const month = new Date(now);
+          month.setMonth(now.getMonth() - i);
+          month.setDate(1);
+          month.setHours(0, 0, 0, 0);
+          const nextMonth = new Date(month);
+          nextMonth.setMonth(month.getMonth() + 1);
+          
+          const monthOrders = allOrders.filter((o: Order) => {
+            const orderDate = new Date(o.createdAt);
+            return orderDate >= month && orderDate < nextMonth;
+          });
+          const monthRevenue = monthOrders.reduce((sum: number, o: Order) => sum + o.total, 0);
+          
+          data.push({
+            name: month.toLocaleDateString('th-TH', { month: 'short' }),
+            revenue: monthRevenue,
+            orders: monthOrders.length,
+          });
+        }
+        break;
+      }
+    }
+
+    return data;
+  }, [allOrders, timeRange]);
+
+  // Calculate filtered stats for selected time range - MUST be before conditional returns
+  const filteredStats = useMemo(() => {
+    const totalRevenue = chartData.reduce((sum, d) => sum + d.revenue, 0);
+    const totalOrders = chartData.reduce((sum, d) => sum + d.orders, 0);
+    return { totalRevenue, totalOrders };
+  }, [chartData]);
+
+  const getStatusBadge = (status: string) => {
+    const statusConfig: Record<string, { label: string; bg: string; color: string }> = {
+      pending: { label: 'รอชำระ', bg: 'rgba(245, 158, 11, 0.2)', color: '#f59e0b' },
+      processing: { label: 'กำลังจัด', bg: 'rgba(59, 130, 246, 0.2)', color: '#3b82f6' },
+      shipped: { label: 'จัดส่งแล้ว', bg: 'rgba(139, 92, 246, 0.2)', color: '#8b5cf6' },
+      delivered: { label: 'สำเร็จ', bg: 'rgba(16, 185, 129, 0.2)', color: '#10b981' },
+      cancelled: { label: 'ยกเลิก', bg: 'rgba(239, 68, 68, 0.2)', color: '#ef4444' },
+    };
+    return statusConfig[status] || statusConfig.pending;
+  };
 
   if (isLoading || loading) {
     return (
@@ -138,6 +340,13 @@ export default function AdminDashboard() {
     },
   ];
 
+  const timeRangeOptions: { value: TimeRange; label: string }[] = [
+    { value: 'day', label: 'วันนี้' },
+    { value: 'week', label: '7 วัน' },
+    { value: 'month', label: '30 วัน' },
+    { value: 'year', label: '12 เดือน' },
+  ];
+
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("th-TH", {
       weekday: "long",
@@ -154,6 +363,42 @@ export default function AdminDashboard() {
       second: "2-digit",
     });
   };
+
+  const formatOrderDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("th-TH", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; dataKey: string }>; label?: string }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div style={{
+          background: 'rgba(15, 23, 42, 0.95)',
+          border: '1px solid rgba(139, 92, 246, 0.3)',
+          borderRadius: '12px',
+          padding: '12px 16px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)'
+        }}>
+          <p style={{ color: '#a78bfa', fontWeight: 600, marginBottom: '8px' }}>{label}</p>
+          {payload.map((entry, index) => (
+            <p key={index} style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
+              {entry.dataKey === 'revenue' ? '💰 รายได้: ' : '📦 ออเดอร์: '}
+              <span style={{ color: 'white', fontWeight: 600 }}>
+                {entry.dataKey === 'revenue' ? `฿${entry.value.toLocaleString()}` : entry.value}
+              </span>
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // filteredStats is now defined before conditional returns (at the top with other hooks)
 
   return (
     <div className="admin-dashboard">
@@ -225,6 +470,298 @@ export default function AdminDashboard() {
           </div>
         </section>
 
+        {/* Revenue Card */}
+        <section style={{ marginBottom: '2rem' }}>
+          <div style={{
+            background: 'linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%)',
+            borderRadius: '20px',
+            padding: '2rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            boxShadow: '0 8px 32px rgba(16, 185, 129, 0.3)'
+          }}>
+            <div>
+              <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.875rem', marginBottom: '0.5rem' }}>💰 รายได้รวมทั้งหมด</p>
+              <p style={{ color: 'white', fontSize: '2.5rem', fontWeight: 700 }}>฿{stats.totalRevenue.toLocaleString()}</p>
+              <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.875rem', marginTop: '0.5rem' }}>จากคำสั่งซื้อทั้งหมด {stats.totalOrders} รายการ</p>
+            </div>
+            <div style={{ fontSize: '4rem' }}>📊</div>
+          </div>
+        </section>
+
+        {/* Time Range Selector */}
+        <section style={{
+          background: 'rgba(30, 41, 59, 0.5)',
+          borderRadius: '16px',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          padding: '1.5rem',
+          marginBottom: '1.5rem'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <h3 style={{ color: 'white', fontSize: '1.25rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span>📈</span> สรุปยอดขาย
+              </h3>
+              <p style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                รายได้ ฿{filteredStats.totalRevenue.toLocaleString()} | {filteredStats.totalOrders} ออเดอร์
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              {timeRangeOptions.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setTimeRange(option.value)}
+                  style={{
+                    padding: '0.625rem 1.25rem',
+                    borderRadius: '10px',
+                    border: 'none',
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    background: timeRange === option.value 
+                      ? 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)' 
+                      : 'rgba(255, 255, 255, 0.05)',
+                    color: timeRange === option.value ? 'white' : '#94a3b8',
+                    boxShadow: timeRange === option.value ? '0 4px 16px rgba(139, 92, 246, 0.3)' : 'none'
+                  }}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Charts Section */}
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+          {/* Revenue Chart */}
+          <section style={{
+            background: 'rgba(30, 41, 59, 0.5)',
+            borderRadius: '16px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '1.5rem'
+          }}>
+            <h3 style={{ color: 'white', fontSize: '1.125rem', fontWeight: 600, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span>💰</span> กราฟรายได้
+            </h3>
+            <div style={{ height: '300px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                  <XAxis dataKey="name" stroke="#64748b" fontSize={11} interval={timeRange === 'month' ? 4 : 0} />
+                  <YAxis stroke="#64748b" fontSize={11} tickFormatter={(value) => value >= 1000 ? `฿${(value/1000).toFixed(0)}k` : `฿${value}`} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#8b5cf6"
+                    strokeWidth={3}
+                    fillOpacity={1}
+                    fill="url(#colorRevenue)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </section>
+
+          {/* Order Status Pie Chart */}
+          <section style={{
+            background: 'rgba(30, 41, 59, 0.5)',
+            borderRadius: '16px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '1.5rem'
+          }}>
+            <h3 style={{ color: 'white', fontSize: '1.125rem', fontWeight: 600, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span>🎯</span> สถานะออเดอร์
+            </h3>
+            <div style={{ height: '200px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={statusData.filter(d => d.value > 0)}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {statusData.filter(d => d.value > 0).map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center', marginTop: '1rem' }}>
+              {statusData.filter(d => d.value > 0).map((item, index) => (
+                <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: item.color }}></div>
+                  <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>{item.name} ({item.value})</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        {/* Orders Bar Chart */}
+        <section style={{
+          background: 'rgba(30, 41, 59, 0.5)',
+          borderRadius: '16px',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          padding: '1.5rem',
+          marginBottom: '2rem'
+        }}>
+          <h3 style={{ color: 'white', fontSize: '1.125rem', fontWeight: 600, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span>📊</span> จำนวนออเดอร์
+          </h3>
+          <div style={{ height: '200px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                <XAxis dataKey="name" stroke="#64748b" fontSize={11} interval={timeRange === 'month' ? 4 : 0} />
+                <YAxis stroke="#64748b" fontSize={11} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="orders" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+
+        {/* Two Column Layout for Recent Orders and Low Stock */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
+          {/* Recent Orders */}
+          <section style={{
+            background: 'rgba(30, 41, 59, 0.5)',
+            borderRadius: '16px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '1.5rem'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ color: 'white', fontSize: '1.125rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span>📋</span> ออเดอร์ล่าสุด
+              </h3>
+              <Link href="/admin/orders" style={{ color: '#8b5cf6', fontSize: '0.875rem', textDecoration: 'none' }}>
+                ดูทั้งหมด →
+              </Link>
+            </div>
+            
+            {recentOrders.length === 0 ? (
+              <p style={{ color: '#64748b', textAlign: 'center', padding: '2rem' }}>ยังไม่มีคำสั่งซื้อ</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {recentOrders.map((order) => {
+                  const statusBadge = getStatusBadge(order.status);
+                  return (
+                    <div key={order._id} style={{
+                      background: 'rgba(15, 23, 42, 0.5)',
+                      borderRadius: '12px',
+                      padding: '1rem',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <div>
+                        <p style={{ color: 'white', fontWeight: 600, fontSize: '0.875rem' }}>
+                          #{order._id.slice(-6).toUpperCase()}
+                        </p>
+                        <p style={{ color: '#64748b', fontSize: '0.75rem' }}>
+                          {formatOrderDate(order.createdAt)}
+                        </p>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <p style={{ color: '#a78bfa', fontWeight: 700 }}>฿{order.total.toLocaleString()}</p>
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '0.25rem 0.5rem',
+                          borderRadius: '6px',
+                          fontSize: '0.7rem',
+                          fontWeight: 600,
+                          background: statusBadge.bg,
+                          color: statusBadge.color
+                        }}>
+                          {statusBadge.label}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
+          {/* Low Stock Alert */}
+          <section style={{
+            background: 'rgba(30, 41, 59, 0.5)',
+            borderRadius: '16px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '1.5rem'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ color: 'white', fontSize: '1.125rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span>⚠️</span> สินค้าใกล้หมด
+              </h3>
+              <Link href="/admin/products" style={{ color: '#8b5cf6', fontSize: '0.875rem', textDecoration: 'none' }}>
+                จัดการ →
+              </Link>
+            </div>
+            
+            {lowStockProducts.length === 0 ? (
+              <div style={{ color: '#10b981', textAlign: 'center', padding: '2rem' }}>
+                <span style={{ fontSize: '2rem' }}>✅</span>
+                <p style={{ marginTop: '0.5rem' }}>สินค้าทั้งหมดมี Stock เพียงพอ</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {lowStockProducts.map((product) => (
+                  <div key={product._id} style={{
+                    background: 'rgba(15, 23, 42, 0.5)',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem'
+                  }}>
+                    <div style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '8px',
+                      overflow: 'hidden',
+                      background: '#1e293b'
+                    }}>
+                      <img src={product.image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ color: 'white', fontWeight: 500, fontSize: '0.875rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {product.name}
+                      </p>
+                      <p style={{ color: '#64748b', fontSize: '0.75rem' }}>฿{product.price.toLocaleString()}</p>
+                    </div>
+                    <div style={{
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '6px',
+                      background: product.stock <= 3 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                      color: product.stock <= 3 ? '#ef4444' : '#f59e0b',
+                      fontSize: '0.75rem',
+                      fontWeight: 700
+                    }}>
+                      เหลือ {product.stock}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+
         {/* Quick Actions */}
         <section className="admin-actions-section">
           <h3 className="admin-section-title">
@@ -253,10 +790,10 @@ export default function AdminDashboard() {
           </div>
         </section>
 
-        {/* Recent Activity Placeholder */}
+        {/* System Status */}
         <section className="admin-recent-section">
           <h3 className="admin-section-title">
-            <span className="admin-section-icon">📊</span>
+            <span className="admin-section-icon">🔧</span>
             สรุปสถานะระบบ
           </h3>
           <div className="admin-system-status">
