@@ -325,6 +325,13 @@ export default function AdminDashboard() {
       color: "admin-action-blue",
     },
     {
+      title: "จัดการหมวดหมู่",
+      description: "เพิ่ม แก้ไข ลบหมวดหมู่",
+      icon: "🏷️",
+      link: "/admin/categories",
+      color: "admin-action-orange",
+    },
+    {
       title: "จัดการคำสั่งซื้อ",
       description: "ดูและอัปเดตสถานะ",
       icon: "🛒",
