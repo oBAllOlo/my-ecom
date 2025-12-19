@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Order from "@/models/Order";
+import Product from "@/models/Product";
+import User from "@/models/User";
 
 // GET all orders
 export async function GET(request: Request) {
@@ -45,7 +47,44 @@ export async function POST(request: Request) {
       );
     }
 
-    const order = await Order.create(body);
+    // Check and reserve stock for each item
+    for (const item of body.items) {
+      const product = await Product.findById(item.productId);
+      
+      if (!product) {
+        return NextResponse.json(
+          { success: false, error: `สินค้า ${item.name} ไม่พบในระบบ` },
+          { status: 400 }
+        );
+      }
+      
+      if (product.stock < item.quantity) {
+        return NextResponse.json(
+          { success: false, error: `สินค้า ${item.name} มีเหลือเพียง ${product.stock} ชิ้น` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Decrease stock for each item (reserve stock)
+    for (const item of body.items) {
+      await Product.findByIdAndUpdate(item.productId, {
+        $inc: { stock: -item.quantity }
+      });
+    }
+
+    // Create order with stockReserved = true
+    const order = await Order.create({
+      ...body,
+      stockReserved: true,
+    });
+
+    // Save shipping address to user for future orders
+    await User.findByIdAndUpdate(body.userId, {
+      address: body.shippingAddress,
+    });
+
+    console.log(`Order created with stock reserved, address saved to user`);
 
     return NextResponse.json({ success: true, data: order }, { status: 201 });
   } catch (error) {

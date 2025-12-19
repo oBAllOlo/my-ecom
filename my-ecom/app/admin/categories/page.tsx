@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
+import ConfirmModal from "@/components/ConfirmModal";
 
 interface Category {
   _id: string;
@@ -28,6 +29,7 @@ export default function AdminCategoriesPage() {
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: "", content: "" });
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; id: string; name: string }>({ show: false, id: "", name: "" });
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== "admin")) {
@@ -115,7 +117,14 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDeleteClick = (category: Category) => {
+    setDeleteConfirm({ show: true, id: category._id, name: category.name });
+  };
+
+  const handleDeleteConfirm = async () => {
+    const id = deleteConfirm.id;
+    setDeleteConfirm({ show: false, id: "", name: "" });
+    
     try {
       const res = await fetch(`/api/categories/${id}`, {
         method: "DELETE",
@@ -388,7 +397,7 @@ export default function AdminCategoriesPage() {
                         ✏️ แก้ไข
                       </button>
                       <button
-                        onClick={() => handleDelete(category._id)}
+                        onClick={() => handleDeleteClick(category)}
                         style={{
                           padding: "0.5rem 0.75rem",
                           background: "rgba(239, 68, 68, 0.15)",
@@ -544,6 +553,18 @@ export default function AdminCategoriesPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteConfirm.show}
+        title="ยืนยันการลบ"
+        message={`คุณต้องการลบหมวดหมู่ "${deleteConfirm.name}" หรือไม่?`}
+        confirmText="ลบเลย"
+        cancelText="ยกเลิก"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteConfirm({ show: false, id: "", name: "" })}
+        type="danger"
+      />
     </div>
   );
 }
