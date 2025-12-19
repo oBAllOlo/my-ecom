@@ -93,7 +93,7 @@ export default function Home() {
             {categories.map((category) => (
               <Link
                 key={category._id}
-                href={`/products?category=${category.slug}`}
+                href={`/products?category=${encodeURIComponent(category.name)}`}
                 className="category-card"
               >
                 <span className="category-icon">{category.icon}</span>

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 
 interface Category {
   _id: string;
@@ -16,6 +17,7 @@ interface Category {
 export default function AdminCategoriesPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
+  const { showToast } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -93,6 +95,7 @@ export default function AdminCategoriesPage() {
       const data = await res.json();
 
       if (data.success) {
+        showToast(editingCategory ? "อัปเดตหมวดหมู่สำเร็จ!" : "เพิ่มหมวดหมู่สำเร็จ!", "success");
         setMessage({
           type: "success",
           content: editingCategory ? "อัปเดตหมวดหมู่สำเร็จ!" : "เพิ่มหมวดหมู่สำเร็จ!",
@@ -113,8 +116,6 @@ export default function AdminCategoriesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("คุณต้องการลบหมวดหมู่นี้หรือไม่?")) return;
-
     try {
       const res = await fetch(`/api/categories/${id}`, {
         method: "DELETE",
@@ -123,13 +124,14 @@ export default function AdminCategoriesPage() {
       const data = await res.json();
 
       if (data.success) {
+        showToast("ลบหมวดหมู่แล้ว", "success");
         fetchCategories();
       } else {
-        alert(data.error || "ไม่สามารถลบหมวดหมู่ได้");
+        showToast(data.error || "ไม่สามารถลบหมวดหมู่ได้", "error");
       }
     } catch (error) {
       console.error("Error deleting category:", error);
-      alert("เกิดข้อผิดพลาดในการลบ");
+      showToast("เกิดข้อผิดพลาดในการลบ", "error");
     }
   };
 

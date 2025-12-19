@@ -5,15 +5,24 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 
 interface Product {
   _id: string;
   name: string;
+  description?: string;
   price: number;
+  originalPrice?: number;
   category: string;
   brand: string;
   stock: number;
   image: string;
+  images?: string[];
+  rating?: number;
+  reviews?: number;
+  features?: string[];
+  switchType?: string;
+  connectivity?: string;
   isFeatured?: boolean;
   isNew?: boolean;
 }
@@ -27,6 +36,7 @@ interface Category {
 export default function AdminProducts() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
+  const { showToast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,16 +83,16 @@ export default function AdminProducts() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("ต้องการลบสินค้านี้หรือไม่?")) return;
-
     try {
       const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
         setProducts(products.filter((p) => p._id !== id));
+        showToast("ลบสินค้าแล้ว", "success");
       }
     } catch (error) {
       console.error("Error deleting product:", error);
+      showToast("เกิดข้อผิดพลาดในการลบ", "error");
     }
   };
 
@@ -432,19 +442,19 @@ interface ProductModalProps {
 function ProductModal({ product, categories, onClose, onSave }: ProductModalProps) {
   const [formData, setFormData] = useState({
     name: product?.name || "",
-    description: "",
+    description: product?.description || "",
     price: product?.price || 0,
-    originalPrice: 0,
+    originalPrice: product?.originalPrice || 0,
     image: product?.image || "",
-    images: [] as string[],
+    images: product?.images || [] as string[],
     category: product?.category || "",
     brand: product?.brand || "",
     stock: product?.stock || 0,
-    rating: 0,
-    reviews: 0,
-    features: "",
-    switchType: "",
-    connectivity: "",
+    rating: product?.rating || 0,
+    reviews: product?.reviews || 0,
+    features: product?.features?.join(", ") || "",
+    switchType: product?.switchType || "",
+    connectivity: product?.connectivity || "",
     isNew: product?.isNew || false,
     isFeatured: product?.isFeatured || false,
   });
