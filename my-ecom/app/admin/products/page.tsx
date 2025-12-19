@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
+import ConfirmModal from "@/components/ConfirmModal";
 
 interface Product {
   _id: string;
@@ -42,6 +43,7 @@ export default function AdminProducts() {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; id: string; name: string }>({ show: false, id: "", name: "" });
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== "admin")) {
@@ -82,7 +84,14 @@ export default function AdminProducts() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDeleteClick = (product: Product) => {
+    setDeleteConfirm({ show: true, id: product._id, name: product.name });
+  };
+
+  const handleDeleteConfirm = async () => {
+    const id = deleteConfirm.id;
+    setDeleteConfirm({ show: false, id: "", name: "" });
+    
     try {
       const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
       const data = await res.json();
@@ -179,7 +188,7 @@ export default function AdminProducts() {
                   ✏️ แก้ไข
                 </button>
                 <button
-                  onClick={() => handleDelete(product._id)}
+                  onClick={() => handleDeleteClick(product)}
                   className="delete-btn"
                 >
                   🗑️ ลบ
@@ -215,6 +224,17 @@ export default function AdminProducts() {
         document.body
       )}
 
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteConfirm.show}
+        title="ยืนยันการลบ"
+        message={`คุณต้องการลบสินค้า "${deleteConfirm.name}" หรือไม่?`}
+        confirmText="ลบเลย"
+        cancelText="ยกเลิก"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteConfirm({ show: false, id: "", name: "" })}
+        type="danger"
+      />
       <style jsx>{`
         .admin-back-link {
           color: #a78bfa;
