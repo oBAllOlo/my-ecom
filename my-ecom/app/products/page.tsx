@@ -117,10 +117,10 @@ function ProductsContent() {
     }
   };
 
-  const handleCategoryChange = (categoryId: string) => {
-    setSelectedCategory(categoryId);
-    if (categoryId) {
-      router.push(`/products?category=${categoryId}`);
+  const handleCategoryChange = (categoryName: string) => {
+    setSelectedCategory(categoryName);
+    if (categoryName) {
+      router.push(`/products?category=${encodeURIComponent(categoryName)}`);
     } else {
       router.push("/products");
     }
@@ -144,8 +144,7 @@ function ProductsContent() {
             : newParam
             ? "สินค้ามาใหม่"
             : selectedCategory
-            ? categories.find((c) => c._id === selectedCategory)?.name ||
-              "สินค้าทั้งหมด"
+            ? selectedCategory
             : "สินค้าทั้งหมด"}
         </h1>
         <p className="products-count">พบ {filteredProducts.length} สินค้า</p>
@@ -172,8 +171,8 @@ function ProductsContent() {
                   <input
                     type="radio"
                     name="category"
-                    checked={selectedCategory === category._id}
-                    onChange={() => handleCategoryChange(category._id)}
+                    checked={selectedCategory === category.name}
+                    onChange={() => handleCategoryChange(category.name)}
                   />
                   <span>
                     {category.icon} {category.name}

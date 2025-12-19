@@ -1,15 +1,27 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Category from "@/models/Category";
+import Product from "@/models/Product";
 
-// GET all categories
+// GET all categories with product counts
 export async function GET() {
   try {
     await dbConnect();
 
-    const categories = await Category.find({}).sort({ name: 1 });
+    const categories = await Category.find({}).sort({ name: 1 }).lean();
+    
+    // Calculate product count for each category
+    const categoriesWithCounts = await Promise.all(
+      categories.map(async (category) => {
+        const productCount = await Product.countDocuments({ category: category.name });
+        return {
+          ...category,
+          productCount,
+        };
+      })
+    );
 
-    return NextResponse.json({ success: true, data: categories });
+    return NextResponse.json({ success: true, data: categoriesWithCounts });
   } catch (error) {
     console.error("Error fetching categories:", error);
     return NextResponse.json(

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Product } from "@/lib/types";
 import { formatPrice } from "@/lib/mockData";
 import { useCart } from "@/context/CartContext";
+import { useToast } from "@/context/ToastContext";
 
 interface ProductCardProps {
   product: Product;
@@ -12,11 +13,13 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
+  const { showToast } = useToast();
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     addToCart(product, 1);
+    showToast(`เพิ่ม "${product.name}" ลงตะกร้าแล้ว`, "success");
   };
 
   const discount = product.originalPrice
