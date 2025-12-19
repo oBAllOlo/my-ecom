@@ -22,7 +22,10 @@ export interface IOrder extends Document {
     postalCode: string;
   };
   status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
-  paymentMethod: string;
+  paymentMethod: "card" | "promptpay" | "banking" | "cod";
+  paymentStatus: "pending" | "paid" | "failed";
+  chargeId?: string;
+  stockReserved: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -53,7 +56,18 @@ const OrderSchema = new Schema<IOrder>(
       enum: ["pending", "processing", "shipped", "delivered", "cancelled"],
       default: "pending",
     },
-    paymentMethod: { type: String, required: true },
+    paymentMethod: { 
+      type: String, 
+      enum: ["card", "promptpay", "banking", "cod"],
+      required: true 
+    },
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "paid", "failed"],
+      default: "pending",
+    },
+    chargeId: { type: String },
+    stockReserved: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
