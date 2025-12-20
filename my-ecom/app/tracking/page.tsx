@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 
 interface Order {
     _id: string;
@@ -47,10 +48,10 @@ const statusConfig = {
 export default function TrackingPage() {
     const searchParams = useSearchParams();
     const { user } = useAuth();
+    const { showToast } = useToast();
     const orderId = searchParams.get("order");
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
     const [searchInput, setSearchInput] = useState(orderId || "");
     const [confirmLoading, setConfirmLoading] = useState(false);
     const [confirmMessage, setConfirmMessage] = useState({ type: "", text: "" });
@@ -58,18 +59,17 @@ export default function TrackingPage() {
 
     const fetchOrder = async (id: string) => {
         setLoading(true);
-        setError("");
         try {
             const res = await fetch(`/api/orders/${id}`);
             const data = await res.json();
             if (data.success) {
                 setOrder(data.data);
             } else {
-                setError("ไม่พบคำสั่งซื้อ กรุณาตรวจสอบหมายเลขอีกครั้ง");
+                showToast("ไม่พบคำสั่งซื้อ กรุณาตรวจสอบหมายเลขอีกครั้ง", "error");
                 setOrder(null);
             }
         } catch {
-            setError("เกิดข้อผิดพลาดในการค้นหา");
+            showToast("เกิดข้อผิดพลาดในการค้นหา", "error");
             setOrder(null);
         } finally {
             setLoading(false);
@@ -188,19 +188,6 @@ export default function TrackingPage() {
                     </div>
                 )}
 
-                {/* Error */}
-                {error && !loading && (
-                    <div style={{
-                        textAlign: "center",
-                        padding: "3rem",
-                        background: "rgba(239, 68, 68, 0.1)",
-                        borderRadius: "16px",
-                        border: "1px solid rgba(239, 68, 68, 0.3)",
-                    }}>
-                        <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>😕</div>
-                        <p style={{ color: "#f87171" }}>{error}</p>
-                    </div>
-                )}
 
                 {/* Order Found */}
                 {order && !loading && (
@@ -500,7 +487,7 @@ export default function TrackingPage() {
 
 
                 {/* No Order ID */}
-                {!orderId && !order && !loading && !error && (
+                {!orderId && !order && !loading && (
                     <div style={{
                         textAlign: "center",
                         padding: "3rem",

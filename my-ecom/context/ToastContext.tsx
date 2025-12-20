@@ -54,16 +54,18 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      
-      {/* Toast Container */}
+
+      {/* Toast Container - Top Center */}
       <div
         style={{
           position: "fixed",
-          bottom: "20px",
-          right: "20px",
+          top: "20px",
+          left: "50%",
+          transform: "translateX(-50%)",
           zIndex: 100000,
           display: "flex",
           flexDirection: "column",
+          alignItems: "center",
           gap: "10px",
         }}
       >
@@ -74,7 +76,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               display: "flex",
               alignItems: "center",
               gap: "12px",
-              padding: "14px 20px",
+              padding: "14px 24px",
               background: "rgba(15, 23, 42, 0.95)",
               backdropFilter: "blur(10px)",
               border: `1px solid ${getColor(toast.type)}`,
@@ -82,10 +84,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               boxShadow: `0 4px 20px rgba(0,0,0,0.4), 0 0 20px ${getColor(toast.type)}30`,
               color: "#fff",
               fontSize: "0.95rem",
-              animation: "slideIn 0.3s ease",
+              animation: "slideDown 0.3s ease",
               cursor: "pointer",
-              minWidth: "250px",
-              maxWidth: "400px",
+              minWidth: "280px",
+              maxWidth: "500px",
             }}
             onClick={() => removeToast(toast.id)}
           >
@@ -97,17 +99,18 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       </div>
 
       <style jsx global>{`
-        @keyframes slideIn {
+        @keyframes slideDown {
           from {
-            transform: translateX(100%);
+            transform: translateY(-100%);
             opacity: 0;
           }
           to {
-            transform: translateX(0);
+            transform: translateY(0);
             opacity: 1;
           }
         }
       `}</style>
+
     </ToastContext.Provider>
   );
 }

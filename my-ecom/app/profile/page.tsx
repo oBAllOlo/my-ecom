@@ -4,10 +4,12 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 
 export default function ProfilePage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { showToast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -21,7 +23,6 @@ export default function ProfilePage() {
     },
   });
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState({ type: "", content: "" });
 
   // Password change state
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -30,8 +31,6 @@ export default function ProfilePage() {
     newPassword: "",
     confirmPassword: "",
   });
-  const [passwordError, setPasswordError] = useState("");
-  const [passwordSuccess, setPasswordSuccess] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
 
   useEffect(() => {
@@ -74,7 +73,6 @@ export default function ProfilePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setMessage({ type: "", content: "" });
 
     try {
       const res = await fetch(`/api/users/${user?._id}`, {
@@ -89,13 +87,13 @@ export default function ProfilePage() {
       const data = await res.json();
 
       if (data.success) {
-        setMessage({ type: "success", content: "บันทึกข้อมูลเรียบร้อยแล้ว" });
+        showToast("บันทึกข้อมูลเรียบร้อยแล้ว", "success");
       } else {
-        setMessage({ type: "error", content: data.error || "บันทึกข้อมูลไม่สำเร็จ" });
+        showToast(data.error || "บันทึกข้อมูลไม่สำเร็จ", "error");
       }
     } catch (error) {
       console.error("Error updating profile:", error);
-      setMessage({ type: "error", content: "เกิดข้อผิดพลาดในการเชื่อมต่อ" });
+      showToast("เกิดข้อผิดพลาดในการเชื่อมต่อ", "error");
     } finally {
       setSaving(false);
     }
@@ -103,16 +101,14 @@ export default function ProfilePage() {
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPasswordError("");
-    setPasswordSuccess("");
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setPasswordError("รหัสผ่านใหม่ไม่ตรงกัน");
+      showToast("รหัสผ่านใหม่ไม่ตรงกัน", "error");
       return;
     }
 
     if (passwordData.newPassword.length < 6) {
-      setPasswordError("รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร");
+      showToast("รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร", "error");
       return;
     }
 
@@ -132,18 +128,17 @@ export default function ProfilePage() {
       const data = await res.json();
 
       if (data.success) {
-        setPasswordSuccess("เปลี่ยนรหัสผ่านสำเร็จ!");
+        showToast("เปลี่ยนรหัสผ่านสำเร็จ!", "success");
         setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
         setTimeout(() => {
           setShowPasswordModal(false);
-          setPasswordSuccess("");
-        }, 2000);
+        }, 1000);
       } else {
-        setPasswordError(data.error || "เปลี่ยนรหัสผ่านไม่สำเร็จ");
+        showToast(data.error || "เปลี่ยนรหัสผ่านไม่สำเร็จ", "error");
       }
     } catch (error) {
       console.error("Error changing password:", error);
-      setPasswordError("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+      showToast("เกิดข้อผิดพลาดในการเชื่อมต่อ", "error");
     } finally {
       setChangingPassword(false);
     }
@@ -242,24 +237,6 @@ export default function ProfilePage() {
               <span>ข้อมูลส่วนตัว</span>
             </div>
           </div>
-
-          {/* Message */}
-          {message.content && (
-            <div style={{
-              padding: '1rem 1.5rem',
-              borderRadius: '12px',
-              marginBottom: '1.5rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              background: message.type === 'success' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-              border: `1px solid ${message.type === 'success' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
-              color: message.type === 'success' ? '#10b981' : '#ef4444'
-            }}>
-              <span style={{ fontSize: '1.25rem' }}>{message.type === 'success' ? '✅' : '❌'}</span>
-              <span style={{ fontWeight: 500 }}>{message.content}</span>
-            </div>
-          )}
 
           <form onSubmit={handleSubmit}>
             <div className="admin-actions-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
@@ -608,8 +585,6 @@ export default function ProfilePage() {
               <button
                 onClick={() => {
                   setShowPasswordModal(false);
-                  setPasswordError("");
-                  setPasswordSuccess("");
                   setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
                 }}
                 style={{
@@ -621,30 +596,6 @@ export default function ProfilePage() {
                 }}
               >×</button>
             </div>
-
-            {passwordError && (
-              <div style={{
-                padding: '0.75rem 1rem',
-                background: 'rgba(239, 68, 68, 0.15)',
-                border: '1px solid rgba(239, 68, 68, 0.3)',
-                borderRadius: '8px',
-                color: '#ef4444',
-                marginBottom: '1rem',
-                fontSize: '0.9rem'
-              }}>⚠️ {passwordError}</div>
-            )}
-
-            {passwordSuccess && (
-              <div style={{
-                padding: '0.75rem 1rem',
-                background: 'rgba(34, 197, 94, 0.15)',
-                border: '1px solid rgba(34, 197, 94, 0.3)',
-                borderRadius: '8px',
-                color: '#22c55e',
-                marginBottom: '1rem',
-                fontSize: '0.9rem'
-              }}>✅ {passwordSuccess}</div>
-            )}
 
             <form onSubmit={handlePasswordChange}>
               <div style={{ marginBottom: '1rem' }}>

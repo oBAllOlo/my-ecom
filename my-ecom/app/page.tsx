@@ -148,23 +148,8 @@ export default function Home() {
         )}
       </section>
 
-      {/* Newsletter Section */}
-      <section className="newsletter">
-        <h2 className="newsletter-title">📬 รับข่าวสารและโปรโมชั่น</h2>
-        <p className="newsletter-description">
-          สมัครรับข่าวสารเพื่อไม่พลาดโปรโมชั่นพิเศษและสินค้าใหม่ก่อนใคร
-        </p>
-        <form className="newsletter-form" onSubmit={(e) => e.preventDefault()}>
-          <input
-            type="email"
-            placeholder="กรอกอีเมลของคุณ"
-            className="newsletter-input"
-          />
-          <button type="submit" className="btn btn-primary">
-            สมัครรับข่าวสาร
-          </button>
-        </form>
-      </section>
+
+
 
       <style jsx>{`
         .loading-grid {

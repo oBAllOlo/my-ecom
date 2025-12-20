@@ -4,16 +4,17 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 
 export default function RegisterPage() {
   const router = useRouter();
   const { register, isAuthenticated } = useAuth();
+  const { showToast } = useToast();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   // Redirect if already logged in
@@ -24,17 +25,16 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
 
     // Validate passwords match
     if (password !== confirmPassword) {
-      setError("รหัสผ่านไม่ตรงกัน");
+      showToast("รหัสผ่านไม่ตรงกัน", "error");
       return;
     }
 
     // Validate name
     if (name.trim().length < 2) {
-      setError("กรุณากรอกชื่อที่ถูกต้อง");
+      showToast("กรุณากรอกชื่อที่ถูกต้อง", "error");
       return;
     }
 
@@ -43,14 +43,14 @@ export default function RegisterPage() {
     const result = await register(name, email, password, phoneNumber || undefined);
 
     if (result.success) {
+      showToast("สมัครสมาชิกสำเร็จ!", "success");
       if (result.requireVerification && result.email) {
-        // Redirect to OTP verification page
         router.push(`/verify?email=${encodeURIComponent(result.email)}`);
       } else {
         router.push("/");
       }
     } else {
-      setError(result.error || "เกิดข้อผิดพลาด");
+      showToast(result.error || "เกิดข้อผิดพลาด", "error");
     }
 
     setIsLoading(false);
@@ -72,7 +72,6 @@ export default function RegisterPage() {
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
-          {error && <div className="auth-error">⚠️ {error}</div>}
 
           <div className="form-group">
             <label className="form-label">ชื่อ-นามสกุล</label>
@@ -98,16 +97,8 @@ export default function RegisterPage() {
             />
           </div>
 
-          <div className="form-group">
-            <label className="form-label">เบอร์โทรศัพท์ (ไม่บังคับ)</label>
-            <input
-              type="tel"
-              className="form-input"
-              placeholder="08x-xxx-xxxx"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-            />
-          </div>
+
+
 
           <div className="form-group">
             <label className="form-label">รหัสผ่าน</label>
@@ -153,20 +144,8 @@ export default function RegisterPage() {
           </button>
         </form>
 
-        <div className="auth-divider">
-          <span>หรือ</span>
-        </div>
 
-        <div className="auth-social">
-          <button className="social-btn google" onClick={handleSocialClick} type="button">
-            <span>G</span>
-            สมัครด้วย Google
-          </button>
-          <button className="social-btn facebook" onClick={handleSocialClick} type="button">
-            <span>f</span>
-            สมัครด้วย Facebook
-          </button>
-        </div>
+
 
         <p className="auth-footer">
           มีบัญชีอยู่แล้ว?{" "}

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 
 interface OrderItem {
   productId: {
@@ -28,9 +29,9 @@ interface Order {
 export default function OrdersPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { showToast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -47,11 +48,11 @@ export default function OrdersPage() {
           if (data.success) {
             setOrders(data.data);
           } else {
-            setError("ไม่สามารถโหลดข้อมูลได้");
+            showToast("ไม่สามารถโหลดข้อมูลได้", "error");
           }
         } catch (err) {
           console.error("Error fetching orders:", err);
-          setError("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+          showToast("เกิดข้อผิดพลาดในการเชื่อมต่อ", "error");
         } finally {
           setLoading(false);
         }
@@ -61,7 +62,7 @@ export default function OrdersPage() {
     if (user) {
       fetchOrders();
     }
-  }, [user]);
+  }, [user, showToast]);
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -115,25 +116,10 @@ export default function OrdersPage() {
         </section>
 
 
-        {/* Error */}
-        {error && (
-          <div style={{
-            padding: '1rem 1.5rem',
-            borderRadius: '12px',
-            marginBottom: '1.5rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-            background: 'rgba(239, 68, 68, 0.15)',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-            color: '#ef4444'
-          }}>
-            <span style={{ fontSize: '1.25rem' }}>⚠️</span>
-            <span style={{ fontWeight: 500 }}>{error}</span>
-          </div>
-        )}
+
 
         {/* Stats Cards */}
+
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(4, 1fr)',
