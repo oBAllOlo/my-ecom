@@ -60,7 +60,7 @@ export default function CheckoutPage() {
   const { items, getCartTotal, clearCart } = useCart();
   const { user } = useAuth();
   const { showToast } = useToast();
-  
+
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>("card");
   const [selectedBank, setSelectedBank] = useState("scb");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -68,14 +68,14 @@ export default function CheckoutPage() {
   const [orderId, setOrderId] = useState<string | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const [omiseLoaded, setOmiseLoaded] = useState(false);
-  
+
   // Thai address data
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [subDistricts, setSubDistricts] = useState<SubDistrict[]>([]);
   const [filteredDistricts, setFilteredDistricts] = useState<District[]>([]);
   const [filteredSubDistricts, setFilteredSubDistricts] = useState<SubDistrict[]>([]);
-  
+
   const [cardForm, setCardForm] = useState<CardFormData>({
     number: "",
     name: "",
@@ -160,7 +160,7 @@ export default function CheckoutPage() {
         try {
           const res = await fetch(`/api/users/address?userId=${user._id}`);
           const data = await res.json();
-          
+
           if (data.success && data.data.address) {
             const addr = data.data.address;
             setShippingForm(prev => ({
@@ -171,7 +171,7 @@ export default function CheckoutPage() {
               province: addr.province || prev.province,
               postalCode: addr.postalCode || prev.postalCode,
             }));
-            
+
             // Find province ID to load districts
             const matchedProvince = provinces.find(p => p.name_th === addr.province);
             if (matchedProvince) {
@@ -185,7 +185,7 @@ export default function CheckoutPage() {
           console.error("Error fetching saved address:", error);
         }
       };
-      
+
       fetchSavedAddress();
     }
   }, [user, provinces]);
@@ -205,6 +205,15 @@ export default function CheckoutPage() {
     }
 
     try {
+      const shippingAddress = {
+        fullName: shippingForm.fullName,
+        phone: shippingForm.phone,
+        street: shippingForm.street,
+        district: shippingForm.district,
+        province: shippingForm.province,
+        postalCode: shippingForm.postalCode,
+      };
+
       const orderData = {
         userId: user._id,
         items: items.map(item => ({
@@ -215,14 +224,7 @@ export default function CheckoutPage() {
           quantity: item.quantity,
         })),
         total,
-        shippingAddress: {
-          fullName: shippingForm.fullName,
-          phone: shippingForm.phone,
-          street: shippingForm.street,
-          district: shippingForm.district,
-          province: shippingForm.province,
-          postalCode: shippingForm.postalCode,
-        },
+        shippingAddress,
         paymentMethod,
         paymentStatus: "pending",
       };
@@ -235,6 +237,18 @@ export default function CheckoutPage() {
 
       const data = await res.json();
       if (data.success) {
+        // Save shipping address to user profile (auto-save for future orders)
+        try {
+          await fetch(`/api/users/${user._id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ address: shippingAddress }),
+          });
+        } catch (err) {
+          console.error("Failed to save address to profile:", err);
+          // Don't block order, just log the error
+        }
+
         return data.data._id;
       }
       throw new Error(data.error);
@@ -244,6 +258,7 @@ export default function CheckoutPage() {
       return null;
     }
   };
+
 
   // Handle Credit Card Payment
   const handleCardPayment = async (newOrderId: string) => {
@@ -310,19 +325,19 @@ export default function CheckoutPage() {
 
     const data = await res.json();
     console.log("PromptPay response:", JSON.stringify(data, null, 2));
-    
+
     if (data.success) {
       // Try QR code first
-      const qrUrl = 
+      const qrUrl =
         data.data.source?.scannable_code?.image?.download_uri ||
         data.data.source?.scannable_code?.image;
-      
+
       if (qrUrl) {
         setQrCodeUrl(typeof qrUrl === "string" ? qrUrl : qrUrl.download_uri);
         setOrderId(newOrderId);
         return true;
       }
-      
+
       // If no QR code, redirect to authorize URL (Omise payment page)
       if (data.data.authorizeUri) {
         console.log("Redirecting to:", data.data.authorizeUri);
@@ -333,7 +348,7 @@ export default function CheckoutPage() {
         }, 500);
         return true;
       }
-      
+
       setOrderId(newOrderId);
       showToast("กรุณาตรวจสอบใน Omise Dashboard", "info");
       return true;
@@ -344,7 +359,7 @@ export default function CheckoutPage() {
   // Handle Internet Banking Payment
   const handleBankingPayment = async (newOrderId: string) => {
     const bankType = `internet_banking_${selectedBank}`;
-    
+
     const res = await fetch("/api/payment/create-source", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -365,7 +380,7 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!user) {
       showToast("กรุณาเข้าสู่ระบบก่อนสั่งซื้อ", "error");
       router.push("/login");
@@ -440,9 +455,9 @@ export default function CheckoutPage() {
           <p className="cart-empty-text">
             ยอดชำระ: {formatPrice(total)}
           </p>
-          <div style={{ 
-            background: "white", 
-            padding: "1rem", 
+          <div style={{
+            background: "white",
+            padding: "1rem",
             borderRadius: "12px",
             display: "inline-block",
             margin: "1rem 0"
@@ -455,7 +470,7 @@ export default function CheckoutPage() {
           <p style={{ color: "var(--text-muted)", fontSize: "0.875rem", marginBottom: "1rem" }}>
             เมื่อชำระเงินแล้ว ระบบจะอัปเดตสถานะอัตโนมัติ
           </p>
-          <button 
+          <button
             className="btn btn-primary"
             onClick={() => {
               clearCart();
@@ -517,7 +532,7 @@ export default function CheckoutPage() {
         src="https://cdn.omise.co/omise.js"
         onLoad={() => setOmiseLoaded(true)}
       />
-      
+
       <div className="checkout-page">
         <h1 className="checkout-title">💳 ชำระเงิน</h1>
 
@@ -587,8 +602,8 @@ export default function CheckoutPage() {
                     onChange={(e) => {
                       const inputValue = e.target.value;
                       const selectedProvince = provinces.find(p => p.name_th === inputValue);
-                      setShippingForm({ 
-                        ...shippingForm, 
+                      setShippingForm({
+                        ...shippingForm,
                         province: inputValue,
                         provinceId: selectedProvince?.id || 0,
                         district: "",
@@ -616,8 +631,8 @@ export default function CheckoutPage() {
                     onChange={(e) => {
                       const inputValue = e.target.value;
                       const selectedDistrict = filteredDistricts.find(d => d.name_th === inputValue);
-                      setShippingForm({ 
-                        ...shippingForm, 
+                      setShippingForm({
+                        ...shippingForm,
                         district: inputValue,
                         districtId: selectedDistrict?.id || 0,
                         subDistrict: "",
@@ -644,8 +659,8 @@ export default function CheckoutPage() {
                     onChange={(e) => {
                       const inputValue = e.target.value;
                       const selectedSubDistrict = filteredSubDistricts.find(s => s.name_th === inputValue);
-                      setShippingForm({ 
-                        ...shippingForm, 
+                      setShippingForm({
+                        ...shippingForm,
                         subDistrict: inputValue,
                         postalCode: selectedSubDistrict?.zip_code?.toString() || shippingForm.postalCode,
                       });
@@ -720,6 +735,51 @@ export default function CheckoutPage() {
             {paymentMethod === "card" && (
               <div className="form-section">
                 <h2 className="form-section-title">💳 ข้อมูลบัตร</h2>
+
+                {/* Test Cards Quick Fill */}
+                <div style={{ marginBottom: "1rem" }}>
+                  <p style={{ color: "var(--text-muted)", fontSize: "0.75rem", marginBottom: "0.5rem" }}>
+                    🧪 บัตรทดสอบ Omise (Sandbox Mode):
+                  </p>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+                    {[
+                      { label: "✅ Visa (สำเร็จ)", number: "4242424242424242", type: "success" },
+                      { label: "✅ Mastercard", number: "5555555555554444", type: "success" },
+                      { label: "✅ JCB", number: "3530111333300000", type: "success" },
+                      { label: "❌ ยอดไม่พอ", number: "4111111111140011", type: "fail" },
+                      { label: "❌ บัตรหาย/ถูกขโมย", number: "4111111111130012", type: "fail" },
+                      { label: "❌ ประมวลผลล้มเหลว", number: "4111111111120013", type: "fail" },
+                      { label: "❌ ปฏิเสธการชำระ", number: "4111111111110014", type: "fail" },
+                    ].map((card) => (
+                      <button
+                        key={card.number}
+                        type="button"
+                        onClick={() => setCardForm({
+                          number: card.number,
+                          name: "TEST USER",
+                          expMonth: "12",
+                          expYear: "30",
+                          cvv: "123",
+                        })}
+                        style={{
+                          padding: "0.4rem 0.75rem",
+                          fontSize: "0.7rem",
+                          borderRadius: "6px",
+                          border: "none",
+                          cursor: "pointer",
+                          background: card.type === "success"
+                            ? "rgba(34, 197, 94, 0.2)"
+                            : "rgba(239, 68, 68, 0.2)",
+                          color: card.type === "success" ? "#22c55e" : "#ef4444",
+                          transition: "all 0.2s",
+                        }}
+                      >
+                        {card.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="form-grid">
                   <div className="form-group full-width">
                     <label className="form-label">หมายเลขบัตร</label>
@@ -787,6 +847,7 @@ export default function CheckoutPage() {
               </div>
             )}
 
+
             {/* Bank Selection for Internet Banking */}
             {paymentMethod === "banking" && (
               <div className="form-section">
@@ -801,11 +862,11 @@ export default function CheckoutPage() {
                         gap: "0.75rem",
                         padding: "1rem",
                         borderRadius: "12px",
-                        border: selectedBank === bank.id 
-                          ? `2px solid ${bank.color}` 
+                        border: selectedBank === bank.id
+                          ? `2px solid ${bank.color}`
                           : "1px solid rgba(255,255,255,0.1)",
-                        background: selectedBank === bank.id 
-                          ? `${bank.color}15` 
+                        background: selectedBank === bank.id
+                          ? `${bank.color}15`
                           : "rgba(255,255,255,0.02)",
                         cursor: "pointer",
                         transition: "all 0.2s",

@@ -1,106 +1,122 @@
-# Data Dictionary - My E-com
+# พจนานุกรมข้อมูล (Data Dictionary) - My E-com
 
-This document describes the MongoDB schema definitions used in the application.
+เอกสารนี้อธิบายโครงสร้างฐานข้อมูล (Schema) ของ MongoDB ที่ใช้ในแอปพลิเคชัน
 
-## 1. User
+## 1. User (ผู้ใช้งาน)
 
 **Collection:** `users`
-**Description:** Stores user account information, authentication details, and addresses.
+**คำอธิบาย:** เก็บข้อมูลบัญชีผู้ใช้, ข้อมูลการยืนยันตัวตน และที่อยู่
 
-| Field       | Type      | Required | Unique | Default  | Description                             |
-| ----------- | --------- | -------- | ------ | -------- | --------------------------------------- |
-| `_id`       | ObjectId  | Yes      | Yes    | -        | Unique identifier                       |
-| `name`      | String    | Yes      | -      | -        | User's full name                        |
-| `email`     | String    | Yes      | Yes    | -        | User's email address (login credential) |
-| `password`  | String    | Yes      | -      | -        | Hashed password                         |
-| `role`      | String    | Yes      | -      | `"user"` | Role: `"user"` or `"admin"`             |
-| `avatar`    | String    | No       | -      | -        | URL to user's profile picture           |
-| `address`   | Subschema | No       | -      | -        | User's primary shipping address         |
-| `createdAt` | Date      | -        | -      | Auto     | Timestamp of creation                   |
-| `updatedAt` | Date      | -        | -      | Auto     | Timestamp of last update                |
+| ชื่อฟิลด์ (Field) | ประเภท (Type) | จำเป็น | ไม่ซ้ำกัน | ค่าเริ่มต้น | คำอธิบาย (Description) |
+| ---------------- | ------------- | ------ | --------- | ----------- | ---------------------- |
+| `_id` | ObjectId | ใช่ | ใช่ | - | รหัสอ้างอิง (Unique Identifier) |
+| `name` | String | ใช่ | - | - | ชื่อ-นามสกุลของผู้ใช้ |
+| `email` | String | ใช่ | ใช่ | - | อีเมล (ใช้สำหรับเข้าสู่ระบบ) |
+| `password` | String | ใช่ | - | - | รหัสผ่านที่เข้ารหัสแล้ว (Hashed) |
+| `role` | String | ใช่ | - | `"user"` | บทบาท: `"user"` (ผู้ใช้ทั่วไป) หรือ `"admin"` (ผู้ดูแลระบบ) |
+| `phoneNumber`| String | ไม่ | - | - | เบอร์โทรศัพท์ติดต่อ |
+| `isVerified` | Boolean | ไม่ | - | `false` | สถานะการยืนยันอีเมล |
+| `avatar` | String | ไม่ | - | - | URL ของรูปโปรไฟล์ |
+| `address` | Subschema | ไม่ | - | - | ที่อยู่จัดส่งหลักของผู้ใช้ |
+| `createdAt` | Date | - | - | อัตโนมัติ | วันที่สร้างบัญชี |
+| `updatedAt` | Date | - | - | อัตโนมัติ | วันที่แก้ไขล่าสุด |
 
-### Address Subschema
+### Address Subschema (ตารางย่อยที่อยู่)
 
-| Field        | Type   | Description          |
-| ------------ | ------ | -------------------- |
-| `fullName`   | String | Recipient's name     |
-| `phone`      | String | Contact phone number |
-| `street`     | String | Street address       |
-| `district`   | String | District/Amphoe      |
-| `province`   | String | Province/Changwat    |
-| `postalCode` | String | Postal code          |
+| ชื่อฟิลด์ | ประเภท | คำอธิบาย |
+| -------- | ------ | -------- |
+| `fullName` | String | ชื่อผู้รับ |
+| `phone` | String | เบอร์โทรศัพท์ติดต่อ |
+| `street` | String | ที่อยู่ (บ้านเลขที่, ซอย, ถนน) |
+| `district` | String | อำเภอ/เขต |
+| `province` | String | จังหวัด |
+| `postalCode` | String | รหัสไปรษณีย์ |
 
 ---
 
-## 2. Product
+## 2. Product (สินค้า)
 
 **Collection:** `products`
-**Description:** Stores product information for the catalog.
+**คำอธิบาย:** เก็บข้อมูลสินค้าในแคตตาล็อก
 
-| Field           | Type          | Required | Default | Description                           |
-| --------------- | ------------- | -------- | ------- | ------------------------------------- |
-| `_id`           | ObjectId      | Yes      | -       | Unique identifier                     |
-| `name`          | String        | Yes      | -       | Product name                          |
-| `description`   | String        | Yes      | -       | Full product description              |
-| `price`         | Number        | Yes      | -       | Current selling price                 |
-| `originalPrice` | Number        | No       | -       | Original price (for sale display)     |
-| `image`         | String        | Yes      | -       | Main product image URL                |
-| `images`        | Array<String> | No       | -       | Additional product image URLs         |
-| `category`      | String        | Yes      | -       | Category name/ID                      |
-| `brand`         | String        | Yes      | -       | Brand name                            |
-| `stock`         | Number        | Yes      | `0`     | Inventory count                       |
-| `rating`        | Number        | No       | `0`     | Average rating (0-5)                  |
-| `reviews`       | Number        | No       | `0`     | Total review count                    |
-| `features`      | Array<String> | No       | -       | List of key features                  |
-| `switchType`    | String        | No       | -       | Keyboard switch type (if applicable)  |
-| `connectivity`  | String        | No       | -       | Connectivity options (e.g., Wireless) |
-| `isNew`         | Boolean       | No       | `false` | Flag for "New Arrival" status         |
-| `isFeatured`    | Boolean       | No       | `false` | Flag for "Featured" status            |
-| `createdAt`     | Date          | -        | Auto    | Timestamp of creation                 |
-| `updatedAt`     | Date          | -        | Auto    | Timestamp of last update              |
+| ชื่อฟิลด์ | ประเภท | จำเป็น | ค่าเริ่มต้น | คำอธิบาย |
+| -------- | ------ | ------ | ----------- | -------- |
+| `_id` | ObjectId | ใช่ | - | รหัสอ้างอิงสินค้า |
+| `name` | String | ใช่ | - | ชื่อสินค้า |
+| `description` | String | ใช่ | - | รายละเอียดสินค้า |
+| `price` | Number | ใช่ | - | ราคาขายปัจจุบัน |
+| `originalPrice` | Number | ไม่ | - | ราคาเต็ม (สำหรับแสดงส่วนลด) |
+| `image` | String | ใช่ | - | URL รูปภาพหลัก |
+| `images` | Array<String> | ไม่ | - | URL รูปภาพเพิ่มเติม |
+| `category` | String | ใช่ | - | หมวดหมู่สินค้า |
+| `brand` | String | ใช่ | - | ยี่ห้อสินค้า |
+| `stock` | Number | ใช่ | `0` | จำนวนสินค้าคงเหลือ |
+| `rating` | Number | ไม่ | `0` | คะแนนเฉลี่ย (0-5) |
+| `reviews` | Number | ไม่ | `0` | จำนวนรีวิวทั้งหมด |
+| `features` | Array<String> | ไม่ | - | รายการคุณสมบัติเด่น |
+| `switchType` | String | ไม่ | - | ประเภทสวิตช์ (สำหรับคีย์บอร์ด) |
+| `connectivity` | String | ไม่ | - | การเชื่อมต่อ (เช่น ไร้สาย) |
+| `isNew` | Boolean | ไม่ | `false` | สินค้ามาใหม่ |
+| `isFeatured` | Boolean | ไม่ | `false` | สินค้าแนะนำ |
+| `createdAt` | Date | - | อัตโนมัติ | วันที่ลงสินค้า |
+| `updatedAt` | Date | - | อัตโนมัติ | วันที่แก้ไขล่าสุด |
 
 ---
 
-## 3. Order
+## 3. Order (คำสั่งซื้อ)
 
 **Collection:** `orders`
-**Description:** Stores customer order details, items purchased, and status.
+**คำอธิบาย:** เก็บรายละเอียดคำสั่งซื้อ, รายการสินค้า และสถานะ
 
-| Field             | Type             | Required | Default     | Description                                                            |
-| ----------------- | ---------------- | -------- | ----------- | ---------------------------------------------------------------------- |
-| `_id`             | ObjectId         | Yes      | -           | Unique identifier                                                      |
-| `userId`          | ObjectId         | Yes      | -           | Reference to `User` collection                                         |
-| `items`           | Array<Subschema> | Yes      | -           | List of purchased items                                                |
-| `total`           | Number           | Yes      | -           | Total order amount                                                     |
-| `shippingAddress` | Subschema        | Yes      | -           | Shipping address snapshot                                              |
-| `status`          | String           | -        | `"pending"` | `"pending"`, `"processing"`, `"shipped"`, `"delivered"`, `"cancelled"` |
-| `paymentMethod`   | String           | Yes      | -           | Payment method used                                                    |
-| `createdAt`       | Date             | -        | Auto        | Timestamp of creation                                                  |
-| `updatedAt`       | Date             | -        | Auto        | Timestamp of last update                                               |
+| ชื่อฟิลด์ | ประเภท | จำเป็น | ค่าเริ่มต้น | คำอธิบาย |
+| -------- | ------ | ------ | ----------- | -------- |
+| `_id` | ObjectId | ใช่ | - | รหัสคำสั่งซื้อ |
+| `userId` | ObjectId | ใช่ | - | อ้างอิงไปยังผู้ใช้ (`User`) |
+| `items` | Array<Subschema> | ใช่ | - | รายการสินค้าที่ซื้อ |
+| `total` | Number | ใช่ | - | ยอดรวมทั้งสิ้น |
+| `shippingAddress` | Subschema | ใช่ | - | ที่อยู่จัดส่ง (Snapshot ณ เวลาซื้อ) |
+| `status` | String | - | `"pending"` | สถานะ: รอชำระ, กำลังเตรียม, จัดส่งแล้ว, สำเร็จ, ยกเลิก |
+| `paymentMethod` | String | ใช่ | - | วิธีการชำระเงิน |
+| `createdAt` | Date | - | อัตโนมัติ | วันที่สั่งซื้อ |
+| `updatedAt` | Date | - | อัตโนมัติ | วันที่อัปเดตสถานะ |
 
-### CartItem Subschema
+### CartItem Subschema (รายการสินค้าในตะกร้า)
 
-| Field       | Type     | Required | Description                        |
-| ----------- | -------- | -------- | ---------------------------------- |
-| `productId` | ObjectId | Yes      | Reference to `Product`             |
-| `name`      | String   | Yes      | Product name at time of purchase   |
-| `price`     | Number   | Yes      | Price per unit at time of purchase |
-| `image`     | String   | Yes      | Product image URL                  |
-| `quantity`  | Number   | Yes      | Quantity purchased (min 1)         |
+| ชื่อฟิลด์ | ประเภท | จำเป็น | คำอธิบาย |
+| -------- | ------ | ------ | -------- |
+| `productId` | ObjectId | ใช่ | อ้างอิงไปยังสินค้า (`Product`) |
+| `name` | String | ใช่ | ชื่อสินค้า (ณ เวลาซื้อ) |
+| `price` | Number | ใช่ | ราคาต่อหน่วย (ณ เวลาซื้อ) |
+| `image` | String | ใช่ | รูปสินค้า |
+| `quantity` | Number | ใช่ | จำนวนที่ซื้อ |
 
 ---
 
-## 4. Category
+## 4. Category (หมวดหมู่)
 
 **Collection:** `categories`
-**Description:** Stores product categories.
+**คำอธิบาย:** เก็บข้อมูลหมวดหมู่สินค้า
 
-| Field          | Type     | Required | Unique | Default | Description                          |
-| -------------- | -------- | -------- | ------ | ------- | ------------------------------------ |
-| `_id`          | ObjectId | Yes      | Yes    | -       | Unique identifier                    |
-| `name`         | String   | Yes      | -      | -       | Display name of the category         |
-| `slug`         | String   | Yes      | Yes    | -       | URL-friendly identifier              |
-| `icon`         | String   | Yes      | -      | -       | Icon identifier or URL               |
-| `productCount` | Number   | No       | -      | `0`     | Cached count of products in category |
-| `createdAt`    | Date     | -        | -      | Auto    | Timestamp of creation                |
-| `updatedAt`    | Date     | -        | -      | Auto    | Timestamp of last update             |
+| ชื่อฟิลด์ | ประเภท | จำเป็น | ไม่ซ้ำกัน | ค่าเริ่มต้น | คำอธิบาย |
+| -------- | ------ | ------ | --------- | ----------- | -------- |
+| `_id` | ObjectId | ใช่ | ใช่ | - | รหัสหมวดหมู่ |
+| `name` | String | ใช่ | - | - | ชื่อที่แสดง |
+| `slug` | String | ใช่ | ใช่ | - | URL-friendly name |
+| `icon` | String | ใช่ | - | - | ไอคอน |
+| `productCount` | Number | ไม่ | - | `0` | จำนวนสินค้าในหมวดนี้ (Cached) |
+| `createdAt` | Date | - | - | อัตโนมัติ | วันที่สร้าง |
+| `updatedAt` | Date | - | - | อัตโนมัติ | วันที่แก้ไขล่าสุด |
+
+---
+
+## 5. OTP (รหัสยืนยันตัวตน)
+
+**Collection:** `otps`
+**คำอธิบาย:** เก็บข้อมูลรหัสยืนยันชั่วคราวสำหรับการยืนยันอีเมล
+
+| ชื่อฟิลด์ | ประเภท | จำเป็น | ไม่ซ้ำกัน | ค่าเริ่มต้น | คำอธิบาย |
+| -------- | ------ | ------ | --------- | ----------- | -------- |
+| `_id` | ObjectId | ใช่ | ใช่ | - | รหัสอ้างอิง |
+| `email` | String | ใช่ | - | - | อีเมลของผู้ใช้ |
+| `otp` | String | ใช่ | - | - | รหัส 6 หลัก |
+| `createdAt` | Date | - | - | อัตโนมัติ | หมดอายุอัตโนมัติใน 5 นาที (TTL) |
