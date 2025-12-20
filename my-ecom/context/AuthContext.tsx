@@ -9,6 +9,13 @@ import React, {
 } from "react";
 import { User } from "@/lib/types";
 
+interface RegisterResult {
+  success: boolean;
+  error?: string;
+  requireVerification?: boolean;
+  email?: string;
+}
+
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
@@ -19,7 +26,12 @@ interface AuthContextType {
   register: (
     name: string,
     email: string,
-    password: string
+    password: string,
+    phoneNumber?: string
+  ) => Promise<RegisterResult>;
+  verifyOTP: (
+    email: string,
+    otp: string
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   isAuthenticated: boolean;
@@ -75,13 +87,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (
     name: string,
     email: string,
-    password: string
-  ): Promise<{ success: boolean; error?: string }> => {
+    password: string,
+    phoneNumber?: string
+  ): Promise<RegisterResult> => {
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, phoneNumber }),
       });
 
       const data = await res.json();
@@ -90,13 +103,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: data.error };
       }
 
+      // Registration now requires verification, don't auto-login
+      return {
+        success: true,
+        requireVerification: data.requireVerification,
+        email: data.email
+      };
+    } catch (error) {
+      console.error("Register error:", error);
+      return { success: false, error: "เกิดข้อผิดพลาดในการสมัครสมาชิก" };
+    }
+  };
+
+  const verifyOTP = async (
+    email: string,
+    otp: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch("/api/auth/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp }),
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        return { success: false, error: data.error };
+      }
+
+      // Auto-login after verification
       setUser(data.data);
       localStorage.setItem("currentUser", JSON.stringify(data.data));
 
       return { success: true };
     } catch (error) {
-      console.error("Register error:", error);
-      return { success: false, error: "เกิดข้อผิดพลาดในการสมัครสมาชิก" };
+      console.error("Verify OTP error:", error);
+      return { success: false, error: "เกิดข้อผิดพลาดในการยืนยัน OTP" };
     }
   };
 
@@ -112,6 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         login,
         register,
+        verifyOTP,
         logout,
         isAuthenticated: !!user,
       }}

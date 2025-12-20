@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import User, { hashPassword } from "@/models/User";
+import OTP from "@/models/OTP";
+import { generateOTP, sendOTPEmail } from "@/lib/email";
 
 export async function POST(request: Request) {
   try {
     await dbConnect();
 
-    const { name, email, password, role = "user" } = await request.json();
+    const { name, email, password, phoneNumber, role = "user" } = await request.json();
 
     // Validate input
     if (!name || !email || !password) {
@@ -23,37 +25,60 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if email already exists
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    const normalizedEmail = email.toLowerCase();
+
+    // Check if email already exists and is verified
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
-      return NextResponse.json(
-        { success: false, error: "อีเมลนี้ถูกใช้งานแล้ว" },
-        { status: 400 }
-      );
+      if (existingUser.isVerified) {
+        return NextResponse.json(
+          { success: false, error: "อีเมลนี้ถูกใช้งานแล้ว" },
+          { status: 400 }
+        );
+      } else {
+        // User exists but not verified - delete and allow re-registration
+        await User.deleteOne({ _id: existingUser._id });
+        await OTP.deleteMany({ email: normalizedEmail });
+      }
     }
 
     // Hash password
     const hashedPassword = await hashPassword(password);
 
-    // Create user
+    // Create user with isVerified = false
     const user = await User.create({
       name,
-      email: email.toLowerCase(),
+      email: normalizedEmail,
       password: hashedPassword,
+      phoneNumber,
       role,
+      isVerified: false,
     });
 
-    // Return user without password
-    const userResponse = {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      createdAt: user.createdAt,
-    };
+    // Generate and save OTP
+    const otpCode = generateOTP();
+    await OTP.deleteMany({ email: normalizedEmail }); // Clear old OTPs
+    await OTP.create({ email: normalizedEmail, otp: otpCode });
+
+    // Send OTP email
+    const emailSent = await sendOTPEmail(normalizedEmail, otpCode);
+
+    if (!emailSent) {
+      // Rollback user creation if email fails
+      await User.deleteOne({ _id: user._id });
+      return NextResponse.json(
+        { success: false, error: "ไม่สามารถส่งอีเมลยืนยันได้ กรุณาลองใหม่อีกครั้ง" },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
-      { success: true, data: userResponse },
+      {
+        success: true,
+        message: "สมัครสมาชิกสำเร็จ กรุณาตรวจสอบอีเมลเพื่อยืนยัน OTP",
+        requireVerification: true,
+        email: normalizedEmail
+      },
       { status: 201 }
     );
   } catch (error) {

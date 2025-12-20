@@ -9,10 +9,12 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@types/nodemailer": "^7.0.4",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.8.0",
     "mongoose": "^9.0.2",
     "next": "16.0.10",
+    "nodemailer": "^7.0.11",
     "omise": "^1.1.0",
     "react": "19.2.1",
     "react-dom": "19.2.1",

@@ -23,6 +23,17 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: "", content: "" });
 
+  // Password change state
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push("/login");
@@ -87,6 +98,54 @@ export default function ProfilePage() {
       setMessage({ type: "error", content: "เกิดข้อผิดพลาดในการเชื่อมต่อ" });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError("");
+    setPasswordSuccess("");
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError("รหัสผ่านใหม่ไม่ตรงกัน");
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setPasswordError("รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร");
+      return;
+    }
+
+    setChangingPassword(true);
+
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user?._id,
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setPasswordSuccess("เปลี่ยนรหัสผ่านสำเร็จ!");
+        setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+        setTimeout(() => {
+          setShowPasswordModal(false);
+          setPasswordSuccess("");
+        }, 2000);
+      } else {
+        setPasswordError(data.error || "เปลี่ยนรหัสผ่านไม่สำเร็จ");
+      }
+    } catch (error) {
+      console.error("Error changing password:", error);
+      setPasswordError("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -495,15 +554,17 @@ export default function ProfilePage() {
               <h4 style={{ color: 'white', fontWeight: 600, marginBottom: '0.25rem' }}>เปลี่ยนรหัสผ่าน</h4>
               <p style={{ color: '#64748b', fontSize: '0.875rem' }}>ปกป้องบัญชีด้วยรหัสผ่านที่รัดกุม</p>
             </div>
-            <button style={{
-              padding: '0.75rem 1.5rem',
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '10px',
-              color: 'white',
-              fontWeight: 500,
-              cursor: 'pointer'
-            }}>
+            <button
+              onClick={() => setShowPasswordModal(true)}
+              style={{
+                padding: '0.75rem 1.5rem',
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '10px',
+                color: 'white',
+                fontWeight: 500,
+                cursor: 'pointer'
+              }}>
               เปลี่ยนรหัสผ่าน
             </button>
           </div>
@@ -515,6 +576,167 @@ export default function ProfilePage() {
           to { transform: rotate(360deg); }
         }
       `}</style>
+
+      {/* Password Change Modal */}
+      {showPasswordModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          backdropFilter: 'blur(4px)'
+        }}>
+          <div style={{
+            background: '#1e293b',
+            borderRadius: '16px',
+            padding: '2rem',
+            width: '100%',
+            maxWidth: '400px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ color: 'white', fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                🔐 เปลี่ยนรหัสผ่าน
+              </h3>
+              <button
+                onClick={() => {
+                  setShowPasswordModal(false);
+                  setPasswordError("");
+                  setPasswordSuccess("");
+                  setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#64748b',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer'
+                }}
+              >×</button>
+            </div>
+
+            {passwordError && (
+              <div style={{
+                padding: '0.75rem 1rem',
+                background: 'rgba(239, 68, 68, 0.15)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: '8px',
+                color: '#ef4444',
+                marginBottom: '1rem',
+                fontSize: '0.9rem'
+              }}>⚠️ {passwordError}</div>
+            )}
+
+            {passwordSuccess && (
+              <div style={{
+                padding: '0.75rem 1rem',
+                background: 'rgba(34, 197, 94, 0.15)',
+                border: '1px solid rgba(34, 197, 94, 0.3)',
+                borderRadius: '8px',
+                color: '#22c55e',
+                marginBottom: '1rem',
+                fontSize: '0.9rem'
+              }}>✅ {passwordSuccess}</div>
+            )}
+
+            <form onSubmit={handlePasswordChange}>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                  รหัสผ่านปัจจุบัน
+                </label>
+                <input
+                  type="password"
+                  value={passwordData.currentPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    background: 'rgba(15, 23, 42, 0.5)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '10px',
+                    color: 'white',
+                    fontSize: '1rem',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                  รหัสผ่านใหม่
+                </label>
+                <input
+                  type="password"
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                  required
+                  minLength={6}
+                  placeholder="อย่างน้อย 6 ตัวอักษร"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    background: 'rgba(15, 23, 42, 0.5)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '10px',
+                    color: 'white',
+                    fontSize: '1rem',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                  ยืนยันรหัสผ่านใหม่
+                </label>
+                <input
+                  type="password"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    background: 'rgba(15, 23, 42, 0.5)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '10px',
+                    color: 'white',
+                    fontSize: '1rem',
+                    outline: 'none'
+                  }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={changingPassword}
+                style={{
+                  width: '100%',
+                  padding: '0.875rem',
+                  background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                  border: 'none',
+                  borderRadius: '10px',
+                  color: 'white',
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  cursor: changingPassword ? 'not-allowed' : 'pointer',
+                  opacity: changingPassword ? 0.7 : 1
+                }}
+              >
+                {changingPassword ? '⏳ กำลังเปลี่ยนรหัส...' : '🔒 เปลี่ยนรหัสผ่าน'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
