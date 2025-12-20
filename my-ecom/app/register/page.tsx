@@ -10,6 +10,7 @@ export default function RegisterPage() {
   const { register, isAuthenticated } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -39,15 +40,24 @@ export default function RegisterPage() {
 
     setIsLoading(true);
 
-    const result = await register(name, email, password);
+    const result = await register(name, email, password, phoneNumber || undefined);
 
     if (result.success) {
-      router.push("/");
+      if (result.requireVerification && result.email) {
+        // Redirect to OTP verification page
+        router.push(`/verify?email=${encodeURIComponent(result.email)}`);
+      } else {
+        router.push("/");
+      }
     } else {
       setError(result.error || "เกิดข้อผิดพลาด");
     }
 
     setIsLoading(false);
+  };
+
+  const handleSocialClick = () => {
+    alert("🚧 ฟีเจอร์นี้กำลังพัฒนา - Coming Soon!");
   };
 
   return (
@@ -85,6 +95,17 @@ export default function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">เบอร์โทรศัพท์ (ไม่บังคับ)</label>
+            <input
+              type="tel"
+              className="form-input"
+              placeholder="08x-xxx-xxxx"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
             />
           </div>
 
@@ -137,11 +158,11 @@ export default function RegisterPage() {
         </div>
 
         <div className="auth-social">
-          <button className="social-btn google">
+          <button className="social-btn google" onClick={handleSocialClick} type="button">
             <span>G</span>
             สมัครด้วย Google
           </button>
-          <button className="social-btn facebook">
+          <button className="social-btn facebook" onClick={handleSocialClick} type="button">
             <span>f</span>
             สมัครด้วย Facebook
           </button>
