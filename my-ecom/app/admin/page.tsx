@@ -52,7 +52,186 @@ interface ChartData {
 
 type TimeRange = 'day' | 'week' | 'month' | 'year';
 
+// Shipping Settings Section Component
+function ShippingSettingsSection() {
+  const [shippingCost, setShippingCost] = useState(50);
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState(1500);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch('/api/settings/shipping');
+        const data = await res.json();
+        if (data.success) {
+          setShippingCost(data.data.shippingCost);
+          setFreeShippingThreshold(data.data.freeShippingThreshold);
+        }
+      } catch (error) {
+        console.error('Error fetching shipping settings:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    setMessage(null);
+    try {
+      const res = await fetch('/api/settings/shipping', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shippingCost, freeShippingThreshold }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMessage({ type: 'success', text: '✅ บันทึกการตั้งค่าเรียบร้อยแล้ว' });
+      } else {
+        setMessage({ type: 'error', text: data.error || 'เกิดข้อผิดพลาด' });
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'ไม่สามารถบันทึกได้' });
+    } finally {
+      setIsSaving(false);
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <section style={{
+        background: 'rgba(30, 41, 59, 0.5)',
+        borderRadius: '16px',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        padding: '1.5rem',
+        marginBottom: '2rem'
+      }}>
+        <p style={{ color: '#64748b', textAlign: 'center' }}>กำลังโหลด...</p>
+      </section>
+    );
+  }
+
+  return (
+    <section style={{
+      background: 'rgba(30, 41, 59, 0.5)',
+      borderRadius: '16px',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      padding: '1.5rem',
+      marginBottom: '2rem'
+    }}>
+      <h3 style={{ color: 'white', fontSize: '1.125rem', fontWeight: 600, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <span>🚚</span> ตั้งค่าค่าจัดส่ง
+      </h3>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
+        {/* Shipping Cost */}
+        <div>
+          <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+            ค่าจัดส่งปกติ (บาท)
+          </label>
+          <input
+            type="number"
+            min="0"
+            value={shippingCost || ''}
+            onChange={(e) => setShippingCost(parseInt(e.target.value) || 0)}
+            style={{
+              width: '100%',
+              padding: '0.75rem 1rem',
+              borderRadius: '10px',
+              border: '1px solid rgba(139, 92, 246, 0.3)',
+              background: 'rgba(15, 23, 42, 0.5)',
+              color: 'white',
+              fontSize: '1rem',
+              outline: 'none'
+            }}
+          />
+          <p style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+            ตั้งเป็น 0 เพื่อส่งฟรีทุกออเดอร์
+          </p>
+        </div>
+
+        {/* Free Shipping Threshold */}
+        <div>
+          <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+            ยอดขั้นต่ำสำหรับส่งฟรี (บาท)
+          </label>
+          <input
+            type="number"
+            min="0"
+            value={freeShippingThreshold || ''}
+            onChange={(e) => setFreeShippingThreshold(parseInt(e.target.value) || 0)}
+            style={{
+              width: '100%',
+              padding: '0.75rem 1rem',
+              borderRadius: '10px',
+              border: '1px solid rgba(139, 92, 246, 0.3)',
+              background: 'rgba(15, 23, 42, 0.5)',
+              color: 'white',
+              fontSize: '1rem',
+              outline: 'none'
+            }}
+          />
+          <p style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+            ลูกค้าสั่งซื้อถึงยอดนี้จะได้ส่งฟรี
+          </p>
+        </div>
+      </div>
+
+      {/* Preview */}
+      <div style={{
+        marginTop: '1.5rem',
+        padding: '1rem',
+        borderRadius: '10px',
+        background: 'rgba(139, 92, 246, 0.1)',
+        border: '1px solid rgba(139, 92, 246, 0.2)'
+      }}>
+        <p style={{ color: '#a78bfa', fontSize: '0.875rem', marginBottom: '0.5rem' }}>👀 ตัวอย่างการแสดงผล:</p>
+        <p style={{ color: 'white', fontSize: '0.9rem' }}>
+          ค่าจัดส่ง: <strong style={{ color: '#10b981' }}>฿{shippingCost.toLocaleString()}</strong>
+          {' | '}
+          ส่งฟรีเมื่อสั่งขั้นต่ำ: <strong style={{ color: '#f59e0b' }}>฿{freeShippingThreshold.toLocaleString()}</strong>
+        </p>
+      </div>
+
+      {/* Save Button & Message */}
+      <div style={{ marginTop: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          style={{
+            padding: '0.75rem 2rem',
+            borderRadius: '10px',
+            border: 'none',
+            background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+            color: 'white',
+            fontWeight: 600,
+            fontSize: '0.9rem',
+            cursor: isSaving ? 'not-allowed' : 'pointer',
+            opacity: isSaving ? 0.7 : 1,
+            boxShadow: '0 4px 16px rgba(139, 92, 246, 0.3)'
+          }}
+        >
+          {isSaving ? '⏳ กำลังบันทึก...' : '💾 บันทึกการตั้งค่า'}
+        </button>
+        {message && (
+          <span style={{
+            color: message.type === 'success' ? '#10b981' : '#ef4444',
+            fontSize: '0.875rem'
+          }}>
+            {message.text}
+          </span>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export default function AdminDashboard() {
+
   const router = useRouter();
   const { user, isLoading } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
@@ -103,7 +282,7 @@ export default function AdminDashboard() {
         const totalRevenue = fetchedOrders.reduce((sum: number, order: Order) => sum + order.total, 0);
 
         // Get recent orders (last 5)
-        const sortedOrders = [...fetchedOrders].sort((a: Order, b: Order) => 
+        const sortedOrders = [...fetchedOrders].sort((a: Order, b: Order) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         setRecentOrders(sortedOrders.slice(0, 5));
@@ -160,13 +339,13 @@ export default function AdminDashboard() {
           hour.setHours(now.getHours() - i, 0, 0, 0);
           const hourEnd = new Date(hour);
           hourEnd.setHours(hour.getHours() + 1);
-          
+
           const hourOrders = allOrders.filter((o: Order) => {
             const orderDate = new Date(o.createdAt);
             return orderDate >= hour && orderDate < hourEnd;
           });
           const hourRevenue = hourOrders.reduce((sum: number, o: Order) => sum + o.total, 0);
-          
+
           data.push({
             name: `${hour.getHours().toString().padStart(2, '0')}:00`,
             revenue: hourRevenue,
@@ -183,13 +362,13 @@ export default function AdminDashboard() {
           date.setHours(0, 0, 0, 0);
           const nextDate = new Date(date);
           nextDate.setDate(date.getDate() + 1);
-          
+
           const dayOrders = allOrders.filter((o: Order) => {
             const orderDate = new Date(o.createdAt);
             return orderDate >= date && orderDate < nextDate;
           });
           const dayRevenue = dayOrders.reduce((sum: number, o: Order) => sum + o.total, 0);
-          
+
           data.push({
             name: date.toLocaleDateString('th-TH', { weekday: 'short' }),
             revenue: dayRevenue,
@@ -206,13 +385,13 @@ export default function AdminDashboard() {
           date.setHours(0, 0, 0, 0);
           const nextDate = new Date(date);
           nextDate.setDate(date.getDate() + 1);
-          
+
           const dayOrders = allOrders.filter((o: Order) => {
             const orderDate = new Date(o.createdAt);
             return orderDate >= date && orderDate < nextDate;
           });
           const dayRevenue = dayOrders.reduce((sum: number, o: Order) => sum + o.total, 0);
-          
+
           data.push({
             name: `${date.getDate()}/${date.getMonth() + 1}`,
             revenue: dayRevenue,
@@ -230,13 +409,13 @@ export default function AdminDashboard() {
           month.setHours(0, 0, 0, 0);
           const nextMonth = new Date(month);
           nextMonth.setMonth(month.getMonth() + 1);
-          
+
           const monthOrders = allOrders.filter((o: Order) => {
             const orderDate = new Date(o.createdAt);
             return orderDate >= month && orderDate < nextMonth;
           });
           const monthRevenue = monthOrders.reduce((sum: number, o: Order) => sum + o.total, 0);
-          
+
           data.push({
             name: month.toLocaleDateString('th-TH', { month: 'short' }),
             revenue: monthRevenue,
@@ -416,13 +595,18 @@ export default function AdminDashboard() {
       <header className="admin-header">
         <div className="admin-header-content">
           <div className="admin-header-left">
-            <div className="admin-logo">
-              <span className="admin-logo-icon">⚙️</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <span style={{ fontSize: '2rem' }}>⚙️</span>
               <div>
-                <h1>Admin Panel</h1>
-                <p>KeyBoardTH Management</p>
+                <h1 style={{ color: 'white', fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>
+                  Admin Panel
+                </h1>
+                <p style={{ color: '#94a3b8', fontSize: '0.75rem', margin: '0.1rem 0 0' }}>
+                  KeyBoardTH Management
+                </p>
               </div>
             </div>
+
           </div>
           <div className="admin-header-right">
             <div className="admin-datetime">
@@ -448,10 +632,17 @@ export default function AdminDashboard() {
 
       <main className="admin-main">
         {/* Welcome Section */}
-        <section className="admin-welcome">
-          <div className="admin-welcome-content">
-            <h2>ยินดีต้อนรับ, {user.name}! 👋</h2>
-            <p>นี่คือภาพรวมของร้านค้าในวันนี้</p>
+        <section style={{ marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <span style={{ fontSize: '2rem' }}>👋</span>
+            <div>
+              <h2 style={{ color: 'white', fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>
+                ยินดีต้อนรับ, {user.name}!
+              </h2>
+              <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: '0.25rem 0 0' }}>
+                นี่คือภาพรวมของร้านค้าในวันนี้
+              </p>
+            </div>
           </div>
         </section>
 
@@ -527,8 +718,8 @@ export default function AdminDashboard() {
                     fontSize: '0.875rem',
                     cursor: 'pointer',
                     transition: 'all 0.2s',
-                    background: timeRange === option.value 
-                      ? 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)' 
+                    background: timeRange === option.value
+                      ? 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)'
                       : 'rgba(255, 255, 255, 0.05)',
                     color: timeRange === option.value ? 'white' : '#94a3b8',
                     boxShadow: timeRange === option.value ? '0 4px 16px rgba(139, 92, 246, 0.3)' : 'none'
@@ -558,13 +749,13 @@ export default function AdminDashboard() {
                 <AreaChart data={chartData}>
                   <defs>
                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4}/>
-                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                   <XAxis dataKey="name" stroke="#64748b" fontSize={11} interval={timeRange === 'month' ? 4 : 0} />
-                  <YAxis stroke="#64748b" fontSize={11} tickFormatter={(value) => value >= 1000 ? `฿${(value/1000).toFixed(0)}k` : `฿${value}`} />
+                  <YAxis stroke="#64748b" fontSize={11} tickFormatter={(value) => value >= 1000 ? `฿${(value / 1000).toFixed(0)}k` : `฿${value}`} />
                   <Tooltip content={<CustomTooltip />} />
                   <Area
                     type="monotone"
@@ -660,7 +851,7 @@ export default function AdminDashboard() {
                 ดูทั้งหมด →
               </Link>
             </div>
-            
+
             {recentOrders.length === 0 ? (
               <p style={{ color: '#64748b', textAlign: 'center', padding: '2rem' }}>ยังไม่มีคำสั่งซื้อ</p>
             ) : (
@@ -720,7 +911,7 @@ export default function AdminDashboard() {
                 จัดการ →
               </Link>
             </div>
-            
+
             {lowStockProducts.length === 0 ? (
               <div style={{ color: '#10b981', textAlign: 'center', padding: '2rem' }}>
                 <span style={{ fontSize: '2rem' }}>✅</span>
@@ -771,9 +962,8 @@ export default function AdminDashboard() {
 
         {/* Quick Actions */}
         <section className="admin-actions-section">
-          <h3 className="admin-section-title">
-            <span className="admin-section-icon">🚀</span>
-            จัดการร้านค้า
+          <h3 style={{ color: 'white', fontSize: '1.125rem', fontWeight: 600, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span>🚀</span> จัดการร้านค้า
           </h3>
           <div className="admin-actions-grid">
             {quickActions.map((action, index) => (
@@ -797,11 +987,13 @@ export default function AdminDashboard() {
           </div>
         </section>
 
+        {/* Shipping Settings */}
+        <ShippingSettingsSection />
+
         {/* System Status */}
         <section className="admin-recent-section">
-          <h3 className="admin-section-title">
-            <span className="admin-section-icon">🔧</span>
-            สรุปสถานะระบบ
+          <h3 style={{ color: 'white', fontSize: '1.125rem', fontWeight: 600, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span>🔧</span> สรุปสถานะระบบ
           </h3>
           <div className="admin-system-status">
             <div className="admin-status-card">

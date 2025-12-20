@@ -10,6 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { formatPrice } from "@/lib/mockData";
 
+
 declare global {
   interface Window {
     Omise: {
@@ -97,9 +98,33 @@ export default function CheckoutPage() {
     postalCode: "",
   });
 
+  // Shipping settings from API
+  const [shippingSettings, setShippingSettings] = useState({
+    shippingCost: 50,
+    freeShippingThreshold: 1500,
+  });
+
   const subtotal = getCartTotal();
-  const shipping = subtotal >= 1500 ? 0 : 50;
+  const shipping = subtotal >= shippingSettings.freeShippingThreshold ? 0 : shippingSettings.shippingCost;
+  const amountForFreeShipping = subtotal >= shippingSettings.freeShippingThreshold ? 0 : shippingSettings.freeShippingThreshold - subtotal;
   const total = subtotal + shipping;
+
+  // Fetch shipping settings from API
+  useEffect(() => {
+    const fetchShippingSettings = async () => {
+      try {
+        const res = await fetch("/api/settings/shipping");
+        const data = await res.json();
+        if (data.success) {
+          setShippingSettings(data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching shipping settings:", error);
+      }
+    };
+    fetchShippingSettings();
+  }, []);
+
 
   // Fetch Thai address data
   useEffect(() => {
@@ -946,6 +971,23 @@ export default function CheckoutPage() {
             <div className="cart-summary-note">
               🔒 ชำระเงินผ่าน Omise อย่างปลอดภัย
             </div>
+
+            {/* Free Shipping Progress */}
+            {amountForFreeShipping > 0 && (
+              <div style={{
+                marginTop: "1rem",
+                padding: "0.75rem 1rem",
+                borderRadius: "10px",
+                background: "linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(109, 40, 217, 0.15) 100%)",
+                border: "1px solid rgba(139, 92, 246, 0.3)",
+                textAlign: "center"
+              }}>
+                <span style={{ color: "#a78bfa", fontSize: "0.85rem" }}>
+                  🚛 สั่งซื้อเพิ่มอีก <strong style={{ color: "#f59e0b" }}>฿{amountForFreeShipping.toLocaleString()}</strong> เพื่อรับส่งฟรี!
+                </span>
+              </div>
+            )}
+
 
             <Link
               href="/cart"

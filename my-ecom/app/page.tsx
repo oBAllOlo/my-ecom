@@ -58,17 +58,8 @@ export default function Home() {
             เลือกช้อปคีย์บอร์ด Mechanical และ Gaming จากแบรนด์ชั้นนำทั่วโลก
             พร้อมรับประกันสินค้าและบริการหลังการขายครบวงจร
           </p>
-          <div className="hero-buttons">
-            <Link href="/products" className="btn btn-primary">
-              🛍️ ช้อปเลย
-            </Link>
-            <Link
-              href="/products?category=gaming"
-              className="btn btn-secondary"
-            >
-              🎮 คีย์บอร์ดเกมมิ่ง
-            </Link>
-          </div>
+
+
         </div>
       </section>
 

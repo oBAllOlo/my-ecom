@@ -60,7 +60,13 @@ export default function CartItemComponent({ item }: CartItemProps) {
             +
           </button>
         </div>
+        {quantity >= product.stock && (
+          <span style={{ fontSize: '0.7rem', color: '#f59e0b', marginTop: '0.25rem' }}>
+            (สูงสุด {product.stock} ชิ้น)
+          </span>
+        )}
       </div>
+
 
       {/* Subtotal */}
       <div className="cart-item-subtotal">
