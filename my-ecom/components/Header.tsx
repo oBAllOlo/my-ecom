@@ -50,6 +50,9 @@ export default function Header() {
           <Link href="/products" className="nav-link">
             สินค้าทั้งหมด
           </Link>
+          <Link href="/custom" className="nav-link">
+            คีย์บอร์ดคัสตอม
+          </Link>
 
           {/* Cart */}
           <Link href="/cart" className="cart-link">
@@ -158,6 +161,13 @@ export default function Header() {
             onClick={() => setIsMenuOpen(false)}
           >
             สินค้าทั้งหมด
+          </Link>
+          <Link
+            href="/custom"
+            className="mobile-nav-link"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            คีย์บอร์ดคัสตอม
           </Link>
           <Link
             href="/cart"
