@@ -9,8 +9,8 @@ export interface ICartItem {
 }
 
 export interface IOrder extends Document {
-  _id: string;
   userId: mongoose.Types.ObjectId;
+
   items: ICartItem[];
   total: number;
   shippingAddress: {
@@ -26,9 +26,14 @@ export interface IOrder extends Document {
   paymentStatus: "pending" | "paid" | "failed";
   chargeId?: string;
   stockReserved: boolean;
+  // Shipping tracking
+  trackingNumber?: string;
+  carrier?: "kerry" | "flash" | "jt" | "thaipost" | "scg" | "other";
+  shippedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
+
 
 const CartItemSchema = new Schema<ICartItem>({
   productId: { type: Schema.Types.ObjectId, ref: "Product", required: true },
@@ -56,10 +61,10 @@ const OrderSchema = new Schema<IOrder>(
       enum: ["pending", "processing", "shipped", "delivered", "cancelled"],
       default: "pending",
     },
-    paymentMethod: { 
-      type: String, 
+    paymentMethod: {
+      type: String,
       enum: ["card", "promptpay", "banking", "cod"],
-      required: true 
+      required: true
     },
     paymentStatus: {
       type: String,
@@ -68,7 +73,15 @@ const OrderSchema = new Schema<IOrder>(
     },
     chargeId: { type: String },
     stockReserved: { type: Boolean, default: false },
+    // Shipping tracking
+    trackingNumber: { type: String },
+    carrier: {
+      type: String,
+      enum: ["kerry", "flash", "jt", "thaipost", "scg", "other"]
+    },
+    shippedAt: { type: Date },
   },
+
   { timestamps: true }
 );
 

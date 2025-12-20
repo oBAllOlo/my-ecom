@@ -29,8 +29,20 @@ interface Order {
     province: string;
     postalCode: string;
   };
+  trackingNumber?: string;
+  carrier?: string;
+  shippedAt?: string;
   createdAt: string;
 }
+
+const carriers = [
+  { id: "kerry", name: "Kerry Express", icon: "🟠" },
+  { id: "flash", name: "Flash Express", icon: "🟡" },
+  { id: "jt", name: "J&T Express", icon: "🔴" },
+  { id: "thaipost", name: "ไปรษณีย์ไทย", icon: "🟤" },
+  { id: "scg", name: "SCG Express", icon: "🟢" },
+  { id: "other", name: "อื่นๆ", icon: "⚪" },
+];
 
 const statusConfig = {
   pending: { label: "รอดำเนินการ", color: "status-pending", icon: "⏳" },
@@ -46,6 +58,14 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  // Shipping modal state
+  const [showShippingModal, setShowShippingModal] = useState(false);
+  const [shippingOrder, setShippingOrder] = useState<Order | null>(null);
+  const [trackingNumber, setTrackingNumber] = useState("");
+  const [selectedCarrier, setSelectedCarrier] = useState("kerry");
+  const [isShipping, setIsShipping] = useState(false);
+  const [shippingMessage, setShippingMessage] = useState({ type: "", text: "" });
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== "admin")) {
@@ -87,6 +107,55 @@ export default function AdminOrders() {
       }
     } catch (error) {
       console.error("Error updating order:", error);
+    }
+  };
+
+  const openShippingModal = (order: Order) => {
+    setShippingOrder(order);
+    setTrackingNumber("");
+    setSelectedCarrier("kerry");
+    setShippingMessage({ type: "", text: "" });
+    setShowShippingModal(true);
+    setSelectedOrder(null);
+  };
+
+  const handleShipOrder = async () => {
+    if (!shippingOrder || !trackingNumber.trim()) {
+      setShippingMessage({ type: "error", text: "กรุณากรอกหมายเลขพัสดุ" });
+      return;
+    }
+
+    setIsShipping(true);
+    try {
+      const res = await fetch("/api/orders/ship", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: shippingOrder._id,
+          trackingNumber: trackingNumber.trim(),
+          carrier: selectedCarrier,
+        }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setShippingMessage({ type: "success", text: "📧 จัดส่งสำเร็จและส่งอีเมลแจ้งลูกค้าแล้ว!" });
+        setOrders(orders.map((o) =>
+          o._id === shippingOrder._id
+            ? { ...o, status: "shipped" as const, trackingNumber, carrier: selectedCarrier }
+            : o
+        ));
+        setTimeout(() => {
+          setShowShippingModal(false);
+        }, 2000);
+      } else {
+        setShippingMessage({ type: "error", text: data.error || "เกิดข้อผิดพลาด" });
+      }
+    } catch (error) {
+      console.error("Error shipping order:", error);
+      setShippingMessage({ type: "error", text: "เกิดข้อผิดพลาดในการเชื่อมต่อ" });
+    } finally {
+      setIsShipping(false);
     }
   };
 
@@ -253,11 +322,59 @@ export default function AdminOrders() {
               {/* Update Status */}
               <div className="modal-section">
                 <h3>🔄 อัปเดตสถานะ</h3>
+
+                {/* Show shipping button for processing orders */}
+                {selectedOrder.status === "processing" && (
+                  <button
+                    onClick={() => openShippingModal(selectedOrder)}
+                    style={{
+                      width: "100%",
+                      padding: "1rem",
+                      marginBottom: "1rem",
+                      background: "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)",
+                      border: "none",
+                      borderRadius: "12px",
+                      color: "white",
+                      fontWeight: 700,
+                      fontSize: "1rem",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "0.5rem",
+                    }}
+                  >
+                    🚚 จัดส่งพัสดุ (กรอก Tracking)
+                  </button>
+                )}
+
+                {/* Show tracking info if shipped */}
+                {selectedOrder.trackingNumber && (
+                  <div style={{
+                    background: "rgba(139, 92, 246, 0.15)",
+                    border: "1px solid rgba(139, 92, 246, 0.3)",
+                    borderRadius: "12px",
+                    padding: "1rem",
+                    marginBottom: "1rem",
+                  }}>
+                    <p style={{ color: "#a78bfa", margin: "0 0 4px", fontSize: "0.8rem" }}>📦 หมายเลขพัสดุ</p>
+                    <p style={{ color: "white", margin: 0, fontSize: "1.1rem", fontWeight: 700, letterSpacing: "1px" }}>
+                      {selectedOrder.trackingNumber}
+                    </p>
+                    <p style={{ color: "#64748b", margin: "8px 0 0", fontSize: "0.8rem" }}>
+                      🏢 {carriers.find(c => c.id === selectedOrder.carrier)?.name || selectedOrder.carrier}
+                    </p>
+                  </div>
+                )}
+
                 <div className="status-buttons">
                   {Object.entries(statusConfig).map(([key, config]) => (
                     <button
                       key={key}
-                      onClick={() => handleStatusUpdate(selectedOrder._id, key)}
+                      onClick={() => key === "shipped" && selectedOrder.status === "processing"
+                        ? openShippingModal(selectedOrder)
+                        : handleStatusUpdate(selectedOrder._id, key)
+                      }
                       className={`status-btn ${config.color} ${selectedOrder.status === key ? "active" : ""}`}
                     >
                       {config.icon} {config.label}
@@ -269,6 +386,121 @@ export default function AdminOrders() {
           </div>
         </div>
       )}
+
+      {/* Shipping Modal */}
+      {showShippingModal && shippingOrder && (
+        <div className="admin-modal-overlay" onClick={() => setShowShippingModal(false)}>
+          <div className="admin-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "480px" }}>
+            <div className="admin-modal-header">
+              <h2>🚚 จัดส่งพัสดุ</h2>
+              <button onClick={() => setShowShippingModal(false)} className="admin-modal-close">
+                ✕
+              </button>
+            </div>
+            <div className="admin-modal-body">
+              <p style={{ color: "#94a3b8", marginBottom: "1.5rem" }}>
+                คำสั่งซื้อ #{shippingOrder._id.slice(-8).toUpperCase()} - {shippingOrder.shippingAddress.fullName}
+              </p>
+
+              {shippingMessage.text && (
+                <div style={{
+                  padding: "0.75rem 1rem",
+                  borderRadius: "10px",
+                  marginBottom: "1rem",
+                  background: shippingMessage.type === "success" ? "rgba(34, 197, 94, 0.15)" : "rgba(239, 68, 68, 0.15)",
+                  border: `1px solid ${shippingMessage.type === "success" ? "rgba(34, 197, 94, 0.3)" : "rgba(239, 68, 68, 0.3)"}`,
+                  color: shippingMessage.type === "success" ? "#22c55e" : "#ef4444",
+                }}>
+                  {shippingMessage.text}
+                </div>
+              )}
+
+              {/* Carrier Selection */}
+              <div style={{ marginBottom: "1.5rem" }}>
+                <label style={{ display: "block", color: "#94a3b8", fontSize: "0.875rem", marginBottom: "0.5rem" }}>
+                  🏢 เลือกบริษัทขนส่ง
+                </label>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.5rem" }}>
+                  {carriers.map((carrier) => (
+                    <button
+                      key={carrier.id}
+                      type="button"
+                      onClick={() => setSelectedCarrier(carrier.id)}
+                      style={{
+                        padding: "0.75rem",
+                        borderRadius: "10px",
+                        border: selectedCarrier === carrier.id ? "2px solid #8b5cf6" : "1px solid rgba(255,255,255,0.1)",
+                        background: selectedCarrier === carrier.id ? "rgba(139, 92, 246, 0.2)" : "rgba(255,255,255,0.05)",
+                        color: selectedCarrier === carrier.id ? "#a78bfa" : "#94a3b8",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem",
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      <span>{carrier.icon}</span>
+                      <span style={{ fontSize: "0.85rem" }}>{carrier.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tracking Number Input */}
+              <div style={{ marginBottom: "1.5rem" }}>
+                <label style={{ display: "block", color: "#94a3b8", fontSize: "0.875rem", marginBottom: "0.5rem" }}>
+                  📦 หมายเลขพัสดุ (Tracking Number)
+                </label>
+                <input
+                  type="text"
+                  value={trackingNumber}
+                  onChange={(e) => setTrackingNumber(e.target.value.toUpperCase())}
+                  placeholder="เช่น TH1234567890"
+                  style={{
+                    width: "100%",
+                    padding: "0.875rem 1rem",
+                    background: "rgba(15, 23, 42, 0.5)",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    borderRadius: "10px",
+                    color: "white",
+                    fontSize: "1rem",
+                    letterSpacing: "1px",
+                    outline: "none",
+                  }}
+                />
+              </div>
+
+              {/* Submit Button */}
+              <button
+                onClick={handleShipOrder}
+                disabled={isShipping || !trackingNumber.trim()}
+                style={{
+                  width: "100%",
+                  padding: "1rem",
+                  background: isShipping || !trackingNumber.trim()
+                    ? "rgba(139, 92, 246, 0.3)"
+                    : "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)",
+                  border: "none",
+                  borderRadius: "12px",
+                  color: "white",
+                  fontWeight: 700,
+                  fontSize: "1rem",
+                  cursor: isShipping || !trackingNumber.trim() ? "not-allowed" : "pointer",
+                  opacity: isShipping || !trackingNumber.trim() ? 0.6 : 1,
+                }}
+              >
+                {isShipping ? "⏳ กำลังดำเนินการ..." : "✅ ยืนยันจัดส่งและแจ้งลูกค้า"}
+              </button>
+
+              <p style={{ color: "#64748b", fontSize: "0.75rem", textAlign: "center", marginTop: "1rem" }}>
+                📧 ระบบจะส่งอีเมลแจ้งหมายเลขพัสดุให้ลูกค้าอัตโนมัติ
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       <style jsx>{`
         .admin-back-link {

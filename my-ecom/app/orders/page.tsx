@@ -247,8 +247,8 @@ export default function OrdersPage() {
           </div>
 
           {orders.length === 0 ? (
-            <div style={{ 
-              padding: '4rem 2rem', 
+            <div style={{
+              padding: '4rem 2rem',
               textAlign: 'center',
               background: 'rgba(30, 41, 59, 0.5)',
               borderRadius: '16px',
@@ -278,8 +278,8 @@ export default function OrdersPage() {
               <p style={{ color: '#94a3b8', marginBottom: '2rem', maxWidth: '300px' }}>
                 คุณยังไม่ได้ทำการสั่งซื้อสินค้า เริ่มช้อปปิ้งสินค้าที่คุณชื่นชอบได้เลย!
               </p>
-              <Link 
-                href="/products" 
+              <Link
+                href="/products"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -303,8 +303,8 @@ export default function OrdersPage() {
               {orders.map((order) => {
                 const statusConfig = getStatusConfig(order.status);
                 return (
-                  <div 
-                    key={order._id} 
+                  <div
+                    key={order._id}
                     className="admin-action-card"
                     style={{ padding: 0, overflow: 'hidden' }}
                   >
@@ -367,7 +367,7 @@ export default function OrdersPage() {
                     <div style={{ padding: '1.25rem 1.5rem' }}>
                       <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
                         {order.items.slice(0, 5).map((item, index) => (
-                          <div 
+                          <div
                             key={index}
                             style={{
                               width: '56px',
@@ -378,8 +378,8 @@ export default function OrdersPage() {
                               border: '1px solid rgba(255, 255, 255, 0.05)'
                             }}
                           >
-                            <img 
-                              src={item.image} 
+                            <img
+                              src={item.image}
                               alt={item.name}
                               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             />
@@ -403,17 +403,35 @@ export default function OrdersPage() {
                           </div>
                         )}
 
-                        <div style={{ marginLeft: 'auto' }}>
+                        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                           <span style={{
                             color: '#64748b',
                             fontSize: '0.875rem'
                           }}>
                             {order.items.length} รายการ
                           </span>
+                          <Link
+                            href={`/tracking?order=${order._id}`}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.5rem',
+                              padding: '0.5rem 1rem',
+                              background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
+                              borderRadius: '8px',
+                              color: 'white',
+                              fontSize: '0.85rem',
+                              fontWeight: 600,
+                              textDecoration: 'none',
+                            }}
+                          >
+                            📦 ติดตามพัสดุ
+                          </Link>
                         </div>
                       </div>
                     </div>
                   </div>
+
                 );
               })}
             </div>
