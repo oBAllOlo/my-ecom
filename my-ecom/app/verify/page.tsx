@@ -3,17 +3,17 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 import Link from "next/link";
 
 export default function VerifyPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { verifyOTP, isAuthenticated } = useAuth();
+    const { showToast } = useToast();
 
     const email = searchParams.get("email") || "";
     const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [isResending, setIsResending] = useState(false);
     const [countdown, setCountdown] = useState(0);
@@ -71,12 +71,10 @@ export default function VerifyPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError("");
-        setSuccess("");
 
         const otpCode = otp.join("");
         if (otpCode.length !== 6) {
-            setError("กรุณากรอกรหัส OTP ให้ครบ 6 หลัก");
+            showToast("กรุณากรอกรหัส OTP ให้ครบ 6 หลัก", "error");
             return;
         }
 
@@ -84,9 +82,10 @@ export default function VerifyPage() {
         const result = await verifyOTP(email, otpCode);
 
         if (result.success) {
+            showToast("ยืนยันอีเมลสำเร็จ!", "success");
             router.push("/");
         } else {
-            setError(result.error || "เกิดข้อผิดพลาด");
+            showToast(result.error || "เกิดข้อผิดพลาด", "error");
             setOtp(["", "", "", "", "", ""]);
             inputRefs.current[0]?.focus();
         }
@@ -97,8 +96,6 @@ export default function VerifyPage() {
         if (countdown > 0 || isResending) return;
 
         setIsResending(true);
-        setError("");
-        setSuccess("");
 
         try {
             const res = await fetch("/api/auth/resend-otp", {
@@ -110,15 +107,15 @@ export default function VerifyPage() {
             const data = await res.json();
 
             if (data.success) {
-                setSuccess("📧 ส่งรหัส OTP ใหม่แล้ว กรุณาตรวจสอบอีเมล");
-                setCountdown(60); // 60 seconds cooldown
+                showToast("📧 ส่งรหัส OTP ใหม่แล้ว!", "success");
+                setCountdown(60);
                 setOtp(["", "", "", "", "", ""]);
                 inputRefs.current[0]?.focus();
             } else {
-                setError(data.error || "ไม่สามารถส่ง OTP ได้");
+                showToast(data.error || "ไม่สามารถส่ง OTP ได้", "error");
             }
         } catch {
-            setError("เกิดข้อผิดพลาดในการส่ง OTP");
+            showToast("เกิดข้อผิดพลาดในการส่ง OTP", "error");
         }
 
         setIsResending(false);
@@ -156,8 +153,6 @@ export default function VerifyPage() {
                 </div>
 
                 <form className="auth-form" onSubmit={handleSubmit}>
-                    {error && <div className="auth-error">⚠️ {error}</div>}
-                    {success && <div className="auth-success">✅ {success}</div>}
 
                     <div className="otp-input-container">
                         {otp.map((digit, index) => (

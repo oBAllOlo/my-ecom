@@ -4,13 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 
 export default function LoginPage() {
   const router = useRouter();
   const { login, isAuthenticated } = useAuth();
+  const { showToast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   // Redirect if already logged in
@@ -21,19 +22,20 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setIsLoading(true);
 
     const result = await login(email, password);
 
     if (result.success) {
+      showToast("เข้าสู่ระบบสำเร็จ!", "success");
       router.push("/");
     } else {
-      setError(result.error || "เกิดข้อผิดพลาด");
+      showToast(result.error || "เกิดข้อผิดพลาด", "error");
     }
 
     setIsLoading(false);
   };
+
 
   return (
     <div className="auth-page">
@@ -47,7 +49,7 @@ export default function LoginPage() {
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
-          {error && <div className="auth-error">⚠️ {error}</div>}
+
 
           <div className="form-group">
             <label className="form-label">อีเมล</label>
@@ -92,20 +94,8 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="auth-divider">
-          <span>หรือ</span>
-        </div>
 
-        <div className="auth-social">
-          <button className="social-btn google">
-            <span>G</span>
-            เข้าสู่ระบบด้วย Google
-          </button>
-          <button className="social-btn facebook">
-            <span>f</span>
-            เข้าสู่ระบบด้วย Facebook
-          </button>
-        </div>
+
 
         <p className="auth-footer">
           ยังไม่มีบัญชี?{" "}
