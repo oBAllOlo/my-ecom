@@ -168,9 +168,11 @@ export default function CheckoutPage() {
               phone: addr.phone || prev.phone,
               street: addr.street || prev.street,
               district: addr.district || prev.district,
+              subDistrict: addr.subDistrict || prev.subDistrict,
               province: addr.province || prev.province,
               postalCode: addr.postalCode || prev.postalCode,
             }));
+
 
             // Find province ID to load districts
             const matchedProvince = provinces.find(p => p.name_th === addr.province);
@@ -210,9 +212,11 @@ export default function CheckoutPage() {
         phone: shippingForm.phone,
         street: shippingForm.street,
         district: shippingForm.district,
+        subDistrict: shippingForm.subDistrict,
         province: shippingForm.province,
         postalCode: shippingForm.postalCode,
       };
+
 
       const orderData = {
         userId: user._id,
@@ -705,17 +709,6 @@ export default function CheckoutPage() {
                   <span className="payment-label">บัตรเครดิต/เดบิต</span>
                 </label>
 
-                <label className={`payment-option ${paymentMethod === "promptpay" ? "selected" : ""}`}>
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="promptpay"
-                    checked={paymentMethod === "promptpay"}
-                    onChange={() => setPaymentMethod("promptpay")}
-                  />
-                  <span className="payment-icon">📱</span>
-                  <span className="payment-label">พร้อมเพย์ QR Code</span>
-                </label>
 
                 <label className={`payment-option ${paymentMethod === "banking" ? "selected" : ""}`}>
                   <input

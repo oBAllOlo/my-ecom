@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 
 interface Order {
     _id: string;
@@ -12,6 +13,7 @@ interface Order {
     shippedAt?: string;
     createdAt: string;
     total: number;
+    userId?: string | { _id: string };
     items: Array<{
         name: string;
         quantity: number;
@@ -44,11 +46,15 @@ const statusConfig = {
 
 export default function TrackingPage() {
     const searchParams = useSearchParams();
+    const { user } = useAuth();
     const orderId = searchParams.get("order");
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [searchInput, setSearchInput] = useState(orderId || "");
+    const [confirmLoading, setConfirmLoading] = useState(false);
+    const [confirmMessage, setConfirmMessage] = useState({ type: "", text: "" });
+
 
     const fetchOrder = async (id: string) => {
         setLoading(true);
@@ -85,6 +91,36 @@ export default function TrackingPage() {
         }
     };
 
+    const handleConfirmReceived = async () => {
+        if (!order) return;
+
+        setConfirmLoading(true);
+        setConfirmMessage({ type: "", text: "" });
+
+        try {
+            const res = await fetch("/api/orders/confirm", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    orderId: order._id,
+                    userId: user?._id,
+                }),
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                setConfirmMessage({ type: "success", text: "✅ ยืนยันรับสินค้าเรียบร้อย ขอบคุณที่ใช้บริการ!" });
+                setOrder({ ...order, status: "delivered" });
+            } else {
+                setConfirmMessage({ type: "error", text: data.error || "เกิดข้อผิดพลาด" });
+            }
+        } catch {
+            setConfirmMessage({ type: "error", text: "เกิดข้อผิดพลาดในการเชื่อมต่อ" });
+        } finally {
+            setConfirmLoading(false);
+        }
+    };
+
     const formatPrice = (price: number) => {
         return new Intl.NumberFormat("th-TH", {
             style: "currency",
@@ -111,52 +147,38 @@ export default function TrackingPage() {
             <div style={{ maxWidth: "600px", margin: "0 auto" }}>
                 {/* Header */}
                 <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-                    <Link href="/" style={{ color: "#a78bfa", textDecoration: "none", fontSize: "0.9rem" }}>
-                        ← กลับหน้าแรก
+                    <Link
+                        href="/orders"
+                        style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "0.5rem",
+                            color: "#a78bfa",
+                            textDecoration: "none",
+                            fontSize: "0.9rem",
+                            padding: "0.5rem 1rem",
+                            borderRadius: "8px",
+                            background: "rgba(139, 92, 246, 0.1)",
+                            border: "1px solid rgba(139, 92, 246, 0.2)",
+                        }}
+                    >
+                        ← กลับหน้าคำสั่งซื้อ
                     </Link>
-                    <h1 style={{ color: "white", fontSize: "2rem", fontWeight: 800, marginTop: "1rem" }}>
-                        📦 ติดตามพัสดุ
+                    <h1 style={{
+                        color: "white",
+                        fontSize: "1.75rem",
+                        fontWeight: 800,
+                        marginTop: "1.5rem",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "0.75rem"
+                    }}>
+                        <span style={{ fontSize: "1.5rem" }}>📍</span>
+                        รายละเอียดคำสั่งซื้อ
                     </h1>
-                    <p style={{ color: "#94a3b8" }}>ค้นหาด้วยหมายเลขคำสั่งซื้อ</p>
                 </div>
 
-                {/* Search Box */}
-                <form onSubmit={handleSearch} style={{ marginBottom: "2rem" }}>
-                    <div style={{ display: "flex", gap: "0.5rem" }}>
-                        <input
-                            type="text"
-                            value={searchInput}
-                            onChange={(e) => setSearchInput(e.target.value.toUpperCase())}
-                            placeholder="เช่น 33AEFB4C"
-                            style={{
-                                flex: 1,
-                                padding: "1rem",
-                                borderRadius: "12px",
-                                border: "1px solid rgba(139, 92, 246, 0.3)",
-                                background: "rgba(30, 41, 59, 0.8)",
-                                color: "white",
-                                fontSize: "1rem",
-                                letterSpacing: "2px",
-                                outline: "none",
-                            }}
-                        />
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            style={{
-                                padding: "0 1.5rem",
-                                borderRadius: "12px",
-                                border: "none",
-                                background: "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)",
-                                color: "white",
-                                fontWeight: 700,
-                                cursor: "pointer",
-                            }}
-                        >
-                            🔍
-                        </button>
-                    </div>
-                </form>
 
                 {/* Loading */}
                 {loading && (
@@ -184,26 +206,42 @@ export default function TrackingPage() {
                 {order && !loading && (
                     <div style={{ background: "rgba(30, 41, 59, 0.8)", borderRadius: "20px", border: "1px solid rgba(139, 92, 246, 0.3)", overflow: "hidden" }}>
                         {/* Order Header */}
-                        <div style={{ padding: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                <div>
-                                    <p style={{ color: "#94a3b8", fontSize: "0.8rem", margin: 0 }}>คำสั่งซื้อ</p>
-                                    <p style={{ color: "white", fontSize: "1.25rem", fontWeight: 700, margin: 0 }}>
-                                        #{order._id.slice(-8).toUpperCase()}
-                                    </p>
+                        <div style={{ padding: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.1)", background: "rgba(0,0,0,0.2)" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+                                <div style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "0.75rem",
+                                    padding: "0.75rem 1.25rem",
+                                    background: "rgba(139, 92, 246, 0.15)",
+                                    borderRadius: "12px",
+                                    border: "1px solid rgba(139, 92, 246, 0.3)"
+                                }}>
+                                    <span style={{ fontSize: "1.25rem" }}>🧾</span>
+                                    <div>
+                                        <p style={{ color: "#94a3b8", fontSize: "0.7rem", margin: 0, textTransform: "uppercase", letterSpacing: "0.05em" }}>หมายเลขคำสั่งซื้อ</p>
+                                        <p style={{ color: "#a78bfa", fontSize: "1.1rem", fontWeight: 700, margin: 0, fontFamily: "monospace" }}>
+                                            #{order._id.slice(-8).toUpperCase()}
+                                        </p>
+                                    </div>
                                 </div>
                                 <div style={{
-                                    padding: "0.5rem 1rem",
-                                    borderRadius: "100px",
-                                    background: `${statusConfig[order.status].color}20`,
-                                    color: statusConfig[order.status].color,
-                                    fontWeight: 600,
-                                    fontSize: "0.85rem",
+                                    padding: "0.6rem 1.25rem",
+                                    borderRadius: "12px",
+                                    background: statusConfig[order.status].color,
+                                    color: "white",
+                                    fontWeight: 700,
+                                    fontSize: "0.9rem",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "0.5rem",
+                                    boxShadow: `0 4px 12px ${statusConfig[order.status].color}40`
                                 }}>
                                     {statusConfig[order.status].icon} {statusConfig[order.status].label}
                                 </div>
                             </div>
                         </div>
+
 
                         {/* Progress Steps */}
                         {order.status !== "cancelled" && (
@@ -274,12 +312,21 @@ export default function TrackingPage() {
                                     padding: "1.25rem",
                                     border: "1px solid rgba(139, 92, 246, 0.3)",
                                 }}>
-                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                                        <div>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem", flexWrap: "wrap" }}>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
                                             <p style={{ color: "#a78bfa", fontSize: "0.8rem", margin: "0 0 4px" }}>📦 หมายเลขพัสดุ</p>
-                                            <p style={{ color: "white", fontSize: "1.25rem", fontWeight: 700, margin: 0, letterSpacing: "2px" }}>
+                                            <p style={{
+                                                color: "white",
+                                                fontSize: "1rem",
+                                                fontWeight: 700,
+                                                margin: 0,
+                                                letterSpacing: "1px",
+                                                wordBreak: "break-all",
+                                                overflowWrap: "break-word",
+                                            }}>
                                                 {order.trackingNumber}
                                             </p>
+
                                             <p style={{ color: "#94a3b8", fontSize: "0.8rem", margin: "8px 0 0" }}>
                                                 {carrierInfo.icon} {carrierInfo.name}
                                             </p>
@@ -313,24 +360,38 @@ export default function TrackingPage() {
                         )}
 
                         {/* Order Items */}
-                        <div style={{ padding: "0 1.5rem 1.5rem" }}>
-                            <p style={{ color: "#94a3b8", fontSize: "0.8rem", margin: "0 0 0.75rem" }}>📋 รายการสินค้า</p>
+                        <div style={{ padding: "1.25rem 1.5rem" }}>
+                            <div style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.5rem",
+                                marginBottom: "1rem",
+                                paddingBottom: "0.75rem",
+                                borderBottom: "1px solid rgba(255,255,255,0.08)"
+                            }}>
+                                <span style={{ fontSize: "1rem" }}>🛒</span>
+                                <span style={{ color: "#94a3b8", fontSize: "0.85rem", fontWeight: 600 }}>
+                                    สินค้าในคำสั่งซื้อ ({order.items.reduce((sum, item) => sum + item.quantity, 0)} ชิ้น)
+                                </span>
+                            </div>
                             {order.items.map((item, idx) => (
                                 <div key={idx} style={{
                                     display: "flex",
                                     alignItems: "center",
                                     gap: "1rem",
-                                    padding: "0.75rem",
-                                    background: "rgba(255,255,255,0.05)",
-                                    borderRadius: "10px",
+                                    padding: "0.75rem 1rem",
+                                    background: "rgba(255,255,255,0.03)",
+                                    borderRadius: "12px",
                                     marginBottom: "0.5rem",
+                                    border: "1px solid rgba(255,255,255,0.05)"
                                 }}>
                                     <img
                                         src={item.image}
                                         alt={item.name}
-                                        style={{ width: "48px", height: "48px", borderRadius: "8px", objectFit: "cover" }}
+                                        style={{ width: "52px", height: "52px", borderRadius: "10px", objectFit: "cover" }}
                                     />
                                     <div style={{ flex: 1 }}>
+
                                         <p style={{ color: "white", margin: 0, fontSize: "0.9rem" }}>{item.name}</p>
                                         <p style={{ color: "#64748b", margin: 0, fontSize: "0.8rem" }}>x{item.quantity}</p>
                                     </div>
@@ -360,6 +421,74 @@ export default function TrackingPage() {
                             </p>
                         </div>
 
+                        {/* Confirm Received Button - Only show for shipped orders */}
+                        {order.status === "shipped" && (
+                            <div style={{ padding: "0 1.5rem 1.5rem" }}>
+                                {confirmMessage.text && (
+                                    <div style={{
+                                        padding: "0.75rem 1rem",
+                                        borderRadius: "10px",
+                                        marginBottom: "1rem",
+                                        background: confirmMessage.type === "success" ? "rgba(34, 197, 94, 0.15)" : "rgba(239, 68, 68, 0.15)",
+                                        border: `1px solid ${confirmMessage.type === "success" ? "rgba(34, 197, 94, 0.3)" : "rgba(239, 68, 68, 0.3)"}`,
+                                        color: confirmMessage.type === "success" ? "#22c55e" : "#ef4444",
+                                        textAlign: "center",
+                                    }}>
+                                        {confirmMessage.text}
+                                    </div>
+                                )}
+
+                                <button
+                                    onClick={handleConfirmReceived}
+                                    disabled={confirmLoading}
+                                    style={{
+                                        width: "100%",
+                                        padding: "1rem",
+                                        background: confirmLoading
+                                            ? "rgba(34, 197, 94, 0.3)"
+                                            : "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
+                                        border: "none",
+                                        borderRadius: "12px",
+                                        color: "white",
+                                        fontWeight: 700,
+                                        fontSize: "1rem",
+                                        cursor: confirmLoading ? "not-allowed" : "pointer",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: "0.5rem",
+                                    }}
+                                >
+                                    {confirmLoading ? "⏳ กำลังดำเนินการ..." : "✅ ยืนยันได้รับสินค้าแล้ว"}
+                                </button>
+
+                                <p style={{ color: "#64748b", fontSize: "0.75rem", textAlign: "center", marginTop: "0.75rem" }}>
+                                    ⏰ หากไม่กดยืนยัน ระบบจะปิดคำสั่งซื้ออัตโนมัติใน 7 วัน
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Delivered Thank You */}
+                        {order.status === "delivered" && (
+                            <div style={{ padding: "0 1.5rem 1.5rem" }}>
+                                <div style={{
+                                    padding: "1rem",
+                                    background: "rgba(34, 197, 94, 0.15)",
+                                    border: "1px solid rgba(34, 197, 94, 0.3)",
+                                    borderRadius: "12px",
+                                    textAlign: "center",
+                                }}>
+                                    <p style={{ color: "#22c55e", margin: 0, fontSize: "1.5rem" }}>✅</p>
+                                    <p style={{ color: "#22c55e", margin: "0.5rem 0 0", fontWeight: 600 }}>
+                                        ได้รับสินค้าเรียบร้อยแล้ว
+                                    </p>
+                                    <p style={{ color: "#64748b", margin: "0.25rem 0 0", fontSize: "0.8rem" }}>
+                                        ขอบคุณที่ใช้บริการ! 💜
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Order Date */}
                         <div style={{ padding: "1rem 1.5rem", background: "rgba(0,0,0,0.2)", textAlign: "center" }}>
                             <p style={{ color: "#64748b", margin: 0, fontSize: "0.8rem" }}>
@@ -368,6 +497,7 @@ export default function TrackingPage() {
                         </div>
                     </div>
                 )}
+
 
                 {/* No Order ID */}
                 {!orderId && !order && !loading && !error && (
