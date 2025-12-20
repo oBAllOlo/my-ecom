@@ -100,16 +100,20 @@ export default function OrdersPage() {
 
       <main className="admin-main" style={{ paddingTop: '2rem' }}>
         {/* Welcome Section */}
-        <section className="admin-welcome">
-          <div className="admin-welcome-content">
-            <h2 className="admin-welcome-title">
-              ประวัติการสั่งซื้อ 📦
-            </h2>
-            <p className="admin-welcome-subtitle">
-              ติดตามสถานะและดูประวัติการสั่งซื้อทั้งหมดของคุณ
-            </p>
+        <section style={{ marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <span style={{ fontSize: '2rem' }}>📦</span>
+            <div>
+              <h2 style={{ color: 'white', fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>
+                ประวัติการสั่งซื้อ
+              </h2>
+              <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: '0.25rem 0 0' }}>
+                ติดตามสถานะและดูประวัติการสั่งซื้อทั้งหมดของคุณ
+              </p>
+            </div>
           </div>
         </section>
+
 
         {/* Error */}
         {error && (
@@ -238,13 +242,20 @@ export default function OrdersPage() {
         </div>
 
         {/* Orders List */}
-        <section className="admin-quick-actions">
-          <div className="admin-section-header">
-            <div className="admin-section-title">
-              <span>🛒</span>
-              <span>รายการคำสั่งซื้อ</span>
-            </div>
+        <section style={{ width: '100%' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            marginBottom: '1rem',
+            color: 'white',
+            fontSize: '1.1rem',
+            fontWeight: 600
+          }}>
+            <span>🛒</span>
+            <span>รายการคำสั่งซื้อ</span>
           </div>
+
 
           {orders.length === 0 ? (
             <div style={{
@@ -305,130 +316,161 @@ export default function OrdersPage() {
                 return (
                   <div
                     key={order._id}
-                    className="admin-action-card"
-                    style={{ padding: 0, overflow: 'hidden' }}
+                    style={{
+                      padding: 0,
+                      overflow: 'hidden',
+                      background: 'rgba(30, 41, 59, 0.5)',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      width: '100%'
+                    }}
                   >
-                    {/* Order Header */}
+                    {/* Order Row - Flexbox Layout */}
                     <div style={{
-                      padding: '1.25rem 1.5rem',
-                      borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                      background: 'rgba(0, 0, 0, 0.2)',
                       display: 'flex',
-                      flexWrap: 'wrap',
-                      justifyContent: 'space-between',
                       alignItems: 'center',
-                      gap: '1rem'
+                      justifyContent: 'space-between',
+                      gap: '1rem',
+                      padding: '1rem 1.5rem',
+                      background: 'rgba(0, 0, 0, 0.2)',
                     }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-                        <div>
-                          <p style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>
-                            หมายเลขคำสั่งซื้อ
-                          </p>
-                          <p style={{ color: 'white', fontWeight: 700, fontFamily: 'monospace', fontSize: '1rem' }}>
-                            #{order._id.slice(-8).toUpperCase()}
-                          </p>
-                        </div>
-                        <div>
-                          <p style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>
-                            วันที่สั่งซื้อ
-                          </p>
-                          <p style={{ color: '#94a3b8', fontWeight: 500 }}>
-                            {new Date(order.createdAt).toLocaleDateString("th-TH", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            })}
-                          </p>
-                        </div>
-                        <div>
-                          <p style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>
-                            ยอดรวม
-                          </p>
-                          <p style={{ color: '#a78bfa', fontWeight: 700, fontSize: '1.25rem' }}>
-                            ฿{order.total.toLocaleString()}
-                          </p>
-                        </div>
+                      {/* Order ID */}
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.5rem 0.75rem',
+                        background: 'rgba(139, 92, 246, 0.15)',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(139, 92, 246, 0.3)',
+                        minWidth: '130px'
+                      }}>
+                        <span style={{ fontSize: '0.9rem' }}>🧾</span>
+                        <span style={{ color: '#a78bfa', fontWeight: 700, fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                          #{order._id.slice(-8).toUpperCase()}
+                        </span>
                       </div>
 
-                      <span style={{
-                        padding: '0.5rem 1rem',
-                        borderRadius: '8px',
-                        fontSize: '0.875rem',
-                        fontWeight: 600,
-                        background: statusConfig.bgLight,
-                        color: statusConfig.bg,
-                        border: `1px solid ${statusConfig.bg}30`
+                      {/* Date */}
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                        color: '#94a3b8',
+                        fontSize: '0.85rem',
+                        minWidth: '120px'
                       }}>
+                        <span>📅</span>
+                        <span>
+                          {new Date(order.createdAt).toLocaleDateString("th-TH", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </div>
+
+                      {/* Price */}
+                      <div style={{
+                        padding: '0.5rem 0.75rem',
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        borderRadius: '8px',
+                        minWidth: '90px',
+                        textAlign: 'center'
+                      }}>
+                        <span style={{ color: '#10b981', fontWeight: 700, fontSize: '0.95rem' }}>
+                          ฿{order.total.toLocaleString()}
+                        </span>
+                      </div>
+
+                      {/* Status */}
+                      <span style={{
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: '8px',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        background: statusConfig.bg,
+                        color: 'white',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.35rem',
+                        whiteSpace: 'nowrap',
+                        minWidth: '140px'
+                      }}>
+                        {order.status === 'pending' && '⏳'}
+                        {order.status === 'processing' && '📦'}
+                        {order.status === 'shipped' && '🚚'}
+                        {order.status === 'delivered' && '✅'}
+                        {order.status === 'cancelled' && '❌'}
                         {statusConfig.label}
                       </span>
-                    </div>
 
-                    {/* Order Items */}
-                    <div style={{ padding: '1.25rem 1.5rem' }}>
-                      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                        {order.items.slice(0, 5).map((item, index) => (
+                      {/* Product Images + Count */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, justifyContent: 'center' }}>
+                        {order.items.slice(0, 2).map((item, index) => (
                           <div
                             key={index}
                             style={{
-                              width: '56px',
-                              height: '56px',
-                              borderRadius: '10px',
+                              width: '48px',
+                              height: '48px',
+                              borderRadius: '8px',
                               overflow: 'hidden',
                               background: 'rgba(15, 23, 42, 0.5)',
-                              border: '1px solid rgba(255, 255, 255, 0.05)'
+                              border: '1px solid rgba(255, 255, 255, 0.08)',
+                              flexShrink: 0
                             }}
                           >
                             <img
                               src={item.image}
                               alt={item.name}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
+                                display: 'block'
+                              }}
                             />
                           </div>
-                        ))}
-                        {order.items.length > 5 && (
-                          <div style={{
-                            width: '56px',
-                            height: '56px',
-                            borderRadius: '10px',
-                            background: 'rgba(139, 92, 246, 0.1)',
-                            border: '1px solid rgba(139, 92, 246, 0.2)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#a78bfa',
-                            fontWeight: 600,
-                            fontSize: '0.875rem'
-                          }}>
-                            +{order.items.length - 5}
-                          </div>
-                        )}
 
-                        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        ))}
+                        {order.items.length > 2 && (
                           <span style={{
                             color: '#64748b',
-                            fontSize: '0.875rem'
+                            fontSize: '0.75rem',
+                            padding: '0.25rem 0.5rem',
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            borderRadius: '4px'
                           }}>
-                            {order.items.length} รายการ
+                            +{order.items.length - 2}
                           </span>
-                          <Link
-                            href={`/tracking?order=${order._id}`}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '0.5rem',
-                              padding: '0.5rem 1rem',
-                              background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
-                              borderRadius: '8px',
-                              color: 'white',
-                              fontSize: '0.85rem',
-                              fontWeight: 600,
-                              textDecoration: 'none',
-                            }}
-                          >
-                            📦 ติดตามพัสดุ
-                          </Link>
-                        </div>
+                        )}
+                        <span style={{ color: '#64748b', fontSize: '0.8rem' }}>
+                          {order.items.reduce((sum, item) => sum + item.quantity, 0)} ชิ้น
+                        </span>
                       </div>
+
+                      {/* Action Button */}
+                      <Link
+                        href={`/tracking?order=${order._id}`}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.4rem',
+                          padding: '0.6rem 1rem',
+                          background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
+                          borderRadius: '8px',
+                          color: 'white',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          textDecoration: 'none',
+                          whiteSpace: 'nowrap',
+                          minWidth: '120px'
+                        }}
+                      >
+                        📍 ดูรายละเอียด
+                      </Link>
                     </div>
                   </div>
 
@@ -441,3 +483,4 @@ export default function OrdersPage() {
     </div>
   );
 }
+

@@ -30,11 +30,21 @@ export async function POST(request: NextRequest) {
     await dbConnect();
 
     // Update order with payment info
-    await Order.findByIdAndUpdate(orderId, {
+    // If payment is successful, also update order status to "processing"
+    const updateData: Record<string, unknown> = {
       paymentStatus: charge.status === "successful" ? "paid" : "pending",
       chargeId: charge.id,
       paymentMethod: "card",
-    });
+    };
+
+    // If charge is successful, update order status to processing
+    if (charge.status === "successful") {
+      updateData.status = "processing";
+      console.log(`Order ${orderId} payment successful - status updated to processing`);
+    }
+
+    await Order.findByIdAndUpdate(orderId, updateData);
+
 
     return NextResponse.json({
       success: true,

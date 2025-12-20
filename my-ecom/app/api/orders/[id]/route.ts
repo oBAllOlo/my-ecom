@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Order from "@/models/Order";
 
-// GET single order by ID
+// GET single order by ID (supports full ID or last 8 characters)
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -11,7 +11,24 @@ export async function GET(
     await dbConnect();
     const { id } = await params;
 
-    const order = await Order.findById(id).populate("userId", "name email");
+    let order;
+
+    // If ID is 24 characters, it's a full MongoDB ObjectId
+    if (id.length === 24) {
+      order = await Order.findById(id).populate("userId", "name email");
+    } else {
+      // Otherwise, search by the last 8 characters of _id
+      // This allows customers to search with short order numbers like "1232D2D"
+      const searchPattern = id.toLowerCase();
+      order = await Order.findOne({
+        $expr: {
+          $regexMatch: {
+            input: { $toString: "$_id" },
+            regex: new RegExp(searchPattern + "$", "i"),
+          },
+        },
+      }).populate("userId", "name email");
+    }
 
     if (!order) {
       return NextResponse.json(
@@ -29,6 +46,7 @@ export async function GET(
     );
   }
 }
+
 
 // PUT update order status
 export async function PUT(
