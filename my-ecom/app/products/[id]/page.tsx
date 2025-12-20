@@ -51,21 +51,21 @@ export default function ProductDetailPage() {
   const productId = params.id as string;
   const { addToCart } = useCart();
   const { user } = useAuth();
-  
+
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
-  
+
   // Review form state
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewForm, setReviewForm] = useState({ rating: 5, title: "", comment: "" });
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewError, setReviewError] = useState("");
   const [reviewSuccess, setReviewSuccess] = useState(false);
-  
+
   // Image gallery state
   const [selectedImage, setSelectedImage] = useState<string>("");
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -127,10 +127,10 @@ export default function ProductDetailPage() {
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    
+
     setSubmittingReview(true);
     setReviewError("");
-    
+
     try {
       const res = await fetch("/api/reviews", {
         method: "POST",
@@ -144,9 +144,9 @@ export default function ProductDetailPage() {
           comment: reviewForm.comment,
         }),
       });
-      
+
       const data = await res.json();
-      
+
       if (data.success) {
         setReviewSuccess(true);
         setShowReviewForm(false);
@@ -197,8 +197,8 @@ export default function ProductDetailPage() {
 
   const discount = product.originalPrice
     ? Math.round(
-        ((product.originalPrice - product.price) / product.originalPrice) * 100
-      )
+      ((product.originalPrice - product.price) / product.originalPrice) * 100
+    )
     : 0;
 
   return (
@@ -226,17 +226,18 @@ export default function ProductDetailPage() {
         {/* Product Gallery */}
         <div className="product-gallery">
           {/* Main Image */}
-          <div 
+          <div
             className="product-main-image"
             onClick={() => setLightboxOpen(true)}
-            style={{ cursor: 'zoom-in' }}
+            style={{ cursor: 'zoom-in', position: 'relative' }}
           >
+
             <img
               src={selectedImage || product.image}
               alt={product.name}
-              style={{ 
-                width: '100%', 
-                height: '100%', 
+              style={{
+                width: '100%',
+                height: '100%',
                 objectFit: 'contain',
                 borderRadius: '16px'
               }}
@@ -254,7 +255,7 @@ export default function ProductDetailPage() {
               🔍 คลิกเพื่อขยาย
             </div>
           </div>
-          
+
           {/* Thumbnails */}
           {product.images && product.images.length > 0 && (
             <div style={{
@@ -442,14 +443,12 @@ export default function ProductDetailPage() {
                     product.stock > 10
                       ? "#22C55E"
                       : product.stock > 0
-                      ? "#F59E0B"
-                      : "#EF4444",
+                        ? "#F59E0B"
+                        : "#EF4444",
                 }}
               >
-                {product.stock > 10
-                  ? "มีสินค้า"
-                  : product.stock > 0
-                  ? `เหลือ ${product.stock} ชิ้น`
+                {product.stock > 0
+                  ? `มีสินค้า ${product.stock} ชิ้น`
                   : "สินค้าหมด"}
               </span>
             </div>
@@ -541,7 +540,7 @@ export default function ProductDetailPage() {
             marginBottom: "2rem"
           }}>
             <h3 style={{ color: "white", marginBottom: "1.5rem" }}>เขียนรีวิว</h3>
-            
+
             {reviewError && (
               <div style={{
                 padding: "1rem",
@@ -554,7 +553,7 @@ export default function ProductDetailPage() {
                 {reviewError}
               </div>
             )}
-            
+
             <form onSubmit={handleSubmitReview}>
               {/* Rating */}
               <div style={{ marginBottom: "1.5rem" }}>
