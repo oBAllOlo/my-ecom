@@ -20,6 +20,31 @@ module.exports = {
           900: '#0c4a6e',
         },
       },
+      animation: {
+        fadeIn: 'fadeIn 0.2s ease',
+        fadeInUp: 'fadeInUp 0.6s ease forwards',
+        scaleIn: 'scaleIn 0.2s ease',
+        shimmer: 'shimmer 1.5s infinite',
+        spin: 'spin 1s linear infinite',
+      },
+      keyframes: {
+        fadeIn: {
+          from: { opacity: '0' },
+          to: { opacity: '1' },
+        },
+        fadeInUp: {
+          from: { opacity: '0', transform: 'translateY(30px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        scaleIn: {
+          from: { transform: 'scale(0.9)', opacity: '0' },
+          to: { transform: 'scale(1)', opacity: '1' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '200% 0' },
+          '100%': { backgroundPosition: '-200% 0' },
+        },
+      },
     },
   },
   plugins: [],

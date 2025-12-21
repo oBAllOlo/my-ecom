@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { useCart } from "@/context/CartContext";
 import { useToast } from "@/context/ToastContext";
 
 interface CustomPart {
@@ -50,7 +49,6 @@ export default function CustomKeyboardPage() {
         const data = await res.json();
         
         if (data.success) {
-          // Group by category
           const grouped = data.data.reduce((acc: GroupedParts, part: CustomPart) => {
             if (!acc[part.category]) acc[part.category] = [];
             acc[part.category].push(part);
@@ -85,7 +83,6 @@ export default function CustomKeyboardPage() {
     0
   );
 
-  // Required categories (exclude optional add-ons)
   const requiredCategories = ["base", "switch", "keycapBase", "wire"];
   const isComplete = requiredCategories.every(cat => selectedOptions[cat]);
 
@@ -93,7 +90,6 @@ export default function CustomKeyboardPage() {
     return price.toLocaleString("th-TH") + " THB";
   };
 
-  // Get preview images for selected options
   const getPreviewLayers = () => {
     const layers: { id: string; image: string; zIndex: number }[] = [];
     
@@ -119,7 +115,6 @@ export default function CustomKeyboardPage() {
       return;
     }
 
-    // Build custom keyboard product
     const customProduct = {
       _id: `custom_${Date.now()}`,
       name: "Custom Keyboard 60%",
@@ -133,10 +128,8 @@ export default function CustomKeyboardPage() {
       customParts: Object.values(selectedOptions).map(p => p._id),
     };
 
-    // For now, show success and redirect to checkout
     showToast("เพิ่มคีย์บอร์ด Custom ลงตะกร้าแล้ว!", "success");
     
-    // Store custom order in localStorage for checkout
     localStorage.setItem("customOrder", JSON.stringify({
       product: customProduct,
       parts: selectedOptions,
@@ -150,72 +143,85 @@ export default function CustomKeyboardPage() {
 
   if (loading) {
     return (
-      <div className="custom-page loading-page">
-        <div className="loading">กำลังโหลด...</div>
+      <div className="flex min-h-[calc(100vh-80px)] items-center justify-center bg-gray-500">
+        <div className="text-white text-2xl">กำลังโหลด...</div>
       </div>
     );
   }
 
   return (
-    <div className="custom-page">
+    <div className="flex min-h-[calc(100vh-80px)] bg-gray-500">
       {/* Sidebar */}
-      <aside className="custom-sidebar">
-        <h2 className="sidebar-title">⌨️ สร้างคีย์บอร์ดของคุณ</h2>
-        <nav className="category-menu">
+      <aside className="w-[330px] min-w-[330px] bg-slate-800 p-6 overflow-y-auto max-h-[calc(100vh-80px)]">
+        <h2 className="text-slate-50 text-xl mb-6 pb-4 border-b border-white/10">
+          ⌨️ สร้างคีย์บอร์ดของคุณ
+        </h2>
+        <nav className="flex flex-col gap-2">
           {categoryOrder.map((categoryId) => {
             const categoryParts = parts[categoryId] || [];
             const isRequired = requiredCategories.includes(categoryId);
+            const isExpanded = expandedCategory === categoryId;
+            const isSelected = !!selectedOptions[categoryId];
             
             return (
-              <div key={categoryId} className="category-item">
+              <div key={categoryId} className="rounded-lg overflow-hidden">
                 <button
-                  className={`category-header ${expandedCategory === categoryId ? "active" : ""} ${selectedOptions[categoryId] ? "completed" : ""}`}
-                  onClick={() => setExpandedCategory(
-                    expandedCategory === categoryId ? null : categoryId
-                  )}
+                  className={`w-full flex justify-between items-center p-4 border-none cursor-pointer text-base transition-all
+                    ${isExpanded ? "bg-blue-500/30" : "bg-white/5 hover:bg-white/10"}
+                    ${isSelected ? "text-green-400" : "text-slate-50"}`}
+                  onClick={() => setExpandedCategory(isExpanded ? null : categoryId)}
                 >
-                  <span className="category-name">
-                    {selectedOptions[categoryId] && <span className="check">✓</span>}
+                  <span className="flex items-center gap-2">
+                    {isSelected && <span className="text-green-400">✓</span>}
                     {categoryLabels[categoryId]}
-                    {!isRequired && <span className="optional">(เสริม)</span>}
+                    {!isRequired && <span className="text-xs text-slate-500">(เสริม)</span>}
                   </span>
-                  <span className={`arrow ${expandedCategory === categoryId ? "open" : ""}`}>
+                  <span className={`text-xs transition-transform ${isExpanded ? "rotate-180" : ""}`}>
                     ▼
                   </span>
                 </button>
                 
-                {expandedCategory === categoryId && (
-                  <div className="option-list">
-                    {categoryParts.map((part) => (
-                      <button
-                        key={part._id}
-                        className={`option-item ${selectedOptions[categoryId]?._id === part._id ? "selected" : ""} ${part.stock <= 0 ? "out-of-stock" : ""}`}
-                        onClick={() => handleSelectOption(categoryId, part)}
-                        disabled={part.stock <= 0}
-                      >
-                        {part.image && (
-                          <div className="option-thumb">
-                            <Image 
-                              src={part.image} 
-                              alt={part.name}
-                              width={40}
-                              height={40}
-                              style={{ objectFit: "cover" }}
-                            />
+                {isExpanded && (
+                  <div className="flex flex-col bg-black/20 max-h-[300px] overflow-y-auto">
+                    {categoryParts.map((part) => {
+                      const isPartSelected = selectedOptions[categoryId]?._id === part._id;
+                      const isOutOfStock = part.stock <= 0;
+                      
+                      return (
+                        <button
+                          key={part._id}
+                          className={`flex items-center gap-3 p-3 border-none cursor-pointer text-left transition-all
+                            ${isPartSelected ? "bg-blue-500/20 text-blue-400" : "text-slate-400 hover:bg-white/5 hover:text-slate-50"}
+                            ${isOutOfStock ? "opacity-50 cursor-not-allowed" : ""}`}
+                          onClick={() => handleSelectOption(categoryId, part)}
+                          disabled={isOutOfStock}
+                        >
+                          {part.image && (
+                            <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0">
+                              <Image 
+                                src={part.image} 
+                                alt={part.name}
+                                width={40}
+                                height={40}
+                                className="object-cover"
+                              />
+                            </div>
+                          )}
+                          <div className="flex-1 flex flex-col">
+                            <span className="text-sm">{part.name}</span>
+                            {part.stock <= 3 && part.stock > 0 && (
+                              <span className="text-xs text-amber-500">เหลือ {part.stock} ชิ้น</span>
+                            )}
+                            {isOutOfStock && (
+                              <span className="text-xs text-red-500">หมด</span>
+                            )}
                           </div>
-                        )}
-                        <div className="option-info">
-                          <span className="option-name">{part.name}</span>
-                          {part.stock <= 3 && part.stock > 0 && (
-                            <span className="stock-warning">เหลือ {part.stock} ชิ้น</span>
-                          )}
-                          {part.stock <= 0 && (
-                            <span className="stock-out">หมด</span>
-                          )}
-                        </div>
-                        <span className="option-price">{formatPrice(part.price)}</span>
-                      </button>
-                    ))}
+                          <span className={`text-sm flex-shrink-0 ${isPartSelected ? "text-blue-400" : "text-slate-500"}`}>
+                            {formatPrice(part.price)}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -225,59 +231,62 @@ export default function CustomKeyboardPage() {
       </aside>
 
       {/* Main Content */}
-      <main className="custom-main">
+      <main className="flex-1 p-6 flex gap-6">
         {/* Preview Area */}
-        <div className="preview-area">
+        <div className="flex-1 flex items-center justify-center bg-black/10 rounded-xl min-h-[400px] relative">
           {previewLayers.length > 0 ? (
-            <div className="preview-stack">
+            <div className="relative w-full h-full min-h-[400px]">
               {previewLayers.map((layer) => (
-                <div key={layer.id} className="preview-layer" style={{ zIndex: layer.zIndex }}>
+                <div key={layer.id} className="absolute inset-0" style={{ zIndex: layer.zIndex }}>
                   <Image
                     src={layer.image}
                     alt={layer.id}
                     fill
-                    style={{ objectFit: "contain" }}
+                    className="object-contain"
                   />
                 </div>
               ))}
             </div>
           ) : (
-            <div className="preview-placeholder">
-              <span className="preview-icon">⌨️</span>
+            <div className="text-center text-white/50">
+              <span className="text-7xl block mb-4">⌨️</span>
               <p>Preview Area</p>
-              <p className="preview-hint">เลือกอุปกรณ์เพื่อดูตัวอย่าง</p>
+              <p className="text-sm opacity-70">เลือกอุปกรณ์เพื่อดูตัวอย่าง</p>
             </div>
           )}
         </div>
 
         {/* Selected Options Panel */}
-        <div className="options-panel">
-          <h3>Selected Options</h3>
+        <div className="w-80 bg-white/95 rounded-xl p-6 self-start">
+          <h3 className="text-slate-800 text-xl mb-4">Selected Options</h3>
           
           {Object.keys(selectedOptions).length === 0 ? (
-            <p className="no-selection">ยังไม่ได้เลือกอุปกรณ์</p>
+            <p className="text-slate-500 italic">ยังไม่ได้เลือกอุปกรณ์</p>
           ) : (
-            <ul className="selected-list">
+            <ul className="list-none p-0 m-0">
               {categoryOrder.map((cat) => {
                 const part = selectedOptions[cat];
                 if (!part) return null;
                 return (
-                  <li key={cat} className="selected-item">
-                    <span className="item-category">{categoryLabels[cat]}:</span>
-                    <span className="item-name">{part.name}</span>
-                    <span className="item-price">{formatPrice(part.price)}</span>
+                  <li key={cat} className="flex flex-col py-3 border-b border-slate-200">
+                    <span className="text-xs text-slate-500 uppercase">{categoryLabels[cat]}:</span>
+                    <span className="text-slate-800 font-medium">{part.name}</span>
+                    <span className="text-blue-500 text-sm">{formatPrice(part.price)}</span>
                   </li>
                 );
               })}
             </ul>
           )}
 
-          <div className="total-section">
-            <h4>Total Price: {formatPrice(totalPrice)}</h4>
+          <div className="mt-6 pt-4 border-t-2 border-slate-800">
+            <h4 className="text-slate-800 text-lg">Total Price: {formatPrice(totalPrice)}</h4>
           </div>
 
           <button
-            className="order-button"
+            className={`w-full mt-4 p-4 rounded-lg text-base font-semibold cursor-pointer transition-all
+              ${isComplete 
+                ? "bg-gradient-to-r from-blue-500 to-violet-500 text-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/30" 
+                : "bg-slate-400 text-white cursor-not-allowed"}`}
             disabled={!isComplete}
             onClick={handleOrder}
           >
@@ -285,324 +294,6 @@ export default function CustomKeyboardPage() {
           </button>
         </div>
       </main>
-
-      <style jsx>{`
-        .custom-page {
-          display: flex;
-          min-height: calc(100vh - 80px);
-          background: #6c757d;
-        }
-
-        .loading-page {
-          justify-content: center;
-          align-items: center;
-        }
-
-        .loading {
-          color: white;
-          font-size: 1.5rem;
-        }
-
-        .custom-sidebar {
-          width: 330px;
-          min-width: 330px;
-          background: #1e293b;
-          padding: 1.5rem;
-          overflow-y: auto;
-          max-height: calc(100vh - 80px);
-        }
-
-        .sidebar-title {
-          color: #f8fafc;
-          font-size: 1.25rem;
-          margin-bottom: 1.5rem;
-          padding-bottom: 1rem;
-          border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .category-menu {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-
-        .category-item {
-          border-radius: 8px;
-          overflow: hidden;
-        }
-
-        .category-header {
-          width: 100%;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 1rem;
-          background: rgba(255,255,255,0.05);
-          color: #f8fafc;
-          border: none;
-          cursor: pointer;
-          font-size: 1rem;
-          transition: all 0.2s;
-        }
-
-        .category-header:hover {
-          background: rgba(255,255,255,0.1);
-        }
-
-        .category-header.active {
-          background: rgba(59, 130, 246, 0.3);
-        }
-
-        .category-header.completed .category-name {
-          color: #4ade80;
-        }
-
-        .check {
-          margin-right: 0.5rem;
-          color: #4ade80;
-        }
-
-        .optional {
-          font-size: 0.75rem;
-          color: #64748b;
-          margin-left: 0.5rem;
-        }
-
-        .arrow {
-          font-size: 0.75rem;
-          transition: transform 0.2s;
-        }
-
-        .arrow.open {
-          transform: rotate(180deg);
-        }
-
-        .option-list {
-          display: flex;
-          flex-direction: column;
-          background: rgba(0,0,0,0.2);
-          max-height: 300px;
-          overflow-y: auto;
-        }
-
-        .option-item {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          padding: 0.75rem 1rem;
-          background: none;
-          border: none;
-          color: #94a3b8;
-          cursor: pointer;
-          transition: all 0.2s;
-          text-align: left;
-        }
-
-        .option-item:hover:not(:disabled) {
-          background: rgba(255,255,255,0.05);
-          color: #f8fafc;
-        }
-
-        .option-item.selected {
-          background: rgba(59, 130, 246, 0.2);
-          color: #60a5fa;
-        }
-
-        .option-item.out-of-stock {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .option-thumb {
-          width: 40px;
-          height: 40px;
-          border-radius: 4px;
-          overflow: hidden;
-          flex-shrink: 0;
-        }
-
-        .option-info {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-        }
-
-        .option-name {
-          font-size: 0.9rem;
-        }
-
-        .stock-warning {
-          font-size: 0.7rem;
-          color: #f59e0b;
-        }
-
-        .stock-out {
-          font-size: 0.7rem;
-          color: #ef4444;
-        }
-
-        .option-price {
-          font-size: 0.85rem;
-          color: #64748b;
-          flex-shrink: 0;
-        }
-
-        .option-item.selected .option-price {
-          color: #60a5fa;
-        }
-
-        .custom-main {
-          flex: 1;
-          padding: 1.5rem;
-          display: flex;
-          gap: 1.5rem;
-        }
-
-        .preview-area {
-          flex: 1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: rgba(0,0,0,0.1);
-          border-radius: 12px;
-          min-height: 400px;
-          position: relative;
-        }
-
-        .preview-stack {
-          position: relative;
-          width: 100%;
-          height: 100%;
-          min-height: 400px;
-        }
-
-        .preview-layer {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-        }
-
-        .preview-placeholder {
-          text-align: center;
-          color: rgba(255,255,255,0.5);
-        }
-
-        .preview-icon {
-          font-size: 5rem;
-          display: block;
-          margin-bottom: 1rem;
-        }
-
-        .preview-hint {
-          font-size: 0.9rem;
-          opacity: 0.7;
-        }
-
-        .options-panel {
-          width: 320px;
-          background: rgba(255, 255, 255, 0.95);
-          border-radius: 12px;
-          padding: 1.5rem;
-          align-self: flex-start;
-        }
-
-        .options-panel h3 {
-          color: #1e293b;
-          margin-bottom: 1rem;
-          font-size: 1.25rem;
-        }
-
-        .no-selection {
-          color: #64748b;
-          font-style: italic;
-        }
-
-        .selected-list {
-          list-style: none;
-          padding: 0;
-          margin: 0;
-        }
-
-        .selected-item {
-          display: flex;
-          flex-direction: column;
-          padding: 0.75rem 0;
-          border-bottom: 1px solid #e2e8f0;
-        }
-
-        .item-category {
-          font-size: 0.75rem;
-          color: #64748b;
-          text-transform: uppercase;
-        }
-
-        .item-name {
-          color: #1e293b;
-          font-weight: 500;
-        }
-
-        .item-price {
-          color: #3b82f6;
-          font-size: 0.9rem;
-        }
-
-        .total-section {
-          margin-top: 1.5rem;
-          padding-top: 1rem;
-          border-top: 2px solid #1e293b;
-        }
-
-        .total-section h4 {
-          color: #1e293b;
-          font-size: 1.1rem;
-        }
-
-        .order-button {
-          width: 100%;
-          margin-top: 1rem;
-          padding: 1rem;
-          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-          color: white;
-          border: none;
-          border-radius: 8px;
-          font-size: 1rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .order-button:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
-        }
-
-        .order-button:disabled {
-          background: #94a3b8;
-          cursor: not-allowed;
-        }
-
-        @media (max-width: 1024px) {
-          .custom-page {
-            flex-direction: column;
-          }
-
-          .custom-sidebar {
-            width: 100%;
-            min-width: 100%;
-            max-height: none;
-          }
-
-          .custom-main {
-            flex-direction: column;
-          }
-
-          .options-panel {
-            width: 100%;
-          }
-        }
-      `}</style>
     </div>
   );
 }

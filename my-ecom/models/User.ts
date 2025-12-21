@@ -6,6 +6,7 @@ export interface IAddress {
   phone: string;
   street: string;
   district: string;
+  subDistrict?: string;
   province: string;
   postalCode: string;
 }
@@ -31,6 +32,7 @@ const AddressSchema = new Schema<IAddress>({
   phone: { type: String },
   street: { type: String },
   district: { type: String },
+  subDistrict: { type: String },
   province: { type: String },
   postalCode: { type: String },
 });
