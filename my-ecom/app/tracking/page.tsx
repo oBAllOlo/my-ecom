@@ -16,10 +16,20 @@ interface Order {
     total: number;
     userId?: string | { _id: string };
     items: Array<{
+        productId?: string;
         name: string;
         quantity: number;
         price: number;
         image: string;
+        images?: string[];
+        customParts?: {
+            base?: { name?: string; image?: string };
+            switch?: { name?: string; image?: string };
+            keycapBase?: { name?: string; image?: string };
+            keycapAdd1?: { name?: string; image?: string };
+            keycapAdd2?: { name?: string; image?: string };
+            wire?: { name?: string; image?: string };
+        };
     }>;
     shippingAddress: {
         fullName: string;
@@ -361,30 +371,119 @@ export default function TrackingPage() {
                                     สินค้าในคำสั่งซื้อ ({order.items.reduce((sum, item) => sum + item.quantity, 0)} ชิ้น)
                                 </span>
                             </div>
-                            {order.items.map((item, idx) => (
+                            {order.items.map((item, idx) => {
+                                const isCustomProduct = item.productId?.startsWith("custom-");
+                                return (
                                 <div key={idx} style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "1rem",
-                                    padding: "0.75rem 1rem",
+                                    padding: "1rem",
                                     background: "rgba(255,255,255,0.03)",
                                     borderRadius: "12px",
                                     marginBottom: "0.5rem",
-                                    border: "1px solid rgba(255,255,255,0.05)"
+                                    border: isCustomProduct ? "1px solid rgba(139, 92, 246, 0.3)" : "1px solid rgba(255,255,255,0.05)"
                                 }}>
-                                    <img
-                                        src={item.image}
-                                        alt={item.name}
-                                        style={{ width: "52px", height: "52px", borderRadius: "10px", objectFit: "cover" }}
-                                    />
-                                    <div style={{ flex: 1 }}>
-
-                                        <p style={{ color: "white", margin: 0, fontSize: "0.9rem" }}>{item.name}</p>
-                                        <p style={{ color: "#64748b", margin: 0, fontSize: "0.8rem" }}>x{item.quantity}</p>
+                                    <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}>
+                                        {/* Image - Stack for custom products */}
+                                        <div style={{ 
+                                            position: "relative", 
+                                            width: isCustomProduct ? "80px" : "52px", 
+                                            height: isCustomProduct ? "80px" : "52px", 
+                                            borderRadius: "10px", 
+                                            overflow: "hidden",
+                                            background: "#334155",
+                                            flexShrink: 0
+                                        }}>
+                                            {isCustomProduct && item.images && item.images.length > 1 ? (
+                                                <>
+                                                    {item.images.map((img, imgIdx) => (
+                                                        <img
+                                                            key={imgIdx}
+                                                            src={img}
+                                                            alt={`${item.name} layer ${imgIdx + 1}`}
+                                                            style={{ 
+                                                                position: "absolute",
+                                                                inset: 0,
+                                                                width: "100%", 
+                                                                height: "100%", 
+                                                                objectFit: "contain",
+                                                                zIndex: imgIdx + 1
+                                                            }}
+                                                        />
+                                                    ))}
+                                                </>
+                                            ) : (
+                                                <img
+                                                    src={item.image}
+                                                    alt={item.name}
+                                                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                                />
+                                            )}
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                            <p style={{ color: "white", margin: 0, fontSize: "0.9rem", fontWeight: 600 }}>{item.name}</p>
+                                            <p style={{ color: "#64748b", margin: 0, fontSize: "0.8rem" }}>x{item.quantity}</p>
+                                            
+                                            {/* Custom Parts Display */}
+                                            {isCustomProduct && item.customParts && (
+                                                <div style={{ 
+                                                    marginTop: "0.75rem", 
+                                                    padding: "0.75rem", 
+                                                    background: "rgba(139, 92, 246, 0.1)", 
+                                                    borderRadius: "8px",
+                                                    fontSize: "0.75rem"
+                                                }}>
+                                                    <p style={{ color: "#a78bfa", margin: "0 0 0.5rem", fontWeight: 600 }}>🛠️ ชิ้นส่วนที่เลือก:</p>
+                                                    <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                                                        {item.customParts.base?.name && (
+                                                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                                                {item.customParts.base.image && <img src={item.customParts.base.image} alt="Base" style={{ width: "32px", height: "32px", borderRadius: "4px", objectFit: "contain", background: "#334155" }} />}
+                                                                <span style={{ color: "#94a3b8" }}>🖥️</span>
+                                                                <span style={{ color: "white" }}>{item.customParts.base.name}</span>
+                                                            </div>
+                                                        )}
+                                                        {item.customParts.switch?.name && (
+                                                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                                                {item.customParts.switch.image && <img src={item.customParts.switch.image} alt="Switch" style={{ width: "32px", height: "32px", borderRadius: "4px", objectFit: "contain", background: "#334155" }} />}
+                                                                <span style={{ color: "#94a3b8" }}>🔘</span>
+                                                                <span style={{ color: "white" }}>{item.customParts.switch.name}</span>
+                                                            </div>
+                                                        )}
+                                                        {item.customParts.keycapBase?.name && (
+                                                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                                                {item.customParts.keycapBase.image && <img src={item.customParts.keycapBase.image} alt="Keycap" style={{ width: "32px", height: "32px", borderRadius: "4px", objectFit: "contain", background: "#334155" }} />}
+                                                                <span style={{ color: "#94a3b8" }}>⌨️</span>
+                                                                <span style={{ color: "white" }}>{item.customParts.keycapBase.name}</span>
+                                                            </div>
+                                                        )}
+                                                        {item.customParts.keycapAdd1?.name && (
+                                                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                                                {item.customParts.keycapAdd1.image && <img src={item.customParts.keycapAdd1.image} alt="Add-on 1" style={{ width: "32px", height: "32px", borderRadius: "4px", objectFit: "contain", background: "#334155" }} />}
+                                                                <span style={{ color: "#94a3b8" }}>🎨</span>
+                                                                <span style={{ color: "white" }}>{item.customParts.keycapAdd1.name}</span>
+                                                            </div>
+                                                        )}
+                                                        {item.customParts.keycapAdd2?.name && (
+                                                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                                                {item.customParts.keycapAdd2.image && <img src={item.customParts.keycapAdd2.image} alt="Add-on 2" style={{ width: "32px", height: "32px", borderRadius: "4px", objectFit: "contain", background: "#334155" }} />}
+                                                                <span style={{ color: "#94a3b8" }}>🎨</span>
+                                                                <span style={{ color: "white" }}>{item.customParts.keycapAdd2.name}</span>
+                                                            </div>
+                                                        )}
+                                                        {item.customParts.wire?.name && (
+                                                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                                                {item.customParts.wire.image && <img src={item.customParts.wire.image} alt="Wire" style={{ width: "32px", height: "32px", borderRadius: "4px", objectFit: "contain", background: "#334155" }} />}
+                                                                <span style={{ color: "#94a3b8" }}>🔌</span>
+                                                                <span style={{ color: "white" }}>{item.customParts.wire.name}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <p style={{ color: "#10b981", fontWeight: 600, margin: 0, whiteSpace: "nowrap" }}>{formatPrice(item.price)}</p>
                                     </div>
-                                    <p style={{ color: "#10b981", fontWeight: 600, margin: 0 }}>{formatPrice(item.price)}</p>
                                 </div>
-                            ))}
+                                );
+                            })}
                             <div style={{
                                 display: "flex",
                                 justifyContent: "space-between",

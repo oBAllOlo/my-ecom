@@ -55,6 +55,12 @@ export async function POST(request: Request) {
     const reservedItems: { productId: string; quantity: number }[] = [];
 
     for (const item of body.items) {
+      // Skip stock check for custom products (they don't exist in Product DB)
+      if (item.productId.startsWith("custom-")) {
+        console.log(`Skipping stock check for custom product: ${item.productId}`);
+        continue;
+      }
+
       // ใช้ Atomic Update: ตรวจสอบ stock และลดในคำสั่งเดียว
       const result = await Product.findOneAndUpdate(
         {

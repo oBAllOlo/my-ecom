@@ -93,8 +93,66 @@ export default function CustomKeyboardPage() {
     return Object.values(selectedParts).filter(p => p !== null).length;
   }, [selectedParts]);
 
+  // Map switch names to audio file names
+  const getSwitchAudioPath = (switchName: string) => {
+    const audioMap: Record<string, string> = {
+      "Alpacas (Linear)": "/audio/alpacas.mp3",
+      "Cherry MX Blacks": "/audio/cherry-mx-blacks.mp3",
+      "Cherry MX Blues": "/audio/cherry-mx-blues.mp3",
+      "Cherry MX Browns": "/audio/cherry-mx-browns.mp3",
+      "Gateron Black Inks": "/audio/gateron-black-inks.mp3",
+      "Gateron Red Inks": "/audio/gateron-red-inks.mp3",
+      "Holy Pandas (Tactile)": "/audio/holy-pandas.mp3",
+      "NovelKeys Creams": "/audio/novelkeys-creams.mp3",
+      "Turquoise Tealios": "/audio/turquoise-tealios.mp3",
+    };
+    return audioMap[switchName] || null;
+  };
+
+  // Map switch names to switch image
+  const getSwitchImagePath = (switchName: string) => {
+    const imageMap: Record<string, string> = {
+      "Alpacas (Linear)": "/images/switch/switch_alpacas.png",
+      "Cherry MX Blacks": "/images/switch/switch_cherry-mx-blacks.png",
+      "Cherry MX Blues": "/images/switch/switch_cherry-mx-blues.png",
+      "Cherry MX Browns": "/images/switch/switch_cherry-mx-browns.png",
+      "Gateron Black Inks": "/images/switch/switch_gateron-black-inks.png",
+      "Gateron Red Inks": "/images/switch/switch_gateron-red-inks.png",
+      "Holy Pandas (Tactile)": "/images/switch/switch_holy-pandas.png",
+      "NovelKeys Creams": "/images/switch/switch_novelkeys-creams.png",
+      "Turquoise Tealios": "/images/switch/switch_turquoise-tealios.png",
+    };
+    return imageMap[switchName] || null;
+  };
+
+  const [showSwitchModal, setShowSwitchModal] = useState(false);
+  const [currentSwitchAudio, setCurrentSwitchAudio] = useState<string | null>(null);
+  const [currentSwitchImage, setCurrentSwitchImage] = useState<string | null>(null);
+  const [currentSwitchName, setCurrentSwitchName] = useState<string>("");
+
+  const playSound = (audioPath: string) => {
+    const audio = new Audio(audioPath);
+    audio.volume = 1.0; // Maximum volume
+    audio.play().catch(console.error);
+  };
+
   const handleSelectPart = (category: CategoryType, part: CustomPart) => {
     setSelectedParts((prev) => ({ ...prev, [category]: part }));
+    
+    // If selecting a switch, show modal with image and play sound
+    if (category === "switch") {
+      const audioPath = getSwitchAudioPath(part.name);
+      const imagePath = getSwitchImagePath(part.name);
+      
+      setCurrentSwitchName(part.name);
+      setCurrentSwitchAudio(audioPath);
+      setCurrentSwitchImage(imagePath);
+      setShowSwitchModal(true);
+      
+      if (audioPath) {
+        playSound(audioPath);
+      }
+    }
   };
 
   const isComplete = selectedParts.base && selectedParts.switch && selectedParts.keycapBase && selectedParts.keycapAdd1 && selectedParts.keycapAdd2 && selectedParts.wire;
@@ -105,17 +163,47 @@ export default function CustomKeyboardPage() {
       return;
     }
 
+    // Collect all part images for stacking display
+    const partImages = [
+      selectedParts.base?.image,
+      selectedParts.switch?.image,
+      selectedParts.keycapBase?.image,
+      selectedParts.keycapAdd1?.image,
+      selectedParts.keycapAdd2?.image,
+      selectedParts.wire?.image,
+    ].filter(Boolean) as string[];
+
+    // Create description with all parts
+    const partsDescription = [
+      `Base: ${selectedParts.base?.name}`,
+      `Switch: ${selectedParts.switch?.name}`,
+      `Keycap Base: ${selectedParts.keycapBase?.name}`,
+      `Keycap Add 1: ${selectedParts.keycapAdd1?.name}`,
+      `Keycap Add 2: ${selectedParts.keycapAdd2?.name}`,
+      `Wire: ${selectedParts.wire?.name}`,
+    ].join(" | ");
+
     const customProduct = {
       _id: `custom-${Date.now()}`,
       name: "คีย์บอร์ด Custom 60%",
-      description: `Base: ${selectedParts.base?.name}, Switch: ${selectedParts.switch?.name}, Keycap: ${selectedParts.keycapBase?.name}`,
+      description: partsDescription,
       price: totalPrice,
       image: selectedParts.base?.image || "/images/keyboard-placeholder.png",
+      images: partImages, // Store all part images for stacking
       category: "custom",
       brand: "Custom Build",
       stock: 1,
       rating: 5,
       reviews: 0,
+      // Store individual part names AND images for order display
+      customParts: {
+        base: { name: selectedParts.base?.name, image: selectedParts.base?.image },
+        switch: { name: selectedParts.switch?.name, image: selectedParts.switch?.image },
+        keycapBase: { name: selectedParts.keycapBase?.name, image: selectedParts.keycapBase?.image },
+        keycapAdd1: { name: selectedParts.keycapAdd1?.name, image: selectedParts.keycapAdd1?.image },
+        keycapAdd2: { name: selectedParts.keycapAdd2?.name, image: selectedParts.keycapAdd2?.image },
+        wire: { name: selectedParts.wire?.name, image: selectedParts.wire?.image },
+      },
     };
 
     addToCart(customProduct);
@@ -273,6 +361,31 @@ export default function CustomKeyboardPage() {
 
       {/* CENTER - Large Preview */}
       <div className="flex-1 relative flex items-center justify-center bg-slate-800 overflow-hidden">
+        {/* Switch Display Card - Top Left */}
+        {selectedParts.switch && (
+          <div className="absolute top-4 left-4 z-20 bg-slate-900/90 backdrop-blur-sm rounded-xl border border-white/10 p-3 w-44">
+            <div className="relative w-full aspect-square mb-2 bg-slate-700 rounded-lg overflow-hidden">
+              {getSwitchImagePath(selectedParts.switch.name) && (
+                <Image
+                  src={getSwitchImagePath(selectedParts.switch.name)!}
+                  alt={selectedParts.switch.name}
+                  fill
+                  className="object-contain p-2"
+                />
+              )}
+            </div>
+            <p className="text-white text-sm font-bold text-center mb-2 truncate">{selectedParts.switch.name}</p>
+            {getSwitchAudioPath(selectedParts.switch.name) && (
+              <button
+                onClick={() => playSound(getSwitchAudioPath(selectedParts.switch!.name)!)}
+                className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1"
+              >
+                <span>🔊</span> Play Sound
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Stacked Keyboard Parts Preview */}
         {selectedParts.base?.image ? (
           <div className="relative w-full h-full max-w-5xl mx-auto">
@@ -351,7 +464,6 @@ export default function CustomKeyboardPage() {
           </div>
         )}
       </div>
-
 
     </div>
   );

@@ -13,10 +13,21 @@ interface Order {
     email: string;
   };
   items: Array<{
+    productId: string;
     name: string;
+    description?: string;
     price: number;
     quantity: number;
     image: string;
+    images?: string[];
+    customParts?: {
+      base?: { name?: string; image?: string };
+      switch?: { name?: string; image?: string };
+      keycapBase?: { name?: string; image?: string };
+      keycapAdd1?: { name?: string; image?: string };
+      keycapAdd2?: { name?: string; image?: string };
+      wire?: { name?: string; image?: string };
+    };
   }>;
   total: number;
   status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
@@ -58,6 +69,9 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<"all" | "custom" | "regular">("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   // Shipping modal state
   const [showShippingModal, setShowShippingModal] = useState(false);
@@ -66,6 +80,34 @@ export default function AdminOrders() {
   const [selectedCarrier, setSelectedCarrier] = useState("kerry");
   const [isShipping, setIsShipping] = useState(false);
   const [shippingMessage, setShippingMessage] = useState({ type: "", text: "" });
+
+  // Helper function to check if order contains custom products
+  const isCustomOrder = (order: Order) => {
+    return order.items.some(item => item.productId?.startsWith("custom-"));
+  };
+
+  // Filter orders based on category
+  const filteredOrders = orders.filter(order => {
+    if (categoryFilter === "all") return true;
+    if (categoryFilter === "custom") return isCustomOrder(order);
+    return !isCustomOrder(order);
+  });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE);
+  const paginatedOrders = filteredOrders.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // Reset to page 1 when filter changes
+  const handleCategoryChange = (category: "all" | "custom" | "regular") => {
+    setCategoryFilter(category);
+    setCurrentPage(1);
+  };
+
+  const customOrdersCount = orders.filter(isCustomOrder).length;
+  const regularOrdersCount = orders.length - customOrdersCount;
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== "admin")) {
@@ -211,6 +253,49 @@ export default function AdminOrders() {
       </header>
 
       <main className="p-8">
+        {/* Category Filter Tabs */}
+        <div className="flex gap-3 mb-6">
+          <button
+            onClick={() => handleCategoryChange("all")}
+            className={`px-5 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 ${
+              categoryFilter === "all"
+                ? "bg-violet-500 text-white shadow-lg shadow-violet-500/30"
+                : "bg-slate-800/50 text-slate-400 hover:bg-slate-700/50"
+            }`}
+          >
+            📦 ทั้งหมด
+            <span className={`text-xs px-2 py-0.5 rounded-full ${
+              categoryFilter === "all" ? "bg-white/20" : "bg-slate-600"
+            }`}>{orders.length}</span>
+          </button>
+          <button
+            onClick={() => handleCategoryChange("custom")}
+            className={`px-5 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 ${
+              categoryFilter === "custom"
+                ? "bg-purple-500 text-white shadow-lg shadow-purple-500/30"
+                : "bg-slate-800/50 text-slate-400 hover:bg-slate-700/50"
+            }`}
+          >
+            🛠️ Custom Build
+            <span className={`text-xs px-2 py-0.5 rounded-full ${
+              categoryFilter === "custom" ? "bg-white/20" : "bg-slate-600"
+            }`}>{customOrdersCount}</span>
+          </button>
+          <button
+            onClick={() => handleCategoryChange("regular")}
+            className={`px-5 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 ${
+              categoryFilter === "regular"
+                ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
+                : "bg-slate-800/50 text-slate-400 hover:bg-slate-700/50"
+            }`}
+          >
+            🛒 สินค้าทั่วไป
+            <span className={`text-xs px-2 py-0.5 rounded-full ${
+              categoryFilter === "regular" ? "bg-white/20" : "bg-slate-600"
+            }`}>{regularOrdersCount}</span>
+          </button>
+        </div>
+
         {/* Orders Table */}
         <div className="bg-slate-800/50 border border-violet-500/20 rounded-2xl overflow-hidden">
           <table className="w-full border-collapse">
@@ -225,12 +310,24 @@ export default function AdminOrders() {
               </tr>
             </thead>
             <tbody>
-              {orders.map((order) => {
+              {paginatedOrders.map((order) => {
                 const status = statusConfig[order.status];
+                const isCustom = isCustomOrder(order);
                 return (
                   <tr key={order._id} className="hover:bg-violet-500/5 transition-colors">
                     <td className="p-4 border-b border-white/5">
-                      <span className="font-mono text-slate-50 font-semibold">#{order._id.slice(-8).toUpperCase()}</span>
+                      <div className="flex flex-col gap-1">
+                        <span className="font-mono text-slate-50 font-semibold">#{order._id.slice(-8).toUpperCase()}</span>
+                        {isCustom ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-500/20 text-purple-400 w-fit">
+                            🛠️ Custom
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 w-fit">
+                            🛒 ปกติ
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="p-4 border-b border-white/5">
                       <div className="flex flex-col">
@@ -270,6 +367,90 @@ export default function AdminOrders() {
             </div>
           )}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-6 bg-slate-800/50 border border-violet-500/20 rounded-xl p-4">
+            <div className="text-slate-400 text-sm">
+              แสดง {((currentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, filteredOrders.length)} จาก {filteredOrders.length} รายการ
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                className={`px-3 py-2 rounded-lg font-medium transition-all ${
+                  currentPage === 1
+                    ? "bg-slate-700/50 text-slate-500 cursor-not-allowed"
+                    : "bg-slate-700 text-slate-200 hover:bg-slate-600"
+                }`}
+              >
+                ⏮️
+              </button>
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  currentPage === 1
+                    ? "bg-slate-700/50 text-slate-500 cursor-not-allowed"
+                    : "bg-slate-700 text-slate-200 hover:bg-slate-600"
+                }`}
+              >
+                ← ก่อนหน้า
+              </button>
+              
+              <div className="flex items-center gap-1 px-2">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum: number;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`w-10 h-10 rounded-lg font-semibold transition-all ${
+                        currentPage === pageNum
+                          ? "bg-violet-500 text-white shadow-lg shadow-violet-500/30"
+                          : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  currentPage === totalPages
+                    ? "bg-slate-700/50 text-slate-500 cursor-not-allowed"
+                    : "bg-slate-700 text-slate-200 hover:bg-slate-600"
+                }`}
+              >
+                ถัดไป →
+              </button>
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className={`px-3 py-2 rounded-lg font-medium transition-all ${
+                  currentPage === totalPages
+                    ? "bg-slate-700/50 text-slate-500 cursor-not-allowed"
+                    : "bg-slate-700 text-slate-200 hover:bg-slate-600"
+                }`}
+              >
+                ⏭️
+              </button>
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Order Detail Modal */}
@@ -285,16 +466,93 @@ export default function AdminOrders() {
               <div className="mb-8">
                 <h3 className="text-slate-50 text-base mb-4">📦 รายการสินค้า</h3>
                 <div className="flex flex-col gap-3">
-                  {selectedOrder.items.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-4 p-3 bg-white/5 rounded-xl">
-                      <img src={item.image} alt={item.name} className="w-12 h-12 rounded-lg object-cover" />
-                      <div className="flex-1">
-                        <p className="text-slate-50 m-0">{item.name}</p>
-                        <p className="text-slate-500 text-sm m-0">x{item.quantity}</p>
+                  {selectedOrder.items.map((item, idx) => {
+                    const isCustomProduct = item.productId?.startsWith("custom-");
+                    return (
+                      <div key={idx} className="p-4 bg-white/5 rounded-xl">
+                        <div className="flex items-start gap-4">
+                          {/* Image - Stack for custom products */}
+                          <div className={`relative flex-shrink-0 bg-slate-700 rounded-xl overflow-hidden ${isCustomProduct ? "w-24 h-24" : "w-16 h-16"}`}>
+                            {isCustomProduct && item.images && item.images.length > 1 ? (
+                              <>
+                                {item.images.map((img, imgIdx) => (
+                                  <img
+                                    key={imgIdx}
+                                    src={img}
+                                    alt={`${item.name} layer ${imgIdx + 1}`}
+                                    className="absolute inset-0 w-full h-full object-contain"
+                                    style={{ zIndex: imgIdx + 1 }}
+                                  />
+                                ))}
+                              </>
+                            ) : (
+                              <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                            )}
+                          </div>
+                        <div className="flex-1">
+                          <p className="text-slate-50 m-0 font-semibold">{item.name}</p>
+                          <p className="text-slate-500 text-sm m-0">x{item.quantity}</p>
+                          
+                          {/* Custom Product Details */}
+                          {isCustomProduct && (
+                            <div className="mt-2 text-xs space-y-1">
+                              <p className="m-0 text-purple-400 font-medium">🛠️ ชิ้นส่วนที่เลือก:</p>
+                              {item.customParts ? (
+                                <div className="bg-purple-500/10 rounded-lg p-3 mt-2 space-y-2">
+                                  {item.customParts.base?.name && (
+                                    <div className="flex items-center gap-2">
+                                      {item.customParts.base.image && <img src={item.customParts.base.image} alt="Base" className="w-16 h-16 rounded object-contain bg-slate-700" />}
+                                      <span className="text-slate-300">🖥️ Base:</span>
+                                      <span className="text-white">{item.customParts.base.name}</span>
+                                    </div>
+                                  )}
+                                  {item.customParts.switch?.name && (
+                                    <div className="flex items-center gap-2">
+                                      {item.customParts.switch.image && <img src={item.customParts.switch.image} alt="Switch" className="w-16 h-16 rounded object-contain bg-slate-700" />}
+                                      <span className="text-slate-300">🔘 Switch:</span>
+                                      <span className="text-white">{item.customParts.switch.name}</span>
+                                    </div>
+                                  )}
+                                  {item.customParts.keycapBase?.name && (
+                                    <div className="flex items-center gap-2">
+                                      {item.customParts.keycapBase.image && <img src={item.customParts.keycapBase.image} alt="Keycap" className="w-16 h-16 rounded object-contain bg-slate-700" />}
+                                      <span className="text-slate-300">⌨️ Keycap:</span>
+                                      <span className="text-white">{item.customParts.keycapBase.name}</span>
+                                    </div>
+                                  )}
+                                  {item.customParts.keycapAdd1?.name && (
+                                    <div className="flex items-center gap-2">
+                                      {item.customParts.keycapAdd1.image && <img src={item.customParts.keycapAdd1.image} alt="Add-on 1" className="w-16 h-16 rounded object-contain bg-slate-700" />}
+                                      <span className="text-slate-300">🎨 Add-on 1:</span>
+                                      <span className="text-white">{item.customParts.keycapAdd1.name}</span>
+                                    </div>
+                                  )}
+                                  {item.customParts.keycapAdd2?.name && (
+                                    <div className="flex items-center gap-2">
+                                      {item.customParts.keycapAdd2.image && <img src={item.customParts.keycapAdd2.image} alt="Add-on 2" className="w-16 h-16 rounded object-contain bg-slate-700" />}
+                                      <span className="text-slate-300">🎨 Add-on 2:</span>
+                                      <span className="text-white">{item.customParts.keycapAdd2.name}</span>
+                                    </div>
+                                  )}
+                                  {item.customParts.wire?.name && (
+                                    <div className="flex items-center gap-2">
+                                      {item.customParts.wire.image && <img src={item.customParts.wire.image} alt="Wire" className="w-16 h-16 rounded object-contain bg-slate-700" />}
+                                      <span className="text-slate-300">🔌 Wire:</span>
+                                      <span className="text-white">{item.customParts.wire.name}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <p className="m-0 text-slate-500 italic">ไม่พบข้อมูลชิ้นส่วน</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                          <p className="text-emerald-400 font-semibold m-0 ml-auto">{formatPrice(item.price * item.quantity)}</p>
+                        </div>
                       </div>
-                      <p className="text-emerald-400 font-semibold m-0">{formatPrice(item.price * item.quantity)}</p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 <div className="flex justify-between pt-4 mt-4 border-t border-white/10 text-slate-400">
                   <span>ยอดรวม</span>

@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 
 interface OrderItem {
-  productId: {
+  productId: string | {
     _id: string;
     name: string;
     image: string;
@@ -15,6 +15,7 @@ interface OrderItem {
   name: string;
   price: number;
   image: string;
+  images?: string[];
   quantity: number;
 }
 
@@ -32,6 +33,25 @@ export default function OrdersPage() {
   const { showToast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [categoryFilter, setCategoryFilter] = useState<"all" | "custom" | "regular">("all");
+
+  // Helper function to check if order contains custom products
+  const isCustomOrder = (order: Order) => {
+    return order.items.some(item => {
+      const productId = typeof item.productId === 'string' ? item.productId : item.productId?._id;
+      return productId?.startsWith("custom-");
+    });
+  };
+
+  // Filter orders based on category
+  const filteredOrders = orders.filter(order => {
+    if (categoryFilter === "all") return true;
+    if (categoryFilter === "custom") return isCustomOrder(order);
+    return !isCustomOrder(order);
+  });
+
+  const customOrdersCount = orders.filter(isCustomOrder).length;
+  const regularOrdersCount = orders.length - customOrdersCount;
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -232,18 +252,104 @@ export default function OrdersPage() {
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '0.75rem',
+            justifyContent: 'space-between',
             marginBottom: '1rem',
-            color: 'white',
-            fontSize: '1.1rem',
-            fontWeight: 600
+            flexWrap: 'wrap',
+            gap: '1rem'
           }}>
-            <span>🛒</span>
-            <span>รายการคำสั่งซื้อ</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'white', fontSize: '1.1rem', fontWeight: 600 }}>
+              <span>🛒</span>
+              <span>รายการคำสั่งซื้อ</span>
+            </div>
+            
+            {/* Category Filter Tabs */}
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                onClick={() => setCategoryFilter("all")}
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: '10px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  background: categoryFilter === "all" 
+                    ? 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)' 
+                    : 'rgba(255,255,255,0.1)',
+                  color: categoryFilter === "all" ? 'white' : '#94a3b8',
+                  boxShadow: categoryFilter === "all" ? '0 4px 12px rgba(139, 92, 246, 0.3)' : 'none'
+                }}
+              >
+                📦 ทั้งหมด
+                <span style={{ 
+                  background: categoryFilter === "all" ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)', 
+                  padding: '0.15rem 0.5rem', 
+                  borderRadius: '20px',
+                  fontSize: '0.75rem'
+                }}>{orders.length}</span>
+              </button>
+              <button
+                onClick={() => setCategoryFilter("custom")}
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: '10px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  background: categoryFilter === "custom" 
+                    ? 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)' 
+                    : 'rgba(255,255,255,0.1)',
+                  color: categoryFilter === "custom" ? 'white' : '#94a3b8',
+                  boxShadow: categoryFilter === "custom" ? '0 4px 12px rgba(168, 85, 247, 0.3)' : 'none'
+                }}
+              >
+                🛠️ Custom
+                <span style={{ 
+                  background: categoryFilter === "custom" ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)', 
+                  padding: '0.15rem 0.5rem', 
+                  borderRadius: '20px',
+                  fontSize: '0.75rem'
+                }}>{customOrdersCount}</span>
+              </button>
+              <button
+                onClick={() => setCategoryFilter("regular")}
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: '10px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  background: categoryFilter === "regular" 
+                    ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' 
+                    : 'rgba(255,255,255,0.1)',
+                  color: categoryFilter === "regular" ? 'white' : '#94a3b8',
+                  boxShadow: categoryFilter === "regular" ? '0 4px 12px rgba(59, 130, 246, 0.3)' : 'none'
+                }}
+              >
+                🛒 สินค้าทั่วไป
+                <span style={{ 
+                  background: categoryFilter === "regular" ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)', 
+                  padding: '0.15rem 0.5rem', 
+                  borderRadius: '20px',
+                  fontSize: '0.75rem'
+                }}>{regularOrdersCount}</span>
+              </button>
+            </div>
           </div>
 
 
-          {orders.length === 0 ? (
+          {filteredOrders.length === 0 ? (
             <div style={{
               padding: '4rem 2rem',
               textAlign: 'center',
@@ -297,8 +403,9 @@ export default function OrdersPage() {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {orders.map((order) => {
+              {filteredOrders.map((order) => {
                 const statusConfig = getStatusConfig(order.status);
+                const isCustom = isCustomOrder(order);
                 return (
                   <div
                     key={order._id}
@@ -307,7 +414,7 @@ export default function OrdersPage() {
                       overflow: 'hidden',
                       background: 'rgba(30, 41, 59, 0.5)',
                       borderRadius: '12px',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      border: isCustom ? '1px solid rgba(168, 85, 247, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
                       width: '100%'
                     }}
                   >
@@ -394,32 +501,56 @@ export default function OrdersPage() {
 
                       {/* Product Images + Count */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, justifyContent: 'center' }}>
-                        {order.items.slice(0, 2).map((item, index) => (
+                        {order.items.slice(0, 2).map((item, index) => {
+                          const itemProductId = typeof item.productId === 'string' ? item.productId : item.productId?._id;
+                          const isCustomItem = itemProductId?.startsWith("custom-");
+                          return (
                           <div
                             key={index}
                             style={{
-                              width: '48px',
-                              height: '48px',
+                              position: 'relative',
+                              width: '150px',
+                              height: '150px',
                               borderRadius: '8px',
                               overflow: 'hidden',
                               background: 'rgba(15, 23, 42, 0.5)',
-                              border: '1px solid rgba(255, 255, 255, 0.08)',
+                              border: isCustomItem ? '2px solid rgba(168, 85, 247, 0.5)' : '1px solid rgba(255, 255, 255, 0.08)',
                               flexShrink: 0
                             }}
                           >
-                            <img
-                              src={item.image}
-                              alt={item.name}
-                              style={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'cover',
-                                display: 'block'
-                              }}
-                            />
+                            {isCustomItem && item.images && item.images.length > 1 ? (
+                              <>
+                                {item.images.map((img, imgIdx) => (
+                                  <img
+                                    key={imgIdx}
+                                    src={img}
+                                    alt={`${item.name} layer ${imgIdx + 1}`}
+                                    style={{
+                                      position: 'absolute',
+                                      inset: '8px',
+                                      width: 'calc(100% - 16px)',
+                                      height: 'calc(100% - 16px)',
+                                      objectFit: 'contain',
+                                      zIndex: imgIdx + 1
+                                    }}
+                                  />
+                                ))}
+                              </>
+                            ) : (
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: 'cover',
+                                  display: 'block'
+                                }}
+                              />
+                            )}
                           </div>
-
-                        ))}
+                          );
+                        })}
                         {order.items.length > 2 && (
                           <span style={{
                             color: '#64748b',
