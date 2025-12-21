@@ -44,54 +44,50 @@ export default function Home() {
   return (
     <>
       {/* Hero Section */}
-      <section className="hero">
-        <div className="hero-content">
-          <span className="hero-badge">
+      <section className="hero py-24 px-8 text-center bg-gradient-to-br from-violet-900/50 via-slate-900 to-slate-900">
+        <div className="max-w-4xl mx-auto">
+          <span className="inline-block bg-gradient-to-r from-violet-500 to-indigo-500 text-white py-2 px-6 rounded-full text-sm font-medium mb-8">
             🎉 ส่งฟรีทั่วประเทศ เมื่อสั่งซื้อครบ ฿1,500
           </span>
-          <h1 className="hero-title">
+          <h1 className="text-5xl md:text-6xl font-extrabold text-white mb-6 leading-tight">
             คีย์บอร์ดคุณภาพ
             <br />
-            สำหรับทุกสไตล์การใช้งาน
+            <span className="bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">สำหรับทุกสไตล์การใช้งาน</span>
           </h1>
-          <p className="hero-description">
+          <p className="text-slate-400 text-lg max-w-2xl mx-auto">
             เลือกช้อปคีย์บอร์ด Mechanical และ Gaming จากแบรนด์ชั้นนำทั่วโลก
             พร้อมรับประกันสินค้าและบริการหลังการขายครบวงจร
           </p>
-
-
         </div>
       </section>
 
       {/* Categories Section */}
-      <section className="section">
-        <div className="section-header">
-          <h2 className="section-title">
-            หมวดหมู่<span>สินค้า</span>
+      <section className="section py-16 px-8">
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-3xl font-bold text-white">
+            หมวดหมู่<span className="bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">สินค้า</span>
           </h2>
-          <Link href="/products" className="view-all-link">
+          <Link href="/products" className="text-violet-400 hover:text-violet-300 transition-colors">
             ดูทั้งหมด →
           </Link>
         </div>
         {loading ? (
-          <div className="loading-grid">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-6">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="skeleton-card"></div>
+              <div key={i} className="h-[120px] bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 bg-[length:200%_100%] animate-shimmer rounded-2xl"></div>
             ))}
           </div>
         ) : (
-          <div className="categories-grid">
+          <div className="categories-grid grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
             {categories.map((category) => (
               <Link
                 key={category._id}
                 href={`/products?category=${encodeURIComponent(category.name)}`}
-                className="category-card"
+                className="category-card bg-slate-800/50 border border-white/10 rounded-2xl p-6 text-center hover:border-violet-500/50 hover:-translate-y-1 hover:shadow-xl hover:shadow-violet-500/10 transition-all group"
               >
-                <span className="category-icon">{category.icon}</span>
-                <span className="category-name">{category.name}</span>
-                <span className="category-count">
-                  {category.productCount} สินค้า
-                </span>
+                <span className="text-4xl block mb-3 group-hover:scale-110 transition-transform">{category.icon}</span>
+                <span className="text-white font-semibold block mb-1">{category.name}</span>
+                <span className="text-slate-500 text-sm">{category.productCount} สินค้า</span>
               </Link>
             ))}
           </div>
@@ -99,23 +95,23 @@ export default function Home() {
       </section>
 
       {/* Featured Products Section */}
-      <section className="section">
-        <div className="section-header">
-          <h2 className="section-title">
-            สินค้า<span>แนะนำ</span>
+      <section className="section py-16 px-8">
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-3xl font-bold text-white">
+            สินค้า<span className="bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">แนะนำ</span>
           </h2>
-          <Link href="/products" className="view-all-link">
+          <Link href="/products" className="text-violet-400 hover:text-violet-300 transition-colors">
             ดูทั้งหมด →
           </Link>
         </div>
         {loading ? (
-          <div className="loading-grid">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-6">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="skeleton-product"></div>
+              <div key={i} className="h-[350px] bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 bg-[length:200%_100%] animate-shimmer rounded-2xl"></div>
             ))}
           </div>
         ) : (
-          <div className="products-grid">
+          <div className="products-grid grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6">
             {featuredProducts.map((product) => (
               <ProductCard key={product._id} product={product} />
             ))}
@@ -124,58 +120,29 @@ export default function Home() {
       </section>
 
       {/* New Products Section */}
-      <section className="section">
-        <div className="section-header">
-          <h2 className="section-title">
-            สินค้า<span>มาใหม่</span>
+      <section className="section py-16 px-8">
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-3xl font-bold text-white">
+            สินค้า<span className="bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">มาใหม่</span>
           </h2>
-          <Link href="/products?new=true" className="view-all-link">
+          <Link href="/products?new=true" className="text-violet-400 hover:text-violet-300 transition-colors">
             ดูทั้งหมด →
           </Link>
         </div>
         {loading ? (
-          <div className="loading-grid">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-6">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="skeleton-product"></div>
+              <div key={i} className="h-[350px] bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 bg-[length:200%_100%] animate-shimmer rounded-2xl"></div>
             ))}
           </div>
         ) : (
-          <div className="products-grid">
+          <div className="products-grid grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6">
             {newProducts.map((product) => (
               <ProductCard key={product._id} product={product} />
             ))}
           </div>
         )}
       </section>
-
-
-
-
-      <style jsx>{`
-        .loading-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-          gap: 1.5rem;
-        }
-        .skeleton-card {
-          height: 120px;
-          background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
-          background-size: 200% 100%;
-          animation: shimmer 1.5s infinite;
-          border-radius: 16px;
-        }
-        .skeleton-product {
-          height: 350px;
-          background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
-          background-size: 200% 100%;
-          animation: shimmer 1.5s infinite;
-          border-radius: 16px;
-        }
-        @keyframes shimmer {
-          0% { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-      `}</style>
     </>
   );
 }

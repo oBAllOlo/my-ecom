@@ -115,9 +115,11 @@ export default function AdminProducts() {
 
   if (isLoading || loading) {
     return (
-      <div className="admin-loading">
-        <div className="admin-loading-spinner"></div>
-        <p>กำลังโหลดข้อมูล...</p>
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-400">กำลังโหลดข้อมูล...</p>
+        </div>
       </div>
     );
   }
@@ -127,69 +129,67 @@ export default function AdminProducts() {
   }
 
   return (
-    <div className="admin-dashboard">
-      <div className="admin-bg-pattern"></div>
-
+    <div className="min-h-screen bg-slate-900 relative">
       {/* Admin Header */}
-      <header className="admin-header">
-        <div className="admin-header-content">
-          <div className="admin-header-left">
-            <Link href="/admin" className="admin-back-link">
+      <header className="bg-slate-800/50 border-b border-white/5 px-8 py-6">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-6">
+            <Link href="/admin" className="text-violet-400 no-underline font-medium py-2 px-4 bg-violet-500/10 rounded-lg hover:bg-violet-500/20 transition-all">
               ← กลับ
             </Link>
-            <div className="admin-page-title">
-              <span className="admin-page-icon">📦</span>
+            <div className="flex items-center gap-4">
+              <span className="text-4xl">📦</span>
               <div>
-                <h1>จัดการสินค้า</h1>
-                <p>{products.length} สินค้าทั้งหมด</p>
+                <h1 className="text-2xl font-extrabold text-slate-50 m-0">จัดการสินค้า</h1>
+                <p className="text-sm text-slate-500 m-0">{products.length} สินค้าทั้งหมด</p>
               </div>
             </div>
           </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="add-product-btn"
+            className="flex items-center gap-2 py-3 px-6 bg-gradient-to-r from-emerald-500 to-emerald-600 border-none rounded-xl text-white font-semibold cursor-pointer hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/30 transition-all"
           >
-            <span>+</span> เพิ่มสินค้าใหม่
+            <span className="text-xl">+</span> เพิ่มสินค้าใหม่
           </button>
         </div>
       </header>
 
-      <main className="admin-main">
+      <main className="p-8">
         {/* Products Grid */}
-        <div className="products-grid">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6">
           {products.map((product, index) => (
             <div 
               key={product._id} 
-              className="product-admin-card"
+              className="bg-slate-800/50 border border-violet-500/20 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:border-violet-500/50 hover:shadow-2xl hover:shadow-violet-500/20 animate-fadeInUp"
               style={{ animationDelay: `${index * 0.05}s` }}
             >
-              <div className="product-admin-image">
-                <img src={product.image} alt={product.name} />
-                <div className="product-admin-badges">
-                  {product.isNew && <span className="badge-new">ใหม่</span>}
-                  {product.isFeatured && <span className="badge-featured">แนะนำ</span>}
+              <div className="relative aspect-[4/3] overflow-hidden">
+                <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 hover:scale-110" />
+                <div className="absolute top-3 left-3 flex gap-2">
+                  {product.isNew && <span className="py-1 px-3 bg-gradient-to-r from-blue-500 to-blue-700 text-white text-xs font-bold rounded-full">ใหม่</span>}
+                  {product.isFeatured && <span className="py-1 px-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs font-bold rounded-full">แนะนำ</span>}
                 </div>
               </div>
-              <div className="product-admin-info">
-                <span className="product-admin-brand">{product.brand}</span>
-                <h3 className="product-admin-name">{product.name}</h3>
-                <div className="product-admin-meta">
-                  <span className="product-admin-price">{formatPrice(product.price)}</span>
-                  <span className={`product-admin-stock ${product.stock > 10 ? 'in-stock' : product.stock > 0 ? 'low-stock' : 'out-stock'}`}>
+              <div className="p-5">
+                <span className="text-xs text-violet-400 font-semibold uppercase tracking-wide">{product.brand}</span>
+                <h3 className="text-lg font-bold text-slate-50 mt-1 mb-3 leading-tight">{product.name}</h3>
+                <div className="flex justify-between items-center">
+                  <span className="text-xl font-extrabold bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent">{formatPrice(product.price)}</span>
+                  <span className={`text-sm font-semibold py-1 px-3 rounded-full ${product.stock > 10 ? 'bg-emerald-500/20 text-emerald-400' : product.stock > 0 ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}`}>
                     {product.stock > 0 ? `${product.stock} ชิ้น` : 'หมด'}
                   </span>
                 </div>
               </div>
-              <div className="product-admin-actions">
+              <div className="p-4 border-t border-white/5 flex gap-3">
                 <button
                   onClick={() => setEditingProduct(product)}
-                  className="edit-btn"
+                  className="flex-1 py-3 bg-blue-500/10 border border-blue-500/30 rounded-xl text-blue-400 font-semibold cursor-pointer transition-all hover:bg-blue-500/20 hover:scale-[1.02]"
                 >
                   ✏️ แก้ไข
                 </button>
                 <button
                   onClick={() => handleDeleteClick(product)}
-                  className="delete-btn"
+                  className="flex-1 py-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 font-semibold cursor-pointer transition-all hover:bg-red-500/20 hover:scale-[1.02]"
                 >
                   🗑️ ลบ
                 </button>
@@ -199,8 +199,8 @@ export default function AdminProducts() {
         </div>
 
         {products.length === 0 && (
-          <div className="admin-empty-state">
-            <span className="empty-icon">📦</span>
+          <div className="text-center py-16 text-slate-500">
+            <span className="text-6xl block mb-4">📦</span>
             <p>ยังไม่มีสินค้า</p>
           </div>
         )}
@@ -235,219 +235,6 @@ export default function AdminProducts() {
         onCancel={() => setDeleteConfirm({ show: false, id: "", name: "" })}
         type="danger"
       />
-      <style jsx>{`
-        .admin-back-link {
-          color: #a78bfa;
-          text-decoration: none;
-          font-weight: 500;
-          padding: 0.5rem 1rem;
-          background: rgba(139, 92, 246, 0.1);
-          border-radius: 8px;
-          transition: all 0.3s ease;
-        }
-        .admin-back-link:hover {
-          background: rgba(139, 92, 246, 0.2);
-        }
-        .admin-page-title {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-        .admin-page-icon {
-          font-size: 2.5rem;
-        }
-        .admin-page-title h1 {
-          font-size: 1.5rem;
-          font-weight: 800;
-          color: #f8fafc;
-          margin: 0;
-        }
-        .admin-page-title p {
-          font-size: 0.85rem;
-          color: #64748b;
-          margin: 0;
-        }
-        .add-product-btn {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.75rem 1.5rem;
-          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-          border: none;
-          border-radius: 12px;
-          color: white;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
-        .add-product-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
-        }
-        .add-product-btn span {
-          font-size: 1.25rem;
-        }
-        .products-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          gap: 1.5rem;
-        }
-        .product-admin-card {
-          background: rgba(30, 41, 59, 0.5);
-          border: 1px solid rgba(139, 92, 246, 0.2);
-          border-radius: 20px;
-          overflow: hidden;
-          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-          animation: fadeInUp 0.6s ease forwards;
-          opacity: 0;
-        }
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .product-admin-card:hover {
-          transform: translateY(-8px);
-          border-color: rgba(139, 92, 246, 0.5);
-          box-shadow: 0 25px 50px -12px rgba(139, 92, 246, 0.3);
-        }
-        .product-admin-image {
-          position: relative;
-          aspect-ratio: 4/3;
-          overflow: hidden;
-        }
-        .product-admin-image img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          transition: transform 0.5s ease;
-        }
-        .product-admin-card:hover .product-admin-image img {
-          transform: scale(1.1);
-        }
-        .product-admin-badges {
-          position: absolute;
-          top: 0.75rem;
-          left: 0.75rem;
-          display: flex;
-          gap: 0.5rem;
-        }
-        .badge-new {
-          padding: 0.35rem 0.75rem;
-          background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-          color: white;
-          font-size: 0.75rem;
-          font-weight: 700;
-          border-radius: 100px;
-        }
-        .badge-featured {
-          padding: 0.35rem 0.75rem;
-          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-          color: white;
-          font-size: 0.75rem;
-          font-weight: 700;
-          border-radius: 100px;
-        }
-        .product-admin-info {
-          padding: 1.25rem;
-        }
-        .product-admin-brand {
-          font-size: 0.75rem;
-          color: #a78bfa;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-        .product-admin-name {
-          font-size: 1.1rem;
-          font-weight: 700;
-          color: #f8fafc;
-          margin: 0.25rem 0 0.75rem 0;
-          line-height: 1.3;
-        }
-        .product-admin-meta {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        .product-admin-price {
-          font-size: 1.25rem;
-          font-weight: 800;
-          background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
-        .product-admin-stock {
-          font-size: 0.85rem;
-          font-weight: 600;
-          padding: 0.35rem 0.75rem;
-          border-radius: 100px;
-        }
-        .product-admin-stock.in-stock {
-          background: rgba(16, 185, 129, 0.2);
-          color: #34d399;
-        }
-        .product-admin-stock.low-stock {
-          background: rgba(245, 158, 11, 0.2);
-          color: #fbbf24;
-        }
-        .product-admin-stock.out-stock {
-          background: rgba(239, 68, 68, 0.2);
-          color: #f87171;
-        }
-        .product-admin-actions {
-          padding: 1rem 1.25rem;
-          border-top: 1px solid rgba(255, 255, 255, 0.05);
-          display: flex;
-          gap: 0.75rem;
-        }
-        .edit-btn {
-          flex: 1;
-          padding: 0.75rem;
-          background: rgba(59, 130, 246, 0.1);
-          border: 1px solid rgba(59, 130, 246, 0.3);
-          border-radius: 10px;
-          color: #60a5fa;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
-        .edit-btn:hover {
-          background: rgba(59, 130, 246, 0.2);
-          transform: scale(1.02);
-        }
-        .delete-btn {
-          flex: 1;
-          padding: 0.75rem;
-          background: rgba(239, 68, 68, 0.1);
-          border: 1px solid rgba(239, 68, 68, 0.3);
-          border-radius: 10px;
-          color: #f87171;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
-        .delete-btn:hover {
-          background: rgba(239, 68, 68, 0.2);
-          transform: scale(1.02);
-        }
-        .admin-empty-state {
-          text-align: center;
-          padding: 4rem 2rem;
-          color: #64748b;
-        }
-        .empty-icon {
-          font-size: 4rem;
-          display: block;
-          margin-bottom: 1rem;
-        }
-      `}</style>
     </div>
   );
 }
@@ -507,9 +294,7 @@ function ProductModal({ product, categories, onClose, onSave }: ProductModalProp
 
       const data = await res.json();
       if (data.success) {
-        // Add to images array
         const newImages = [...formData.images, data.url];
-        // Set first image as main if no main image yet
         if (!formData.image) {
           setFormData({ ...formData, image: data.url, images: newImages });
         } else {
@@ -528,7 +313,6 @@ function ProductModal({ product, categories, onClose, onSave }: ProductModalProp
 
   const removeImage = (indexToRemove: number) => {
     const newImages = formData.images.filter((_, i) => i !== indexToRemove);
-    // If removed image was main, set first remaining as main
     const removedUrl = formData.images[indexToRemove];
     if (formData.image === removedUrl) {
       setFormData({ ...formData, image: newImages[0] || "", images: newImages });
@@ -599,122 +383,106 @@ function ProductModal({ product, categories, onClose, onSave }: ProductModalProp
 
   return (
     <div 
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(0, 0, 0, 0.85)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 99999,
-        padding: '1rem',
-      }}
+      className="fixed inset-0 bg-black/85 flex items-center justify-center z-[99999] p-4"
       onClick={onClose}
     >
       <div 
-        style={{
-          background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-          border: '1px solid rgba(139, 92, 246, 0.3)',
-          borderRadius: '24px',
-          maxWidth: '600px',
-          width: '100%',
-          maxHeight: '85vh',
-          overflowY: 'auto',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-        }}
+        className="bg-gradient-to-br from-slate-800 to-slate-900 border border-violet-500/30 rounded-3xl max-w-xl w-full max-h-[85vh] overflow-y-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="modal-header">
-          <h2>{product ? "✏️ แก้ไขสินค้า" : "➕ เพิ่มสินค้าใหม่"}</h2>
-          <button onClick={onClose} className="modal-close">✕</button>
+        <div className="flex justify-between items-center p-6 border-b border-white/10">
+          <h2 className="text-xl text-slate-50 m-0">{product ? "✏️ แก้ไขสินค้า" : "➕ เพิ่มสินค้าใหม่"}</h2>
+          <button onClick={onClose} className="bg-none border-none text-slate-500 text-2xl cursor-pointer hover:text-white transition-colors">✕</button>
         </div>
-        <form onSubmit={handleSubmit} className="modal-form">
-          <div className="form-row">
-            <div className="form-group">
-              <label>ชื่อสินค้า *</label>
+        <form onSubmit={handleSubmit} className="p-6">
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-slate-400 text-sm mb-2">ชื่อสินค้า *</label>
               <input
                 type="text"
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="w-full py-3 px-4 bg-violet-500/10 border border-violet-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-violet-500/60 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.2)] transition-all"
               />
             </div>
-            <div className="form-group">
-              <label>แบรนด์ *</label>
+            <div>
+              <label className="block text-slate-400 text-sm mb-2">แบรนด์ *</label>
               <input
                 type="text"
                 required
                 value={formData.brand}
                 onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                className="w-full py-3 px-4 bg-violet-500/10 border border-violet-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-violet-500/60 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.2)] transition-all"
               />
             </div>
           </div>
 
-          <div className="form-group">
-            <label>รายละเอียด</label>
+          <div className="mb-4">
+            <label className="block text-slate-400 text-sm mb-2">รายละเอียด</label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={3}
+              className="w-full py-3 px-4 bg-violet-500/10 border border-violet-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-violet-500/60 transition-all resize-none"
             />
           </div>
 
-          <div className="form-row three-col">
-            <div className="form-group">
-              <label>ราคา *</label>
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            <div>
+              <label className="block text-slate-400 text-sm mb-2">ราคา *</label>
               <input
                 type="number"
                 required
                 min="0"
                 value={formData.price || ""}
                 onChange={(e) => setFormData({ ...formData, price: e.target.value ? Number(e.target.value) : 0 })}
+                className="w-full py-3 px-4 bg-violet-500/10 border border-violet-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-violet-500/60 transition-all"
               />
             </div>
-            <div className="form-group">
-              <label>ราคาเดิม</label>
+            <div>
+              <label className="block text-slate-400 text-sm mb-2">ราคาเดิม</label>
               <input
                 type="number"
                 min="0"
                 value={formData.originalPrice || ""}
                 onChange={(e) => setFormData({ ...formData, originalPrice: e.target.value ? Number(e.target.value) : 0 })}
+                className="w-full py-3 px-4 bg-violet-500/10 border border-violet-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-violet-500/60 transition-all"
               />
             </div>
-            <div className="form-group">
-              <label>สต็อก *</label>
+            <div>
+              <label className="block text-slate-400 text-sm mb-2">สต็อก *</label>
               <input
                 type="number"
                 required
                 min="0"
                 value={formData.stock || ""}
                 onChange={(e) => setFormData({ ...formData, stock: e.target.value ? Number(e.target.value) : 0 })}
+                className="w-full py-3 px-4 bg-violet-500/10 border border-violet-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-violet-500/60 transition-all"
               />
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>หมวดหมู่ *</label>
-              <select
-                required
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              >
-                <option value="">เลือกหมวดหมู่</option>
-                {categories.map((cat) => (
-                  <option key={cat._id} value={cat.name}>{cat.icon} {cat.name}</option>
-                ))}
-              </select>
-            </div>
+          <div className="mb-4">
+            <label className="block text-slate-400 text-sm mb-2">หมวดหมู่ *</label>
+            <select
+              required
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              className="w-full py-3 px-4 bg-violet-500/10 border border-violet-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-violet-500/60 transition-all"
+            >
+              <option value="" className="bg-slate-800">เลือกหมวดหมู่</option>
+              {categories.map((cat) => (
+                <option key={cat._id} value={cat.name} className="bg-slate-800">{cat.icon} {cat.name}</option>
+              ))}
+            </select>
           </div>
 
           {/* Image Upload Zone */}
-          <div className="form-group">
-            <label>รูปภาพสินค้า * (สามารถเพิ่มได้หลายรูป)</label>
+          <div className="mb-4">
+            <label className="block text-slate-400 text-sm mb-2">รูปภาพสินค้า * (สามารถเพิ่มได้หลายรูป)</label>
             <div 
-              className={`upload-zone ${dragActive ? 'active' : ''} ${uploading ? 'uploading' : ''}`}
+              className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all min-h-[150px] flex items-center justify-center ${dragActive ? 'border-violet-500 bg-violet-500/10' : 'border-violet-500/40 bg-violet-500/5 hover:border-violet-500 hover:bg-violet-500/10'} ${uploading ? 'pointer-events-none opacity-70' : ''}`}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
@@ -726,96 +494,42 @@ function ProductModal({ product, categories, onClose, onSave }: ProductModalProp
                 type="file"
                 accept="image/*"
                 onChange={handleFileSelect}
-                style={{ display: 'none' }}
+                className="hidden"
               />
               {uploading ? (
-                <div className="upload-loading">
-                  <div className="upload-spinner"></div>
-                  <p>กำลังอัพโหลด...</p>
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-10 h-10 border-3 border-violet-500/20 border-t-violet-500 rounded-full animate-spin"></div>
+                  <p className="text-violet-400 m-0">กำลังอัพโหลด...</p>
                 </div>
               ) : (
-                <div className="upload-placeholder">
-                  <span className="upload-icon">📷</span>
-                  <p>คลิกหรือลากไฟล์มาวางที่นี่</p>
-                  <span className="upload-hint">รองรับ JPG, PNG, WEBP (สูงสุด 5MB ต่อรูป)</span>
+                <div className="flex flex-col items-center gap-2">
+                  <span className="text-5xl">📷</span>
+                  <p className="text-slate-50 font-medium m-0">คลิกหรือลากไฟล์มาวางที่นี่</p>
+                  <span className="text-slate-500 text-sm">รองรับ JPG, PNG, WEBP (สูงสุด 5MB ต่อรูป)</span>
                 </div>
               )}
             </div>
             
             {/* Image Gallery */}
             {formData.images.length > 0 && (
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
-                gap: '0.75rem',
-                marginTop: '1rem'
-              }}>
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3 mt-4">
                 {formData.images.map((img, index) => (
                   <div 
                     key={index}
-                    style={{
-                      position: 'relative',
-                      aspectRatio: '1',
-                      borderRadius: '12px',
-                      overflow: 'hidden',
-                      border: formData.image === img ? '3px solid #8b5cf6' : '1px solid rgba(255,255,255,0.1)',
-                      cursor: 'pointer'
-                    }}
+                    className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer ${formData.image === img ? 'ring-3 ring-violet-500' : 'border border-white/10'}`}
                     onClick={() => setPreviewImage(img)}
                   >
-                    <img 
-                      src={img} 
-                      alt={`Product ${index + 1}`}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
+                    <img src={img} alt={`Product ${index + 1}`} className="w-full h-full object-cover" />
                     {formData.image === img && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '4px',
-                        left: '4px',
-                        background: '#8b5cf6',
-                        color: 'white',
-                        fontSize: '0.65rem',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        fontWeight: 600
-                      }}>
-                        หลัก
-                      </div>
+                      <div className="absolute top-1 left-1 bg-violet-500 text-white text-[10px] py-0.5 px-1.5 rounded font-semibold">หลัก</div>
                     )}
-                    <div style={{
-                      position: 'absolute',
-                      top: '4px',
-                      right: '4px',
-                      background: 'rgba(0,0,0,0.6)',
-                      color: 'white',
-                      fontSize: '0.75rem',
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                    }}>
-                      🔍
-                    </div>
-                    <div style={{
-                      position: 'absolute',
-                      bottom: '0',
-                      left: '0',
-                      right: '0',
-                      display: 'flex',
-                      gap: '2px'
-                    }}>
+                    <div className="absolute top-1 right-1 bg-black/60 text-white text-xs py-0.5 px-1.5 rounded">🔍</div>
+                    <div className="absolute bottom-0 left-0 right-0 flex gap-0.5">
                       {formData.image !== img && (
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); setAsMainImage(img); }}
-                          style={{
-                            flex: 1,
-                            padding: '4px',
-                            background: 'rgba(139, 92, 246, 0.9)',
-                            border: 'none',
-                            color: 'white',
-                            fontSize: '0.65rem',
-                            cursor: 'pointer'
-                          }}
+                          className="flex-1 py-1 bg-violet-500/90 border-none text-white text-[10px] cursor-pointer"
                         >
                           ตั้งเป็นหลัก
                         </button>
@@ -823,15 +537,7 @@ function ProductModal({ product, categories, onClose, onSave }: ProductModalProp
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); removeImage(index); }}
-                        style={{
-                          flex: formData.image === img ? 1 : 0.5,
-                          padding: '4px',
-                          background: 'rgba(239, 68, 68, 0.9)',
-                          border: 'none',
-                          color: 'white',
-                          fontSize: '0.65rem',
-                          cursor: 'pointer'
-                        }}
+                        className={`py-1 bg-red-500/90 border-none text-white text-[10px] cursor-pointer ${formData.image === img ? 'flex-1' : 'flex-[0.5]'}`}
                       >
                         ลบ
                       </button>
@@ -842,14 +548,14 @@ function ProductModal({ product, categories, onClose, onSave }: ProductModalProp
             )}
             
             {/* Fallback URL input */}
-            <div className="url-fallback">
-              <label>หรือใส่ URL รูปภาพ:</label>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div className="mt-4 pt-4 border-t border-white/10">
+              <label className="block text-slate-500 text-xs mb-2">หรือใส่ URL รูปภาพ:</label>
+              <div className="flex gap-2">
                 <input
                   type="url"
                   id="urlInput"
                   placeholder="https://example.com/image.jpg"
-                  style={{ flex: 1 }}
+                  className="flex-1 py-3 px-4 bg-violet-500/10 border border-violet-500/30 rounded-xl text-slate-50 text-sm outline-none"
                 />
                 <button
                   type="button"
@@ -865,14 +571,7 @@ function ProductModal({ product, categories, onClose, onSave }: ProductModalProp
                       input.value = '';
                     }
                   }}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    background: '#8b5cf6',
-                    border: 'none',
-                    borderRadius: '8px',
-                    color: 'white',
-                    cursor: 'pointer'
-                  }}
+                  className="py-2 px-4 bg-violet-500 border-none rounded-lg text-white cursor-pointer"
                 >
                   เพิ่ม
                 </button>
@@ -880,30 +579,32 @@ function ProductModal({ product, categories, onClose, onSave }: ProductModalProp
             </div>
           </div>
 
-          <div className="form-checkboxes">
-            <label className="checkbox-label">
+          <div className="flex gap-8 mb-6">
+            <label className="flex items-center gap-2 text-slate-400 cursor-pointer">
               <input
                 type="checkbox"
                 checked={formData.isNew}
                 onChange={(e) => setFormData({ ...formData, isNew: e.target.checked })}
+                className="accent-violet-500"
               />
               <span>สินค้าใหม่</span>
             </label>
-            <label className="checkbox-label">
+            <label className="flex items-center gap-2 text-slate-400 cursor-pointer">
               <input
                 type="checkbox"
                 checked={formData.isFeatured}
                 onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+                className="accent-violet-500"
               />
               <span>สินค้าแนะนำ</span>
             </label>
           </div>
 
-          <div className="form-actions">
-            <button type="button" onClick={onClose} className="btn-cancel">
+          <div className="flex gap-4">
+            <button type="button" onClick={onClose} className="flex-1 p-4 bg-slate-500/20 border border-slate-500/30 rounded-xl text-slate-400 font-semibold cursor-pointer hover:bg-slate-500/30 transition-all">
               ยกเลิก
             </button>
-            <button type="submit" disabled={saving} className="btn-submit">
+            <button type="submit" disabled={saving} className={`flex-1 p-4 bg-gradient-to-r from-emerald-500 to-emerald-600 border-none rounded-xl text-white font-semibold transition-all ${saving ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/30'}`}>
               {saving ? "กำลังบันทึก..." : "💾 บันทึก"}
             </button>
           </div>
@@ -912,329 +613,23 @@ function ProductModal({ product, categories, onClose, onSave }: ProductModalProp
         {/* Image Preview Lightbox */}
         {previewImage && (
           <div 
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(0, 0, 0, 0.95)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 100001,
-              padding: '2rem'
-            }}
+            className="fixed inset-0 bg-black/95 flex items-center justify-center z-[100001] p-8"
             onClick={() => setPreviewImage(null)}
           >
             <button
               onClick={() => setPreviewImage(null)}
-              style={{
-                position: 'absolute',
-                top: '20px',
-                right: '20px',
-                background: 'rgba(255,255,255,0.2)',
-                border: 'none',
-                color: 'white',
-                fontSize: '2rem',
-                width: '50px',
-                height: '50px',
-                borderRadius: '50%',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
+              className="absolute top-5 right-5 bg-white/20 border-none text-white text-3xl w-12 h-12 rounded-full cursor-pointer flex items-center justify-center"
             >
               ✕
             </button>
             <img 
               src={previewImage} 
               alt="Preview"
-              style={{
-                maxWidth: '90%',
-                maxHeight: '90%',
-                objectFit: 'contain',
-                borderRadius: '12px'
-              }}
+              className="max-w-[90%] max-h-[90%] object-contain rounded-xl"
               onClick={(e) => e.stopPropagation()}
             />
           </div>
         )}
-
-        <style jsx>{`
-          .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.85);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            padding: 1rem;
-            animation: fadeIn 0.2s ease;
-          }
-          @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
-          .modal-content {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            border-radius: 24px;
-            max-width: 600px;
-            width: 100%;
-            max-height: 85vh;
-            overflow-y: auto;
-            position: relative;
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(139, 92, 246, 0.1);
-          }
-          @keyframes popIn {
-            from {
-              opacity: 0;
-              transform: scale(0.9) translateY(-20px);
-            }
-            to {
-              opacity: 1;
-              transform: scale(1) translateY(0);
-            }
-          }
-          .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-          }
-          .modal-header h2 {
-            font-size: 1.25rem;
-            color: #f8fafc;
-            margin: 0;
-          }
-          .modal-close {
-            background: none;
-            border: none;
-            color: #64748b;
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: color 0.3s ease;
-          }
-          .modal-close:hover {
-            color: #f8fafc;
-          }
-          .modal-form {
-            padding: 1.5rem;
-          }
-          .form-row {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-            margin-bottom: 1rem;
-          }
-          .form-row.three-col {
-            grid-template-columns: repeat(3, 1fr);
-          }
-          .form-group {
-            margin-bottom: 1rem;
-          }
-          .form-group label {
-            display: block;
-            color: #94a3b8;
-            font-size: 0.85rem;
-            margin-bottom: 0.5rem;
-          }
-          .form-group input,
-          .form-group textarea,
-          .form-group select {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            background: rgba(139, 92, 246, 0.1);
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            border-radius: 12px;
-            color: #f8fafc;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-          }
-          .form-group input:focus,
-          .form-group textarea:focus,
-          .form-group select:focus {
-            outline: none;
-            border-color: rgba(139, 92, 246, 0.6);
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
-          }
-          .form-group select option {
-            background: #1e293b;
-          }
-          .form-checkboxes {
-            display: flex;
-            gap: 2rem;
-            margin-bottom: 1.5rem;
-          }
-          .checkbox-label {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #94a3b8;
-            cursor: pointer;
-          }
-          .checkbox-label input {
-            accent-color: #8b5cf6;
-          }
-          .form-actions {
-            display: flex;
-            gap: 1rem;
-          }
-          .btn-cancel {
-            flex: 1;
-            padding: 1rem;
-            background: rgba(100, 116, 139, 0.2);
-            border: 1px solid rgba(100, 116, 139, 0.3);
-            border-radius: 12px;
-            color: #94a3b8;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-          }
-          .btn-cancel:hover {
-            background: rgba(100, 116, 139, 0.3);
-          }
-          .btn-submit {
-            flex: 1;
-            padding: 1rem;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-          }
-          .btn-submit:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
-          }
-          .btn-submit:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-          }
-          /* Upload Zone Styles */
-          .upload-zone {
-            border: 2px dashed rgba(139, 92, 246, 0.4);
-            border-radius: 16px;
-            padding: 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: rgba(139, 92, 246, 0.05);
-            min-height: 200px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-          .upload-zone:hover, .upload-zone.active {
-            border-color: #8b5cf6;
-            background: rgba(139, 92, 246, 0.1);
-          }
-          .upload-zone.uploading {
-            pointer-events: none;
-            opacity: 0.7;
-          }
-          .upload-placeholder {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-          }
-          .upload-icon {
-            font-size: 3rem;
-          }
-          .upload-placeholder p {
-            color: #f8fafc;
-            font-weight: 500;
-            margin: 0;
-          }
-          .upload-hint {
-            color: #64748b;
-            font-size: 0.85rem;
-          }
-          .upload-preview {
-            position: relative;
-            width: 100%;
-            max-width: 300px;
-          }
-          .upload-preview img {
-            width: 100%;
-            height: auto;
-            border-radius: 12px;
-            max-height: 200px;
-            object-fit: cover;
-          }
-          .upload-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.6);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-          }
-          .upload-preview:hover .upload-overlay {
-            opacity: 1;
-          }
-          .upload-overlay span {
-            color: white;
-            font-weight: 600;
-          }
-          .upload-loading {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1rem;
-          }
-          .upload-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(139, 92, 246, 0.2);
-            border-top-color: #8b5cf6;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-          }
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-          .upload-loading p {
-            color: #a78bfa;
-            margin: 0;
-          }
-          .url-fallback {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-          }
-          .url-fallback label {
-            font-size: 0.8rem;
-            color: #64748b;
-            margin-bottom: 0.5rem;
-          }
-          .url-fallback input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            background: rgba(139, 92, 246, 0.1);
-            border: 1px solid rgba(139, 92, 246, 0.3);
-            border-radius: 12px;
-            color: #f8fafc;
-            font-size: 0.9rem;
-          }
-        `}</style>
       </div>
     </div>
   );

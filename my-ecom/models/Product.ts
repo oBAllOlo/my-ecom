@@ -1,7 +1,7 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
+import mongoose, { Schema, Model } from "mongoose";
 
-export interface IProduct extends Document {
-  _id: string;
+// Separate interface for Product data (without Document properties)
+export interface IProductData {
   name: string;
   description: string;
   price: number;
@@ -18,11 +18,14 @@ export interface IProduct extends Document {
   connectivity?: string;
   isNew?: boolean;
   isFeatured?: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-const ProductSchema = new Schema<IProduct>(
+// Export IProduct as alias for backward compatibility
+export type IProduct = IProductData & mongoose.Document;
+
+const ProductSchema = new Schema<IProductData>(
   {
     name: { type: String, required: true },
     description: { type: String, default: "" },
@@ -44,7 +47,7 @@ const ProductSchema = new Schema<IProduct>(
   { timestamps: true }
 );
 
-const Product: Model<IProduct> =
-  mongoose.models.Product || mongoose.model<IProduct>("Product", ProductSchema);
+const Product: Model<IProductData> =
+  mongoose.models.Product || mongoose.model<IProductData>("Product", ProductSchema);
 
 export default Product;

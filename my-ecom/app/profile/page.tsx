@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 
@@ -18,6 +17,7 @@ export default function ProfilePage() {
       phone: "",
       street: "",
       district: "",
+      subDistrict: "",
       province: "",
       postalCode: "",
     },
@@ -54,6 +54,7 @@ export default function ProfilePage() {
                 phone: data.data.address?.phone || "",
                 street: data.data.address?.street || "",
                 district: data.data.address?.district || "",
+                subDistrict: data.data.address?.subDistrict || "",
                 province: data.data.address?.province || "",
                 postalCode: data.data.address?.postalCode || "",
               },
@@ -146,364 +147,185 @@ export default function ProfilePage() {
 
   if (isLoading || !user) {
     return (
-      <div className="admin-loading">
-        <div className="admin-loading-spinner"></div>
-        <p>กำลังโหลดข้อมูล...</p>
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-400">กำลังโหลดข้อมูล...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="admin-dashboard">
-      {/* Background */}
-      <div className="admin-bg-pattern"></div>
-
-      <main className="admin-main" style={{ paddingTop: '2rem' }}>
+    <div className="min-h-screen bg-slate-900 relative">
+      <main className="p-8 max-w-4xl mx-auto">
         {/* Welcome Section */}
-        <section className="admin-welcome">
-          <div className="admin-welcome-content">
-            <h2 className="admin-welcome-title">
-              โปรไฟล์ของฉัน 👤
-            </h2>
-            <p className="admin-welcome-subtitle">
-              จัดการข้อมูลส่วนตัวและที่อยู่จัดส่ง
-            </p>
-          </div>
+        <section className="mb-8">
+          <h2 className="text-3xl font-bold text-white mb-2">โปรไฟล์ของฉัน 👤</h2>
+          <p className="text-slate-400">จัดการข้อมูลส่วนตัวและที่อยู่จัดส่ง</p>
         </section>
 
         {/* User Info Cards */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: '1rem',
-          marginBottom: '2rem'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1rem',
-            padding: '1.25rem 1.5rem',
-            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-            borderRadius: '16px'
-          }}>
-            <div style={{
-              width: '48px',
-              height: '48px',
-              background: 'rgba(255,255,255,0.2)',
-              borderRadius: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.5rem'
-            }}>✅</div>
+        <div className="grid grid-cols-2 gap-4 mb-8">
+          <div className="flex items-center gap-4 py-5 px-6 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl">
+            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-2xl">✅</div>
             <div>
-              <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.75rem', marginBottom: '0.25rem' }}>สถานะบัญชี</p>
-              <p style={{ color: 'white', fontSize: '1.25rem', fontWeight: 700 }}>Active</p>
-              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem' }}>บัญชีใช้งานปกติ</p>
+              <p className="text-white/80 text-xs mb-1">สถานะบัญชี</p>
+              <p className="text-white text-xl font-bold">Active</p>
+              <p className="text-white/60 text-xs">บัญชีใช้งานปกติ</p>
             </div>
           </div>
 
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1rem',
-            padding: '1.25rem 1.5rem',
-            background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-            borderRadius: '16px'
-          }}>
-            <div style={{
-              width: '48px',
-              height: '48px',
-              background: 'rgba(255,255,255,0.2)',
-              borderRadius: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.5rem'
-            }}>👤</div>
+          <div className="flex items-center gap-4 py-5 px-6 bg-gradient-to-br from-violet-500 to-violet-600 rounded-2xl">
+            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-2xl">👤</div>
             <div>
-              <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.75rem', marginBottom: '0.25rem' }}>ประเภทบัญชี</p>
-              <p style={{ color: 'white', fontSize: '1.25rem', fontWeight: 700, textTransform: 'uppercase' }}>{user.role}</p>
-              <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem' }}>สิทธิ์การใช้งาน</p>
+              <p className="text-white/80 text-xs mb-1">ประเภทบัญชี</p>
+              <p className="text-white text-xl font-bold uppercase">{user.role}</p>
+              <p className="text-white/60 text-xs">สิทธิ์การใช้งาน</p>
             </div>
           </div>
         </div>
 
         {/* Profile Form Section */}
-        <section className="admin-quick-actions">
-          <div className="admin-section-header">
-            <div className="admin-section-title">
-              <span>✏️</span>
-              <span>ข้อมูลส่วนตัว</span>
-            </div>
+        <section className="bg-slate-800/50 rounded-2xl p-6 border border-white/5">
+          <div className="flex items-center gap-2 mb-6">
+            <span className="text-2xl">✏️</span>
+            <span className="text-white font-semibold text-lg">ข้อมูลส่วนตัว</span>
           </div>
 
           <form onSubmit={handleSubmit}>
-            <div className="admin-actions-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
-              {/* User Avatar Card */}
-              <div className="admin-action-card" style={{ gridColumn: 'span 2', display: 'flex', alignItems: 'center', gap: '1.5rem', padding: '2rem' }}>
-                <div style={{
-                  width: '80px',
-                  height: '80px',
-                  borderRadius: '16px',
-                  background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '2.5rem',
-                  fontWeight: 700,
-                  color: 'white',
-                  boxShadow: '0 8px 24px rgba(139, 92, 246, 0.4)',
-                  position: 'relative'
-                }}>
-                  {user.name.charAt(0).toUpperCase()}
-                  <div style={{
-                    position: 'absolute',
-                    bottom: '-4px',
-                    right: '-4px',
-                    width: '24px',
-                    height: '24px',
-                    background: '#10b981',
-                    borderRadius: '50%',
-                    border: '4px solid #1e293b'
-                  }}></div>
-                </div>
-                <div>
-                  <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'white', marginBottom: '0.25rem' }}>{user.name}</h3>
-                  <p style={{ color: '#94a3b8', marginBottom: '0.5rem' }}>{user.email}</p>
-                  <span style={{
-                    display: 'inline-block',
-                    padding: '0.25rem 0.75rem',
-                    background: 'rgba(139, 92, 246, 0.2)',
-                    color: '#a78bfa',
-                    borderRadius: '9999px',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    border: '1px solid rgba(139, 92, 246, 0.3)'
-                  }}>{user.role}</span>
-                </div>
+            {/* User Avatar Card */}
+            <div className="bg-slate-700/30 rounded-xl p-6 mb-6 flex items-center gap-6">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-500 flex items-center justify-center text-4xl font-bold text-white shadow-lg shadow-violet-500/40 relative">
+                {user.name.charAt(0).toUpperCase()}
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-4 border-slate-800"></div>
               </div>
+              <div>
+                <h3 className="text-2xl font-bold text-white mb-1">{user.name}</h3>
+                <p className="text-slate-400 mb-2">{user.email}</p>
+                <span className="inline-block py-1 px-3 bg-violet-500/20 text-violet-400 rounded-full text-xs font-semibold uppercase tracking-wide border border-violet-500/30">
+                  {user.role}
+                </span>
+              </div>
+            </div>
 
+            <div className="grid grid-cols-2 gap-4 mb-6">
               {/* Name Field */}
-              <div className="admin-action-card" style={{ padding: '1.5rem' }}>
-                <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 500 }}>
-                  ชื่อ-นามสกุล
-                </label>
+              <div className="bg-slate-700/30 rounded-xl p-6">
+                <label className="block text-slate-400 text-sm mb-2 font-medium">ชื่อ-นามสกุล</label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem 1rem',
-                    background: 'rgba(15, 23, 42, 0.5)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '12px',
-                    color: 'white',
-                    fontSize: '1rem',
-                    outline: 'none'
-                  }}
+                  className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-violet-500/50 transition-colors"
                   placeholder="กรอกชื่อ-นามสกุล"
                 />
               </div>
 
               {/* Email Field */}
-              <div className="admin-action-card" style={{ padding: '1.5rem' }}>
-                <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 500 }}>
-                  อีเมล
-                </label>
+              <div className="bg-slate-700/30 rounded-xl p-6">
+                <label className="block text-slate-400 text-sm mb-2 font-medium">อีเมล</label>
                 <input
                   type="email"
                   value={formData.email}
                   disabled
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem 1rem',
-                    background: 'rgba(15, 23, 42, 0.3)',
-                    border: '1px solid rgba(255, 255, 255, 0.05)',
-                    borderRadius: '12px',
-                    color: '#64748b',
-                    fontSize: '1rem',
-                    cursor: 'not-allowed'
-                  }}
+                  className="w-full p-3 bg-slate-900/30 border border-white/5 rounded-xl text-slate-500 text-base cursor-not-allowed"
                 />
-                <p style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '0.5rem' }}>ไม่สามารถเปลี่ยนอีเมลได้</p>
+                <p className="text-slate-500 text-xs mt-2">ไม่สามารถเปลี่ยนอีเมลได้</p>
               </div>
             </div>
 
             {/* Shipping Address Section */}
-            <div className="admin-section-header" style={{ marginTop: '2rem' }}>
-              <div className="admin-section-title">
-                <span>📦</span>
-                <span>ที่อยู่จัดส่ง</span>
-              </div>
+            <div className="flex items-center gap-2 mb-6 mt-8">
+              <span className="text-2xl">📦</span>
+              <span className="text-white font-semibold text-lg">ที่อยู่จัดส่ง</span>
             </div>
 
-            <div className="admin-actions-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
-              <div className="admin-action-card" style={{ gridColumn: 'span 2', padding: '1.5rem' }}>
-                <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 500 }}>
-                  ชื่อผู้รับ
-                </label>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2 bg-slate-700/30 rounded-xl p-6">
+                <label className="block text-slate-400 text-sm mb-2 font-medium">ชื่อผู้รับ</label>
                 <input
                   type="text"
                   value={formData.address.fullName}
                   onChange={(e) => setFormData({ ...formData, address: { ...formData.address, fullName: e.target.value } })}
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem 1rem',
-                    background: 'rgba(15, 23, 42, 0.5)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '12px',
-                    color: 'white',
-                    fontSize: '1rem',
-                    outline: 'none'
-                  }}
+                  className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-violet-500/50 transition-colors"
                   placeholder="ชื่อ-นามสกุล ผู้รับ"
                 />
               </div>
 
-              <div className="admin-action-card" style={{ padding: '1.5rem' }}>
-                <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 500 }}>
-                  เบอร์โทรศัพท์
-                </label>
+              <div className="bg-slate-700/30 rounded-xl p-6">
+                <label className="block text-slate-400 text-sm mb-2 font-medium">เบอร์โทรศัพท์</label>
                 <input
                   type="text"
                   value={formData.address.phone}
                   onChange={(e) => setFormData({ ...formData, address: { ...formData.address, phone: e.target.value } })}
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem 1rem',
-                    background: 'rgba(15, 23, 42, 0.5)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '12px',
-                    color: 'white',
-                    fontSize: '1rem',
-                    outline: 'none'
-                  }}
+                  className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-violet-500/50 transition-colors"
                   placeholder="08x-xxx-xxxx"
                 />
               </div>
 
-              <div className="admin-action-card" style={{ padding: '1.5rem' }}>
-                <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 500 }}>
-                  แขวง/ตำบล
-                </label>
+              <div className="bg-slate-700/30 rounded-xl p-6">
+                <label className="block text-slate-400 text-sm mb-2 font-medium">เขต/อำเภอ</label>
                 <input
                   type="text"
                   value={formData.address.district}
                   onChange={(e) => setFormData({ ...formData, address: { ...formData.address, district: e.target.value } })}
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem 1rem',
-                    background: 'rgba(15, 23, 42, 0.5)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '12px',
-                    color: 'white',
-                    fontSize: '1rem',
-                    outline: 'none'
-                  }}
+                  className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-violet-500/50 transition-colors"
                 />
               </div>
 
-              <div className="admin-action-card" style={{ gridColumn: 'span 2', padding: '1.5rem' }}>
-                <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 500 }}>
-                  ที่อยู่ (บ้านเลขที่, ซอย, ถนน)
-                </label>
+              <div className="bg-slate-700/30 rounded-xl p-6">
+                <label className="block text-slate-400 text-sm mb-2 font-medium">แขวง/ตำบล</label>
+                <input
+                  type="text"
+                  value={formData.address.subDistrict}
+                  onChange={(e) => setFormData({ ...formData, address: { ...formData.address, subDistrict: e.target.value } })}
+                  className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-violet-500/50 transition-colors"
+                />
+              </div>
+
+              <div className="col-span-2 bg-slate-700/30 rounded-xl p-6">
+                <label className="block text-slate-400 text-sm mb-2 font-medium">ที่อยู่ (บ้านเลขที่, ซอย, ถนน)</label>
                 <textarea
                   value={formData.address.street}
                   onChange={(e) => setFormData({ ...formData, address: { ...formData.address, street: e.target.value } })}
                   rows={3}
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem 1rem',
-                    background: 'rgba(15, 23, 42, 0.5)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '12px',
-                    color: 'white',
-                    fontSize: '1rem',
-                    outline: 'none',
-                    resize: 'none'
-                  }}
+                  className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-violet-500/50 transition-colors resize-none"
                   placeholder="บ้านเลขที่, ซอย, ถนน"
                 />
               </div>
 
-              <div className="admin-action-card" style={{ padding: '1.5rem' }}>
-                <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 500 }}>
-                  จังหวัด
-                </label>
+              <div className="bg-slate-700/30 rounded-xl p-6">
+                <label className="block text-slate-400 text-sm mb-2 font-medium">จังหวัด</label>
                 <input
                   type="text"
                   value={formData.address.province}
                   onChange={(e) => setFormData({ ...formData, address: { ...formData.address, province: e.target.value } })}
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem 1rem',
-                    background: 'rgba(15, 23, 42, 0.5)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '12px',
-                    color: 'white',
-                    fontSize: '1rem',
-                    outline: 'none'
-                  }}
+                  className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-violet-500/50 transition-colors"
                 />
               </div>
 
-              <div className="admin-action-card" style={{ padding: '1.5rem' }}>
-                <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.875rem', marginBottom: '0.5rem', fontWeight: 500 }}>
-                  รหัสไปรษณีย์
-                </label>
+              <div className="bg-slate-700/30 rounded-xl p-6">
+                <label className="block text-slate-400 text-sm mb-2 font-medium">รหัสไปรษณีย์</label>
                 <input
                   type="text"
                   value={formData.address.postalCode}
                   onChange={(e) => setFormData({ ...formData, address: { ...formData.address, postalCode: e.target.value } })}
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem 1rem',
-                    background: 'rgba(15, 23, 42, 0.5)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '12px',
-                    color: 'white',
-                    fontSize: '1rem',
-                    outline: 'none'
-                  }}
+                  className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-violet-500/50 transition-colors"
                 />
               </div>
             </div>
 
             {/* Submit Button */}
-            <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
+            <div className="mt-8 flex justify-end">
               <button
                 type="submit"
                 disabled={saving}
-                style={{
-                  padding: '1rem 2rem',
-                  background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                  border: 'none',
-                  borderRadius: '12px',
-                  color: 'white',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  cursor: saving ? 'not-allowed' : 'pointer',
-                  opacity: saving ? 0.5 : 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  boxShadow: '0 4px 16px rgba(139, 92, 246, 0.3)'
-                }}
+                className={`py-4 px-8 bg-gradient-to-r from-violet-500 to-indigo-500 border-none rounded-xl text-white text-base font-semibold flex items-center gap-2 shadow-lg shadow-violet-500/30 transition-all ${saving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:-translate-y-0.5 hover:shadow-xl'}`}
               >
                 {saving ? (
                   <>
-                    <div style={{
-                      width: '20px',
-                      height: '20px',
-                      border: '2px solid rgba(255,255,255,0.3)',
-                      borderTopColor: 'white',
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite'
-                    }}></div>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                     <span>กำลังบันทึก...</span>
                   </>
                 ) : (
@@ -518,68 +340,33 @@ export default function ProfilePage() {
         </section>
 
         {/* Security Section */}
-        <section className="admin-quick-actions" style={{ marginTop: '2rem' }}>
-          <div className="admin-section-header">
-            <div className="admin-section-title">
-              <span>🔐</span>
-              <span>ความปลอดภัย</span>
-            </div>
+        <section className="bg-slate-800/50 rounded-2xl p-6 border border-white/5 mt-8">
+          <div className="flex items-center gap-2 mb-6">
+            <span className="text-2xl">🔐</span>
+            <span className="text-white font-semibold text-lg">ความปลอดภัย</span>
           </div>
 
-          <div className="admin-action-card" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="bg-slate-700/30 rounded-xl p-6 flex justify-between items-center">
             <div>
-              <h4 style={{ color: 'white', fontWeight: 600, marginBottom: '0.25rem' }}>เปลี่ยนรหัสผ่าน</h4>
-              <p style={{ color: '#64748b', fontSize: '0.875rem' }}>ปกป้องบัญชีด้วยรหัสผ่านที่รัดกุม</p>
+              <h4 className="text-white font-semibold mb-1">เปลี่ยนรหัสผ่าน</h4>
+              <p className="text-slate-500 text-sm">ปกป้องบัญชีด้วยรหัสผ่านที่รัดกุม</p>
             </div>
             <button
               onClick={() => setShowPasswordModal(true)}
-              style={{
-                padding: '0.75rem 1.5rem',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '10px',
-                color: 'white',
-                fontWeight: 500,
-                cursor: 'pointer'
-              }}>
+              className="py-3 px-6 bg-white/5 border border-white/10 rounded-xl text-white font-medium cursor-pointer hover:bg-white/10 transition-all"
+            >
               เปลี่ยนรหัสผ่าน
             </button>
           </div>
         </section>
       </main>
 
-      <style jsx>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
-
       {/* Password Change Modal */}
       {showPasswordModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.8)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 9999,
-          backdropFilter: 'blur(4px)'
-        }}>
-          <div style={{
-            background: '#1e293b',
-            borderRadius: '16px',
-            padding: '2rem',
-            width: '100%',
-            maxWidth: '400px',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ color: 'white', fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999] backdrop-blur-sm">
+          <div className="bg-slate-800 rounded-2xl p-8 w-full max-w-md border border-white/10 shadow-2xl">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-white text-xl font-bold flex items-center gap-2">
                 🔐 เปลี่ยนรหัสผ่าน
               </h3>
               <button
@@ -587,43 +374,24 @@ export default function ProfilePage() {
                   setShowPasswordModal(false);
                   setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
                 }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#64748b',
-                  fontSize: '1.5rem',
-                  cursor: 'pointer'
-                }}
+                className="bg-none border-none text-slate-500 text-2xl cursor-pointer hover:text-white transition-colors"
               >×</button>
             </div>
 
             <form onSubmit={handlePasswordChange}>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
-                  รหัสผ่านปัจจุบัน
-                </label>
+              <div className="mb-4">
+                <label className="block text-slate-400 text-sm mb-2">รหัสผ่านปัจจุบัน</label>
                 <input
                   type="password"
                   value={passwordData.currentPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
                   required
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem 1rem',
-                    background: 'rgba(15, 23, 42, 0.5)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '10px',
-                    color: 'white',
-                    fontSize: '1rem',
-                    outline: 'none'
-                  }}
+                  className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-violet-500/50 transition-colors"
                 />
               </div>
 
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
-                  รหัสผ่านใหม่
-                </label>
+              <div className="mb-4">
+                <label className="block text-slate-400 text-sm mb-2">รหัสผ่านใหม่</label>
                 <input
                   type="password"
                   value={passwordData.newPassword}
@@ -631,56 +399,25 @@ export default function ProfilePage() {
                   required
                   minLength={6}
                   placeholder="อย่างน้อย 6 ตัวอักษร"
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem 1rem',
-                    background: 'rgba(15, 23, 42, 0.5)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '10px',
-                    color: 'white',
-                    fontSize: '1rem',
-                    outline: 'none'
-                  }}
+                  className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-violet-500/50 transition-colors placeholder:text-slate-600"
                 />
               </div>
 
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', color: '#94a3b8', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
-                  ยืนยันรหัสผ่านใหม่
-                </label>
+              <div className="mb-6">
+                <label className="block text-slate-400 text-sm mb-2">ยืนยันรหัสผ่านใหม่</label>
                 <input
                   type="password"
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                   required
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem 1rem',
-                    background: 'rgba(15, 23, 42, 0.5)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '10px',
-                    color: 'white',
-                    fontSize: '1rem',
-                    outline: 'none'
-                  }}
+                  className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-violet-500/50 transition-colors"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={changingPassword}
-                style={{
-                  width: '100%',
-                  padding: '0.875rem',
-                  background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                  border: 'none',
-                  borderRadius: '10px',
-                  color: 'white',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  cursor: changingPassword ? 'not-allowed' : 'pointer',
-                  opacity: changingPassword ? 0.7 : 1
-                }}
+                className={`w-full py-4 bg-gradient-to-r from-violet-500 to-indigo-500 border-none rounded-xl text-white text-base font-semibold transition-all ${changingPassword ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer hover:shadow-lg hover:shadow-violet-500/30'}`}
               >
                 {changingPassword ? '⏳ กำลังเปลี่ยนรหัส...' : '🔒 เปลี่ยนรหัสผ่าน'}
               </button>

@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
         const charge = await omise.charges.retrieve(order.chargeId);
 
         // Update order based on charge status
-        if (charge.status === "successful" && order.paymentStatus !== "paid") {
+        if (charge.status === "successful") {
             order.paymentStatus = "paid";
             order.status = "processing";
             await order.save();

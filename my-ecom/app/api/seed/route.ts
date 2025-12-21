@@ -18,7 +18,6 @@ export async function POST() {
     const insertedCategories = await Category.insertMany(
       categories.map((cat) => ({
         name: cat.name,
-        slug: cat.slug,
         icon: cat.icon,
         productCount: cat.productCount,
       }))

@@ -80,7 +80,6 @@ export default function AdminCustomPartsPage() {
     
     try {
       if (editingPart) {
-        // Update
         const res = await fetch(`/api/custom-parts/${editingPart._id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -94,7 +93,6 @@ export default function AdminCustomPartsPage() {
           fetchParts();
         }
       } else {
-        // Create
         const res = await fetch("/api/custom-parts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -175,19 +173,24 @@ export default function AdminCustomPartsPage() {
   }, {} as Record<string, CustomPart[]>);
 
   return (
-    <div className="admin-page">
-      <div className="admin-header">
-        <h1>⌨️ จัดการ Custom Parts</h1>
-        <div className="header-actions">
-          <Link href="/admin" className="btn-secondary">← กลับ</Link>
-          <button onClick={handleSeed} className="btn-warning">🔄 Seed ข้อมูล</button>
+    <div className="p-8 min-h-screen bg-slate-900">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-slate-50 text-2xl font-bold">⌨️ จัดการ Custom Parts</h1>
+        <div className="flex gap-4">
+          <Link href="/admin" className="py-3 px-6 rounded-lg font-semibold bg-white/10 text-slate-400 no-underline hover:bg-white/20 transition-all">
+            ← กลับ
+          </Link>
+          <button onClick={handleSeed} className="py-3 px-6 rounded-lg font-semibold bg-amber-500 text-white border-none cursor-pointer hover:bg-amber-600 transition-all">
+            🔄 Seed ข้อมูล
+          </button>
           <button 
             onClick={() => {
               setEditingPart(null);
               setFormData({ category: "base", name: "", price: 0, image: "", stock: 0, isActive: true });
               setShowForm(true);
             }} 
-            className="btn-primary"
+            className="py-3 px-6 rounded-lg font-semibold bg-gradient-to-r from-blue-500 to-violet-500 text-white border-none cursor-pointer hover:shadow-lg hover:shadow-blue-500/30 transition-all"
           >
             + เพิ่ม Part
           </button>
@@ -195,9 +198,9 @@ export default function AdminCustomPartsPage() {
       </div>
 
       {/* Category Filter */}
-      <div className="filter-bar">
+      <div className="flex gap-2 mb-8 flex-wrap">
         <button 
-          className={`filter-btn ${selectedCategory === "all" ? "active" : ""}`}
+          className={`py-2 px-4 rounded-full border cursor-pointer transition-all ${selectedCategory === "all" ? "bg-blue-500 text-white border-blue-500" : "bg-transparent text-slate-400 border-white/10 hover:bg-blue-500 hover:text-white hover:border-blue-500"}`}
           onClick={() => setSelectedCategory("all")}
         >
           ทั้งหมด ({parts.length})
@@ -205,7 +208,7 @@ export default function AdminCustomPartsPage() {
         {Object.entries(categoryLabels).map(([key, label]) => (
           <button
             key={key}
-            className={`filter-btn ${selectedCategory === key ? "active" : ""}`}
+            className={`py-2 px-4 rounded-full border cursor-pointer transition-all ${selectedCategory === key ? "bg-blue-500 text-white border-blue-500" : "bg-transparent text-slate-400 border-white/10 hover:bg-blue-500 hover:text-white hover:border-blue-500"}`}
             onClick={() => setSelectedCategory(key)}
           >
             {label}
@@ -215,74 +218,80 @@ export default function AdminCustomPartsPage() {
 
       {/* Form Modal */}
       {showForm && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h2>{editingPart ? "แก้ไข Part" : "เพิ่ม Part ใหม่"}</h2>
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[1000]">
+          <div className="bg-slate-800 p-8 rounded-2xl w-full max-w-lg">
+            <h2 className="text-slate-50 text-xl mb-6">{editingPart ? "แก้ไข Part" : "เพิ่ม Part ใหม่"}</h2>
             <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label>หมวดหมู่</label>
+              <div className="mb-4">
+                <label className="block text-slate-400 mb-2">หมวดหมู่</label>
                 <select 
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full p-3 rounded-lg border border-white/10 bg-white/5 text-slate-50"
                 >
                   {Object.entries(categoryLabels).map(([key, label]) => (
-                    <option key={key} value={key}>{label}</option>
+                    <option key={key} value={key} className="bg-slate-800">{label}</option>
                   ))}
                 </select>
               </div>
-              <div className="form-group">
-                <label>ชื่อ</label>
+              <div className="mb-4">
+                <label className="block text-slate-400 mb-2">ชื่อ</label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
+                  className="w-full p-3 rounded-lg border border-white/10 bg-white/5 text-slate-50"
                 />
               </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>ราคา (฿)</label>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-slate-400 mb-2">ราคา (฿)</label>
                   <input
                     type="number"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
                     required
+                    className="w-full p-3 rounded-lg border border-white/10 bg-white/5 text-slate-50"
                   />
                 </div>
-                <div className="form-group">
-                  <label>Stock</label>
+                <div>
+                  <label className="block text-slate-400 mb-2">Stock</label>
                   <input
                     type="number"
                     value={formData.stock}
                     onChange={(e) => setFormData({ ...formData, stock: Number(e.target.value) })}
                     required
+                    className="w-full p-3 rounded-lg border border-white/10 bg-white/5 text-slate-50"
                   />
                 </div>
               </div>
-              <div className="form-group">
-                <label>รูปภาพ (URL)</label>
+              <div className="mb-4">
+                <label className="block text-slate-400 mb-2">รูปภาพ (URL)</label>
                 <input
                   type="text"
                   value={formData.image}
                   onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                   placeholder="/images/products/..."
+                  className="w-full p-3 rounded-lg border border-white/10 bg-white/5 text-slate-50 placeholder:text-slate-600"
                 />
               </div>
-              <div className="form-group">
-                <label>
+              <div className="mb-4">
+                <label className="flex items-center gap-2 text-slate-400 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formData.isActive}
                     onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                    className="w-4 h-4"
                   />
-                  {" "}เปิดขาย
+                  เปิดขาย
                 </label>
               </div>
-              <div className="form-actions">
-                <button type="button" onClick={() => setShowForm(false)} className="btn-secondary">
+              <div className="flex gap-4 mt-6">
+                <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-3 px-6 rounded-lg font-semibold bg-white/10 text-slate-400 border-none cursor-pointer hover:bg-white/20 transition-all">
                   ยกเลิก
                 </button>
-                <button type="submit" className="btn-primary">
+                <button type="submit" className="flex-1 py-3 px-6 rounded-lg font-semibold bg-gradient-to-r from-blue-500 to-violet-500 text-white border-none cursor-pointer hover:shadow-lg transition-all">
                   {editingPart ? "อัปเดต" : "เพิ่ม"}
                 </button>
               </div>
@@ -293,14 +302,14 @@ export default function AdminCustomPartsPage() {
 
       {/* Parts List */}
       {loading ? (
-        <div className="loading">กำลังโหลด...</div>
+        <div className="text-center text-slate-400 py-12">กำลังโหลด...</div>
       ) : (
-        <div className="parts-container">
+        <div>
           {selectedCategory === "all" ? (
             Object.entries(groupedParts).map(([category, categoryParts]) => (
-              <div key={category} className="category-section">
-                <h2 className="category-title">{categoryLabels[category] || category}</h2>
-                <div className="parts-grid">
+              <div key={category} className="mb-8">
+                <h2 className="text-slate-50 text-xl mb-4 pb-2 border-b border-white/10">{categoryLabels[category] || category}</h2>
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
                   {categoryParts.map((part) => (
                     <PartCard
                       key={part._id}
@@ -316,7 +325,7 @@ export default function AdminCustomPartsPage() {
               </div>
             ))
           ) : (
-            <div className="parts-grid">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
               {parts.map((part) => (
                 <PartCard
                   key={part._id}
@@ -332,160 +341,6 @@ export default function AdminCustomPartsPage() {
           )}
         </div>
       )}
-
-      <style jsx>{`
-        .admin-page {
-          padding: 2rem;
-          min-height: 100vh;
-          background: #0f172a;
-        }
-
-        .admin-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 2rem;
-        }
-
-        .admin-header h1 {
-          color: #f8fafc;
-          font-size: 1.75rem;
-        }
-
-        .header-actions {
-          display: flex;
-          gap: 1rem;
-        }
-
-        .btn-primary, .btn-secondary, .btn-warning {
-          padding: 0.75rem 1.5rem;
-          border-radius: 8px;
-          font-weight: 600;
-          cursor: pointer;
-          border: none;
-          transition: all 0.2s;
-        }
-
-        .btn-primary {
-          background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-          color: white;
-        }
-
-        .btn-secondary {
-          background: rgba(255,255,255,0.1);
-          color: #94a3b8;
-          text-decoration: none;
-        }
-
-        .btn-warning {
-          background: #f59e0b;
-          color: white;
-        }
-
-        .filter-bar {
-          display: flex;
-          gap: 0.5rem;
-          margin-bottom: 2rem;
-          flex-wrap: wrap;
-        }
-
-        .filter-btn {
-          padding: 0.5rem 1rem;
-          border-radius: 20px;
-          border: 1px solid rgba(255,255,255,0.1);
-          background: transparent;
-          color: #94a3b8;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .filter-btn.active, .filter-btn:hover {
-          background: #3b82f6;
-          color: white;
-          border-color: #3b82f6;
-        }
-
-        .category-section {
-          margin-bottom: 2rem;
-        }
-
-        .category-title {
-          color: #f8fafc;
-          font-size: 1.25rem;
-          margin-bottom: 1rem;
-          padding-bottom: 0.5rem;
-          border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .parts-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          gap: 1rem;
-        }
-
-        .modal-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0,0,0,0.8);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-        }
-
-        .modal {
-          background: #1e293b;
-          padding: 2rem;
-          border-radius: 16px;
-          width: 100%;
-          max-width: 500px;
-        }
-
-        .modal h2 {
-          color: #f8fafc;
-          margin-bottom: 1.5rem;
-        }
-
-        .form-group {
-          margin-bottom: 1rem;
-        }
-
-        .form-group label {
-          display: block;
-          color: #94a3b8;
-          margin-bottom: 0.5rem;
-        }
-
-        .form-group input, .form-group select {
-          width: 100%;
-          padding: 0.75rem;
-          border-radius: 8px;
-          border: 1px solid rgba(255,255,255,0.1);
-          background: rgba(255,255,255,0.05);
-          color: #f8fafc;
-        }
-
-        .form-row {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1rem;
-        }
-
-        .form-actions {
-          display: flex;
-          gap: 1rem;
-          margin-top: 1.5rem;
-        }
-
-        .loading {
-          text-align: center;
-          color: #94a3b8;
-          padding: 3rem;
-        }
-      `}</style>
     </div>
   );
 }
@@ -509,19 +364,19 @@ function PartCard({
   const [stock, setStock] = useState(part.stock);
 
   return (
-    <div className={`part-card ${!part.isActive ? "inactive" : ""}`}>
-      <div className="part-image">
+    <div className={`bg-white/5 rounded-xl overflow-hidden border border-white/10 ${!part.isActive ? "opacity-50" : ""}`}>
+      <div className="relative h-[120px] bg-black/20">
         {part.image ? (
-          <Image src={part.image} alt={part.name} fill style={{ objectFit: "contain" }} />
+          <Image src={part.image} alt={part.name} fill className="object-contain" />
         ) : (
-          <span className="no-image">📦</span>
+          <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-3xl">📦</span>
         )}
       </div>
-      <div className="part-info">
-        <h3>{part.name}</h3>
-        <p className="price">{formatPrice(part.price)}</p>
-        <div className="stock-control">
-          <label>Stock:</label>
+      <div className="p-4">
+        <h3 className="text-slate-50 text-sm mb-2">{part.name}</h3>
+        <p className="text-blue-500 font-semibold mb-2">{formatPrice(part.price)}</p>
+        <div className="flex items-center gap-2 mb-3">
+          <label className="text-slate-400 text-sm">Stock:</label>
           <input
             type="number"
             value={stock}
@@ -532,116 +387,24 @@ function PartCard({
               }
             }}
             min="0"
+            className="w-[60px] py-1 px-2 rounded border border-white/10 bg-black/20 text-slate-50 text-center"
           />
         </div>
-        <div className="part-actions">
-          <button onClick={() => onToggleActive(part)} className={part.isActive ? "btn-active" : "btn-inactive"}>
+        <div className="flex gap-2">
+          <button 
+            onClick={() => onToggleActive(part)} 
+            className={`flex-1 py-2 rounded-md border-none cursor-pointer text-xs font-semibold ${part.isActive ? "bg-emerald-500 text-white" : "bg-gray-500 text-white"}`}
+          >
             {part.isActive ? "✓ เปิด" : "✗ ปิด"}
           </button>
-          <button onClick={() => onEdit(part)} className="btn-edit">แก้ไข</button>
-          <button onClick={() => onDelete(part._id)} className="btn-delete">ลบ</button>
+          <button onClick={() => onEdit(part)} className="flex-1 py-2 rounded-md border-none cursor-pointer text-xs font-semibold bg-blue-500 text-white">
+            แก้ไข
+          </button>
+          <button onClick={() => onDelete(part._id)} className="flex-1 py-2 rounded-md border-none cursor-pointer text-xs font-semibold bg-red-500 text-white">
+            ลบ
+          </button>
         </div>
       </div>
-
-      <style jsx>{`
-        .part-card {
-          background: rgba(255,255,255,0.05);
-          border-radius: 12px;
-          overflow: hidden;
-          border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .part-card.inactive {
-          opacity: 0.5;
-        }
-
-        .part-image {
-          position: relative;
-          height: 120px;
-          background: rgba(0,0,0,0.2);
-        }
-
-        .no-image {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          font-size: 2rem;
-        }
-
-        .part-info {
-          padding: 1rem;
-        }
-
-        .part-info h3 {
-          color: #f8fafc;
-          font-size: 0.9rem;
-          margin-bottom: 0.5rem;
-        }
-
-        .price {
-          color: #3b82f6;
-          font-weight: 600;
-          margin-bottom: 0.5rem;
-        }
-
-        .stock-control {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          margin-bottom: 0.75rem;
-        }
-
-        .stock-control label {
-          color: #94a3b8;
-          font-size: 0.85rem;
-        }
-
-        .stock-control input {
-          width: 60px;
-          padding: 0.25rem 0.5rem;
-          border-radius: 4px;
-          border: 1px solid rgba(255,255,255,0.1);
-          background: rgba(0,0,0,0.2);
-          color: #f8fafc;
-          text-align: center;
-        }
-
-        .part-actions {
-          display: flex;
-          gap: 0.5rem;
-        }
-
-        .part-actions button {
-          flex: 1;
-          padding: 0.5rem;
-          border-radius: 6px;
-          border: none;
-          cursor: pointer;
-          font-size: 0.75rem;
-          font-weight: 600;
-        }
-
-        .btn-active {
-          background: #10b981;
-          color: white;
-        }
-
-        .btn-inactive {
-          background: #6b7280;
-          color: white;
-        }
-
-        .btn-edit {
-          background: #3b82f6;
-          color: white;
-        }
-
-        .btn-delete {
-          background: #ef4444;
-          color: white;
-        }
-      `}</style>
     </div>
   );
 }

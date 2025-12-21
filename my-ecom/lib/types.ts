@@ -30,6 +30,7 @@ export interface CartItem {
 export interface Category {
   _id: string;
   name: string;
+  slug?: string;
   icon: string;
   productCount: number;
 }
