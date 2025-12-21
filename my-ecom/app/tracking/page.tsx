@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
@@ -55,7 +55,7 @@ const statusConfig = {
     cancelled: { label: "ยกเลิก", color: "#f87171", icon: "❌", step: 0 },
 };
 
-export default function TrackingPage() {
+function TrackingContent() {
     const searchParams = useSearchParams();
     const { user } = useAuth();
     const { showToast } = useToast();
@@ -604,5 +604,21 @@ export default function TrackingPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+// Wrap with Suspense for Next.js 14+ static generation
+export default function TrackingPage() {
+    return (
+        <Suspense fallback={
+            <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)", padding: "2rem 1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>⏳</div>
+                    <p style={{ color: "#94a3b8" }}>กำลังโหลด...</p>
+                </div>
+            </div>
+        }>
+            <TrackingContent />
+        </Suspense>
     );
 }
