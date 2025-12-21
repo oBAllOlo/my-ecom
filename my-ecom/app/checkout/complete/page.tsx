@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import Link from "next/link";
 
-export default function CheckoutCompletePage() {
+function CheckoutCompleteContent() {
   const searchParams = useSearchParams();
   const { clearCart } = useCart();
   const orderId = searchParams.get("orderId");
@@ -149,5 +149,21 @@ export default function CheckoutCompletePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Wrap with Suspense for Next.js 14+ static generation
+export default function CheckoutCompletePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-[80vh] flex items-center justify-center p-8 bg-gradient-to-br from-slate-900 to-slate-800">
+        <div className="bg-slate-800/80 backdrop-blur-md rounded-3xl p-12 text-center max-w-md w-full border border-white/10">
+          <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-6"></div>
+          <p className="text-slate-400">กำลังโหลด...</p>
+        </div>
+      </div>
+    }>
+      <CheckoutCompleteContent />
+    </Suspense>
   );
 }
