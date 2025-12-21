@@ -15,15 +15,47 @@ export default function CartItemComponent({ item }: CartItemProps) {
 
   return (
     <div className="cart-item">
-      {/* Image */}
-      <div className="cart-item-image">
-        <Image
-          src={product.image}
-          alt={product.name}
-          width={100}
-          height={100}
-          className="cart-image"
-        />
+      {/* Image - Stack images for custom builds */}
+      <div 
+        className="cart-item-image" 
+        style={{ 
+          position: "relative", 
+          width: "120px", 
+          height: "120px",
+          minWidth: "120px",
+          flexShrink: 0,
+          overflow: "hidden",
+          borderRadius: "12px",
+          backgroundColor: "#1e293b"
+        }}
+      >
+        {product.category === "custom" && product.images && product.images.length > 1 ? (
+          // Stacked images for custom keyboard
+          <>
+            {product.images.map((img, index) => (
+              <Image
+                key={index}
+                src={img}
+                alt={`${product.name} layer ${index + 1}`}
+                fill
+                className="cart-image"
+                style={{
+                  objectFit: "contain",
+                  zIndex: index + 1,
+                }}
+              />
+            ))}
+          </>
+        ) : (
+          // Single image for regular products
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            className="cart-image"
+            style={{ objectFit: "contain" }}
+          />
+        )}
       </div>
 
       {/* Info */}

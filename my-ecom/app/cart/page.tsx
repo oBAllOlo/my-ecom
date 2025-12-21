@@ -37,9 +37,59 @@ export default function CartPage() {
       <div className="cart-layout">
         {/* Cart Items */}
         <div className="cart-items">
-          {items.map((item) => (
-            <CartItemComponent key={item.product._id} item={item} />
-          ))}
+          {/* Custom Build Section */}
+          {items.filter(item => item.product.category === "custom").length > 0 && (
+            <div style={{ marginBottom: "2rem" }}>
+              <h2 style={{ 
+                color: "#A855F7", 
+                fontSize: "1.25rem", 
+                fontWeight: "bold", 
+                marginBottom: "1rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem"
+              }}>
+                🛠️ คีย์บอร์ด Custom Build
+              </h2>
+              <div style={{ 
+                borderLeft: "3px solid #A855F7", 
+                paddingLeft: "1rem" 
+              }}>
+                {items
+                  .filter(item => item.product.category === "custom")
+                  .map((item) => (
+                    <CartItemComponent key={item.product._id} item={item} />
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* Regular Products Section */}
+          {items.filter(item => item.product.category !== "custom").length > 0 && (
+            <div style={{ marginBottom: "2rem" }}>
+              <h2 style={{ 
+                color: "#3B82F6", 
+                fontSize: "1.25rem", 
+                fontWeight: "bold", 
+                marginBottom: "1rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem"
+              }}>
+                🛒 สินค้าทั่วไป
+              </h2>
+              <div style={{ 
+                borderLeft: "3px solid #3B82F6", 
+                paddingLeft: "1rem" 
+              }}>
+                {items
+                  .filter(item => item.product.category !== "custom")
+                  .map((item) => (
+                    <CartItemComponent key={item.product._id} item={item} />
+                  ))}
+              </div>
+            </div>
+          )}
 
           {/* Clear Cart Button */}
           <button

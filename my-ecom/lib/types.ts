@@ -20,6 +20,15 @@ export interface Product {
   isFeatured?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+  // Custom keyboard parts
+  customParts?: {
+    base?: { name?: string; image?: string };
+    switch?: { name?: string; image?: string };
+    keycapBase?: { name?: string; image?: string };
+    keycapAdd1?: { name?: string; image?: string };
+    keycapAdd2?: { name?: string; image?: string };
+    wire?: { name?: string; image?: string };
+  };
 }
 
 export interface CartItem {

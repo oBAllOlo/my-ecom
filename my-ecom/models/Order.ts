@@ -1,11 +1,21 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface ICartItem {
-  productId: mongoose.Types.ObjectId;
+  productId: string; // Changed to string to support custom product IDs
   name: string;
+  description?: string;
   price: number;
   image: string;
+  images?: string[]; // For custom products with stacked images
   quantity: number;
+  customParts?: {
+    base?: { name?: string; image?: string };
+    switch?: { name?: string; image?: string };
+    keycapBase?: { name?: string; image?: string };
+    keycapAdd1?: { name?: string; image?: string };
+    keycapAdd2?: { name?: string; image?: string };
+    wire?: { name?: string; image?: string };
+  };
 }
 
 export interface IOrder extends Document {
@@ -36,11 +46,24 @@ export interface IOrder extends Document {
 
 
 const CartItemSchema = new Schema<ICartItem>({
-  productId: { type: Schema.Types.ObjectId, ref: "Product", required: true },
+  productId: { type: String, required: true },
   name: { type: String, required: true },
+  description: { type: String, default: "" },
   price: { type: Number, required: true },
   image: { type: String, required: true },
+  images: { type: [String], default: [] },
   quantity: { type: Number, required: true, min: 1 },
+  customParts: {
+    type: {
+      base: { name: String, image: String },
+      switch: { name: String, image: String },
+      keycapBase: { name: String, image: String },
+      keycapAdd1: { name: String, image: String },
+      keycapAdd2: { name: String, image: String },
+      wire: { name: String, image: String },
+    },
+    default: null,
+  },
 });
 
 const OrderSchema = new Schema<IOrder>(

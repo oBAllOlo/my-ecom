@@ -248,8 +248,11 @@ export default function CheckoutPage() {
         items: items.map(item => ({
           productId: item.product._id,
           name: item.product.name,
+          description: item.product.description || "",
           price: item.product.price,
           image: item.product.image,
+          images: item.product.images || [],
+          customParts: item.product.customParts || null,
           quantity: item.quantity,
         })),
         total,
@@ -922,14 +925,28 @@ export default function CheckoutPage() {
             <div className="order-items">
               {items.map((item) => (
                 <div key={item.product._id} className="order-item">
-                  <div className="order-item-image">
-                    <Image
-                      src={item.product.image}
-                      alt={item.product.name}
-                      width={60}
-                      height={60}
-                      style={{ objectFit: "cover" }}
-                    />
+                  <div className="order-item-image" style={{ position: "relative", width: "60px", height: "60px", overflow: "hidden", borderRadius: "8px", backgroundColor: "#1e293b" }}>
+                    {item.product.category === "custom" && item.product.images && item.product.images.length > 1 ? (
+                      <>
+                        {item.product.images.map((img, index) => (
+                          <Image
+                            key={index}
+                            src={img}
+                            alt={`${item.product.name} layer ${index + 1}`}
+                            fill
+                            style={{ objectFit: "contain", zIndex: index + 1 }}
+                          />
+                        ))}
+                      </>
+                    ) : (
+                      <Image
+                        src={item.product.image}
+                        alt={item.product.name}
+                        width={60}
+                        height={60}
+                        style={{ objectFit: "cover" }}
+                      />
+                    )}
                   </div>
                   <div className="order-item-info">
                     <p className="order-item-name">{item.product.name}</p>
