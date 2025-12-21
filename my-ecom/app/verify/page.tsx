@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import Link from "next/link";
 
-export default function VerifyPage() {
+function VerifyContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { verifyOTP, isAuthenticated } = useAuth();
@@ -198,5 +198,23 @@ export default function VerifyPage() {
                 </p>
             </div>
         </div>
+    );
+}
+
+// Wrap with Suspense for Next.js 14+ static generation
+export default function VerifyPage() {
+    return (
+        <Suspense fallback={
+            <div className="auth-page">
+                <div className="auth-container">
+                    <div className="auth-header">
+                        <span className="auth-icon" style={{ animation: "spin 1s linear infinite" }}>⏳</span>
+                        <p style={{ color: "#94a3b8" }}>กำลังโหลด...</p>
+                    </div>
+                </div>
+            </div>
+        }>
+            <VerifyContent />
+        </Suspense>
     );
 }
