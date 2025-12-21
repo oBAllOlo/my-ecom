@@ -524,6 +524,13 @@ export default function AdminDashboard() {
       link: "/admin/users",
       color: "admin-action-purple",
     },
+    {
+      title: "จัดการชิ้นส่วน Custom",
+      description: "สต็อกคีย์บอร์ด Custom",
+      icon: "🔧",
+      link: "/admin/custom-parts",
+      color: "admin-action-cyan",
+    },
   ];
 
   const timeRangeOptions: { value: TimeRange; label: string }[] = [
