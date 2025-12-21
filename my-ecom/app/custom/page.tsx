@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useCart } from "@/context/CartContext";
 import { useToast } from "@/context/ToastContext";
 
 interface CustomPart {
@@ -16,11 +15,9 @@ interface CustomPart {
   isActive: boolean;
 }
 
-interface GroupedParts {
-  [key: string]: CustomPart[];
-}
+type CategoryType = "base" | "switch" | "keycapBase" | "keycapAdd1" | "keycapAdd2" | "wire";
 
-const categoryLabels: Record<string, string> = {
+const categoryLabels: Record<CategoryType, string> = {
   base: "Base",
   switch: "Switch",
   keycapBase: "Keycap Base",
@@ -29,32 +26,38 @@ const categoryLabels: Record<string, string> = {
   wire: "Wire",
 };
 
-const categoryOrder = ["base", "switch", "keycapBase", "keycapAdd1", "keycapAdd2", "wire"];
+const categoryIcons: Record<CategoryType, string> = {
+  base: "🖥️",
+  switch: "🔘",
+  keycapBase: "⌨️",
+  keycapAdd1: "🎨",
+  keycapAdd2: "✨",
+  wire: "🔌",
+};
 
 export default function CustomKeyboardPage() {
-  const router = useRouter();
-  const { user } = useAuth();
+  const { addToCart } = useCart();
   const { showToast } = useToast();
   
-  const [parts, setParts] = useState<GroupedParts>({});
+  const [parts, setParts] = useState<CustomPart[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expandedCategory, setExpandedCategory] = useState<string | null>("base");
-  const [selectedOptions, setSelectedOptions] = useState<Record<string, CustomPart>>({});
+  const [selectedParts, setSelectedParts] = useState<Record<CategoryType, CustomPart | null>>({
+    base: null,
+    switch: null,
+    keycapBase: null,
+    keycapAdd1: null,
+    keycapAdd2: null,
+    wire: null,
+  });
+  const [openCategory, setOpenCategory] = useState<CategoryType | null>("base");
 
-  // Fetch parts from API
   useEffect(() => {
     const fetchParts = async () => {
       try {
         const res = await fetch("/api/custom-parts");
         const data = await res.json();
-        
         if (data.success) {
-          const grouped = data.data.reduce((acc: GroupedParts, part: CustomPart) => {
-            if (!acc[part.category]) acc[part.category] = [];
-            acc[part.category].push(part);
-            return acc;
-          }, {});
-          setParts(grouped);
+          setParts(data.data.filter((p: CustomPart) => p.isActive));
         }
       } catch (error) {
         console.error("Error fetching parts:", error);
@@ -62,238 +65,294 @@ export default function CustomKeyboardPage() {
         setLoading(false);
       }
     };
-
     fetchParts();
   }, []);
 
-  const handleSelectOption = (categoryId: string, part: CustomPart) => {
-    if (part.stock <= 0) {
-      showToast("สินค้าหมด", "error");
-      return;
-    }
-    
-    setSelectedOptions(prev => ({
-      ...prev,
-      [categoryId]: part,
-    }));
-  };
-
-  const totalPrice = Object.values(selectedOptions).reduce(
-    (sum, part) => sum + part.price,
-    0
-  );
-
-  const requiredCategories = ["base", "switch", "keycapBase", "wire"];
-  const isComplete = requiredCategories.every(cat => selectedOptions[cat]);
-
-  const formatPrice = (price: number) => {
-    return price.toLocaleString("th-TH") + " THB";
-  };
-
-  const getPreviewLayers = () => {
-    const layers: { id: string; image: string; zIndex: number }[] = [];
-    
-    categoryOrder.forEach((cat, index) => {
-      const selected = selectedOptions[cat];
-      if (selected?.image) {
-        layers.push({ id: cat, image: selected.image, zIndex: index + 1 });
+  const partsByCategory = useMemo(() => {
+    const categories: Record<CategoryType, CustomPart[]> = {
+      base: [],
+      switch: [],
+      keycapBase: [],
+      keycapAdd1: [],
+      keycapAdd2: [],
+      wire: [],
+    };
+    parts.forEach((part) => {
+      if (part.category in categories) {
+        categories[part.category as CategoryType].push(part);
       }
     });
-    
-    return layers;
+    return categories;
+  }, [parts]);
+
+  const totalPrice = useMemo(() => {
+    return Object.values(selectedParts).reduce((sum, part) => sum + (part?.price || 0), 0);
+  }, [selectedParts]);
+
+  const selectedCount = useMemo(() => {
+    return Object.values(selectedParts).filter(p => p !== null).length;
+  }, [selectedParts]);
+
+  const handleSelectPart = (category: CategoryType, part: CustomPart) => {
+    setSelectedParts((prev) => ({ ...prev, [category]: part }));
   };
 
-  const handleOrder = async () => {
-    if (!user) {
-      showToast("กรุณาเข้าสู่ระบบก่อนสั่งซื้อ", "error");
-      router.push("/login");
-      return;
-    }
+  const isComplete = selectedParts.base && selectedParts.switch && selectedParts.keycapBase && selectedParts.keycapAdd1 && selectedParts.keycapAdd2 && selectedParts.wire;
 
+  const handleAddToCart = () => {
     if (!isComplete) {
-      showToast("กรุณาเลือกให้ครบก่อน", "error");
+      showToast("กรุณาเลือกชิ้นส่วนให้ครบ", "error");
       return;
     }
 
     const customProduct = {
-      _id: `custom_${Date.now()}`,
-      name: "Custom Keyboard 60%",
-      description: Object.entries(selectedOptions)
-        .map(([cat, part]) => `${categoryLabels[cat]}: ${part.name}`)
-        .join(", "),
+      _id: `custom-${Date.now()}`,
+      name: "คีย์บอร์ด Custom 60%",
+      description: `Base: ${selectedParts.base?.name}, Switch: ${selectedParts.switch?.name}, Keycap: ${selectedParts.keycapBase?.name}`,
       price: totalPrice,
+      image: selectedParts.base?.image || "/images/keyboard-placeholder.png",
+      category: "custom",
+      brand: "Custom Build",
       stock: 1,
-      images: [selectedOptions.base?.image || ""],
-      category: { _id: "custom", name: "Custom" },
-      customParts: Object.values(selectedOptions).map(p => p._id),
+      rating: 5,
+      reviews: 0,
     };
 
+    addToCart(customProduct);
     showToast("เพิ่มคีย์บอร์ด Custom ลงตะกร้าแล้ว!", "success");
-    
-    localStorage.setItem("customOrder", JSON.stringify({
-      product: customProduct,
-      parts: selectedOptions,
-      total: totalPrice,
-    }));
-    
-    router.push("/checkout");
   };
 
-  const previewLayers = getPreviewLayers();
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("th-TH").format(price);
+  };
 
   if (loading) {
     return (
-      <div className="flex min-h-[calc(100vh-80px)] items-center justify-center bg-gray-500">
-        <div className="text-white text-2xl">กำลังโหลด...</div>
+      <div className="h-screen bg-gradient-to-br from-slate-900 via-violet-900/20 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-400 text-lg">กำลังโหลดชิ้นส่วน...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-80px)] bg-gray-500">
-      {/* Sidebar */}
-      <aside className="w-[330px] min-w-[330px] bg-slate-800 p-6 overflow-y-auto max-h-[calc(100vh-80px)]">
-        <h2 className="text-slate-50 text-xl mb-6 pb-4 border-b border-white/10">
-          ⌨️ สร้างคีย์บอร์ดของคุณ
-        </h2>
-        <nav className="flex flex-col gap-2">
-          {categoryOrder.map((categoryId) => {
-            const categoryParts = parts[categoryId] || [];
-            const isRequired = requiredCategories.includes(categoryId);
-            const isExpanded = expandedCategory === categoryId;
-            const isSelected = !!selectedOptions[categoryId];
-            
+    <div className="h-screen flex overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      {/* LEFT SIDEBAR - Category Selectors */}
+      <div className="w-72 bg-slate-900/80 backdrop-blur-xl border-r border-white/10 flex flex-col">
+        {/* Header */}
+        <div className="p-4 border-b border-white/10">
+          <h2 className="text-white font-bold text-lg flex items-center gap-2">
+            <span className="text-2xl">🛠️</span> สร้างคีย์บอร์ด
+          </h2>
+          <p className="text-slate-500 text-sm mt-1">เลือกชิ้นส่วนที่ต้องการ</p>
+        </div>
+
+        {/* Categories */}
+        <div className="flex-1 overflow-y-auto">
+          {(Object.keys(categoryLabels) as CategoryType[]).map((category) => {
+            const selected = selectedParts[category];
+            const options = partsByCategory[category];
+            const isOpen = openCategory === category;
+            const isOptional = category === "keycapAdd1" || category === "keycapAdd2";
+
             return (
-              <div key={categoryId} className="rounded-lg overflow-hidden">
+              <div key={category} className="border-b border-white/5">
                 <button
-                  className={`w-full flex justify-between items-center p-4 border-none cursor-pointer text-base transition-all
-                    ${isExpanded ? "bg-blue-500/30" : "bg-white/5 hover:bg-white/10"}
-                    ${isSelected ? "text-green-400" : "text-slate-50"}`}
-                  onClick={() => setExpandedCategory(isExpanded ? null : categoryId)}
+                  onClick={() => setOpenCategory(isOpen ? null : category)}
+                  className={`w-full flex items-center justify-between px-4 py-3 text-left transition-all ${
+                    isOpen 
+                      ? "bg-violet-500/20 border-l-2 border-violet-500" 
+                      : "hover:bg-white/5 border-l-2 border-transparent"
+                  }`}
                 >
-                  <span className="flex items-center gap-2">
-                    {isSelected && <span className="text-green-400">✓</span>}
-                    {categoryLabels[categoryId]}
-                    {!isRequired && <span className="text-xs text-slate-500">(เสริม)</span>}
-                  </span>
-                  <span className={`text-xs transition-transform ${isExpanded ? "rotate-180" : ""}`}>
-                    ▼
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">{categoryIcons[category]}</span>
+                    <div>
+                      <span className={`text-sm font-semibold ${isOptional ? "text-amber-400" : "text-white"}`}>
+                        {categoryLabels[category]}
+                      </span>
+                      {selected && (
+                        <p className="text-emerald-400 text-xs truncate max-w-[140px]">{selected.name}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {selected && (
+                      <span className="text-emerald-400 text-xs font-bold">✓</span>
+                    )}
+                    <span className={`text-slate-400 text-xs transition-transform ${isOpen ? "rotate-180" : ""}`}>▼</span>
+                  </div>
                 </button>
-                
-                {isExpanded && (
-                  <div className="flex flex-col bg-black/20 max-h-[300px] overflow-y-auto">
-                    {categoryParts.map((part) => {
-                      const isPartSelected = selectedOptions[categoryId]?._id === part._id;
-                      const isOutOfStock = part.stock <= 0;
-                      
-                      return (
-                        <button
-                          key={part._id}
-                          className={`flex items-center gap-3 p-3 border-none cursor-pointer text-left transition-all
-                            ${isPartSelected ? "bg-blue-500/20 text-blue-400" : "text-slate-400 hover:bg-white/5 hover:text-slate-50"}
-                            ${isOutOfStock ? "opacity-50 cursor-not-allowed" : ""}`}
-                          onClick={() => handleSelectOption(categoryId, part)}
-                          disabled={isOutOfStock}
-                        >
-                          {part.image && (
-                            <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0">
-                              <Image 
-                                src={part.image} 
-                                alt={part.name}
-                                width={40}
-                                height={40}
-                                className="object-cover"
-                              />
-                            </div>
-                          )}
-                          <div className="flex-1 flex flex-col">
-                            <span className="text-sm">{part.name}</span>
-                            {part.stock <= 3 && part.stock > 0 && (
-                              <span className="text-xs text-amber-500">เหลือ {part.stock} ชิ้น</span>
-                            )}
-                            {isOutOfStock && (
-                              <span className="text-xs text-red-500">หมด</span>
-                            )}
+
+                {isOpen && (
+                  <div className="bg-slate-800/50 max-h-72 overflow-y-auto">
+                    {options.map((part) => (
+                      <button
+                        key={part._id}
+                        onClick={() => handleSelectPart(category, part)}
+                        disabled={part.stock === 0}
+                        className={`w-full px-4 py-3 text-left transition-all flex items-center gap-3 ${
+                          selected?._id === part._id
+                            ? "bg-gradient-to-r from-violet-600/40 to-fuchsia-600/40 border-l-2 border-violet-400"
+                            : part.stock === 0
+                            ? "opacity-40 cursor-not-allowed"
+                            : "hover:bg-white/5 border-l-2 border-transparent"
+                        }`}
+                      >
+                        {part.image && (
+                          <div className="w-12 h-12 relative rounded-lg overflow-hidden flex-shrink-0 bg-slate-700 ring-2 ring-white/10">
+                            <Image src={part.image} alt={part.name} fill className="object-cover" />
                           </div>
-                          <span className={`text-sm flex-shrink-0 ${isPartSelected ? "text-blue-400" : "text-slate-500"}`}>
-                            {formatPrice(part.price)}
-                          </span>
-                        </button>
-                      );
-                    })}
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm font-medium truncate">{part.name}</p>
+                          <p className="text-emerald-400 text-sm font-bold">฿{formatPrice(part.price)}</p>
+                        </div>
+                        {selected?._id === part._id && (
+                          <span className="text-violet-400 text-lg">✓</span>
+                        )}
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
             );
           })}
-        </nav>
-      </aside>
+        </div>
 
-      {/* Main Content */}
-      <main className="flex-1 p-6 flex gap-6">
-        {/* Preview Area */}
-        <div className="flex-1 flex items-center justify-center bg-black/10 rounded-xl min-h-[400px] relative">
-          {previewLayers.length > 0 ? (
-            <div className="relative w-full h-full min-h-[400px]">
-              {previewLayers.map((layer) => (
-                <div key={layer.id} className="absolute inset-0" style={{ zIndex: layer.zIndex }}>
-                  <Image
-                    src={layer.image}
-                    alt={layer.id}
-                    fill
-                    className="object-contain"
-                  />
+        {/* Summary & Action - Fixed at bottom */}
+        <div className="border-t border-white/10 bg-slate-900/80">
+          {/* Price Summary */}
+          <div className="p-3 space-y-2">
+            {(Object.keys(categoryLabels) as CategoryType[]).map((category) => {
+              const part = selectedParts[category];
+              if (!part) return null;
+              return (
+                <div key={category} className="flex justify-between items-center text-xs">
+                  <span className="text-slate-400">{categoryLabels[category]}</span>
+                  <span className="text-emerald-400 font-bold">฿{formatPrice(part.price)}</span>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center text-white/50">
-              <span className="text-7xl block mb-4">⌨️</span>
-              <p>Preview Area</p>
-              <p className="text-sm opacity-70">เลือกอุปกรณ์เพื่อดูตัวอย่าง</p>
-            </div>
-          )}
-        </div>
-
-        {/* Selected Options Panel */}
-        <div className="w-80 bg-white/95 rounded-xl p-6 self-start">
-          <h3 className="text-slate-800 text-xl mb-4">Selected Options</h3>
-          
-          {Object.keys(selectedOptions).length === 0 ? (
-            <p className="text-slate-500 italic">ยังไม่ได้เลือกอุปกรณ์</p>
-          ) : (
-            <ul className="list-none p-0 m-0">
-              {categoryOrder.map((cat) => {
-                const part = selectedOptions[cat];
-                if (!part) return null;
-                return (
-                  <li key={cat} className="flex flex-col py-3 border-b border-slate-200">
-                    <span className="text-xs text-slate-500 uppercase">{categoryLabels[cat]}:</span>
-                    <span className="text-slate-800 font-medium">{part.name}</span>
-                    <span className="text-blue-500 text-sm">{formatPrice(part.price)}</span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-
-          <div className="mt-6 pt-4 border-t-2 border-slate-800">
-            <h4 className="text-slate-800 text-lg">Total Price: {formatPrice(totalPrice)}</h4>
+              );
+            })}
           </div>
-
-          <button
-            className={`w-full mt-4 p-4 rounded-lg text-base font-semibold cursor-pointer transition-all
-              ${isComplete 
-                ? "bg-gradient-to-r from-blue-500 to-violet-500 text-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/30" 
-                : "bg-slate-400 text-white cursor-not-allowed"}`}
-            disabled={!isComplete}
-            onClick={handleOrder}
-          >
-            {isComplete ? "🛒 สั่งซื้อเลย" : "กรุณาเลือกให้ครบ"}
-          </button>
+          
+          {/* Total */}
+          <div className="px-3 py-2 bg-slate-800/50 flex justify-between items-center">
+            <span className="text-slate-400 text-sm">ราคารวม</span>
+            <span className="text-xl font-bold text-emerald-400">฿{formatPrice(totalPrice)}</span>
+          </div>
+          
+          {/* Progress */}
+          <div className="px-3 py-2">
+            <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-500"
+                style={{ width: `${(selectedCount / 6) * 100}%` }}
+              />
+            </div>
+          </div>
+          
+          {/* Action Button */}
+          <div className="p-3">
+            <button
+              onClick={handleAddToCart}
+              disabled={!isComplete}
+              className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
+                isComplete
+                  ? "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:shadow-lg hover:shadow-violet-500/30"
+                  : "bg-slate-700 text-slate-500 cursor-not-allowed"
+              }`}
+            >
+              {isComplete ? "🛒 เพิ่มลงตะกร้า" : `เลือก ${selectedCount}/4 รายการ`}
+            </button>
+          </div>
         </div>
-      </main>
+      </div>
+
+      {/* CENTER - Large Preview */}
+      <div className="flex-1 relative flex items-center justify-center bg-slate-800 overflow-hidden">
+        {/* Stacked Keyboard Parts Preview */}
+        {selectedParts.base?.image ? (
+          <div className="relative w-full h-full max-w-5xl mx-auto">
+            {/* Layer 1: Base */}
+            {selectedParts.base?.image && (
+              <Image
+                src={selectedParts.base.image}
+                alt="Base"
+                fill
+                className="object-contain"
+                priority
+                style={{ zIndex: 1 }}
+              />
+            )}
+            
+            {/* Layer 2: Switch */}
+            {selectedParts.switch?.image && (
+              <Image
+                src={selectedParts.switch.image}
+                alt="Switch"
+                fill
+                className="object-contain"
+                style={{ zIndex: 2 }}
+              />
+            )}
+            
+            {/* Layer 3: Keycap Base */}
+            {selectedParts.keycapBase?.image && (
+              <Image
+                src={selectedParts.keycapBase.image}
+                alt="Keycap Base"
+                fill
+                className="object-contain"
+                style={{ zIndex: 3 }}
+              />
+            )}
+            
+            {/* Layer 4: Keycap Add 1 */}
+            {selectedParts.keycapAdd1?.image && (
+              <Image
+                src={selectedParts.keycapAdd1.image}
+                alt="Keycap Add 1"
+                fill
+                className="object-contain"
+                style={{ zIndex: 4 }}
+              />
+            )}
+            
+            {/* Layer 5: Keycap Add 2 */}
+            {selectedParts.keycapAdd2?.image && (
+              <Image
+                src={selectedParts.keycapAdd2.image}
+                alt="Keycap Add 2"
+                fill
+                className="object-contain"
+                style={{ zIndex: 5 }}
+              />
+            )}
+            
+            {/* Layer 6: Wire */}
+            {selectedParts.wire?.image && (
+              <Image
+                src={selectedParts.wire.image}
+                alt="Wire"
+                fill
+                className="object-contain"
+                style={{ zIndex: 6 }}
+              />
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center text-slate-500">
+            <span className="text-8xl mb-6 opacity-30">⌨️</span>
+            <p className="text-2xl font-medium">เลือก Base เพื่อดูตัวอย่าง</p>
+            <p className="text-base mt-2 text-slate-600">← คลิกที่เมนูด้านซ้าย</p>
+          </div>
+        )}
+      </div>
+
+
     </div>
   );
 }

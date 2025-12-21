@@ -22,7 +22,7 @@ const CustomPartSchema = new Schema<ICustomPart>(
     },
     name: { type: String, required: true },
     price: { type: Number, required: true, min: 0 },
-    image: { type: String, required: true },
+    image: { type: String, default: "" },
     stock: { type: Number, required: true, default: 0, min: 0 },
     isActive: { type: Boolean, default: true },
   },
