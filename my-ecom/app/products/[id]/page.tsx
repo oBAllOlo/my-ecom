@@ -24,7 +24,7 @@ interface Product {
   features?: string[];
   switchType?: string;
   connectivity?: string;
-  isNew?: boolean;
+  isNewProduct?: boolean;
   isFeatured?: boolean;
 }
 
@@ -385,7 +385,7 @@ export default function ProductDetailPage() {
         <div className="product-detail-info">
           {/* Badges */}
           <div style={{ display: "flex", gap: "0.5rem" }}>
-            {product.isNew && <span className="badge badge-new">ใหม่</span>}
+            {product.isNewProduct && <span className="badge badge-new">ใหม่</span>}
             {discount > 0 && (
               <span className="badge badge-sale">ลด {discount}%</span>
             )}

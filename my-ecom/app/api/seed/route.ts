@@ -40,7 +40,7 @@ export async function POST() {
         features: prod.features,
         switchType: prod.switchType,
         connectivity: prod.connectivity,
-        isNew: prod.isNew,
+        isNewProduct: prod.isNewProduct,
         isFeatured: prod.isFeatured,
       }))
     );

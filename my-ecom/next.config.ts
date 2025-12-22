@@ -17,9 +17,11 @@ const nextConfig: NextConfig = {
         pathname: "/**",
       },
     ],
+    // Minimize image optimization in production to save memory
     minimumCacheTTL: 60,
   },
   
+  // Reduce memory during build
   experimental: {
     webpackMemoryOptimizations: true,
   },
