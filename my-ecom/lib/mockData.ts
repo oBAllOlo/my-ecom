@@ -55,7 +55,7 @@ export const products: Product[] = [
     ],
     switchType: "Gateron G Pro Red",
     connectivity: "Wireless + Wired",
-    isNew: true,
+    isNewProduct: true,
     isFeatured: true,
   },
   {
@@ -126,7 +126,7 @@ export const products: Product[] = [
     ],
     switchType: "Akko CS Jelly Pink",
     connectivity: "Wireless + Wired",
-    isNew: true,
+    isNewProduct: true,
   },
   {
     _id: "5",
@@ -207,7 +207,7 @@ export const products: Product[] = [
     features: ["Low-profile", "Tri-mode", "RGB", "Mac Compatible"],
     switchType: "NuPhy Wisteria",
     connectivity: "Bluetooth + 2.4GHz + USB-C",
-    isNew: true,
+    isNewProduct: true,
   },
   {
     _id: "9",
@@ -260,7 +260,7 @@ export const products: Product[] = [
     features: ["Rapid Trigger", "Analog Input", "SOCD", "Hot-swappable"],
     switchType: "Lekker L45",
     connectivity: "Wired USB-C",
-    isNew: true,
+    isNewProduct: true,
   },
   {
     _id: "12",
@@ -282,7 +282,7 @@ export const products: Product[] = [
 ];
 
 export const featuredProducts = products.filter((p) => p.isFeatured);
-export const newProducts = products.filter((p) => p.isNew);
+export const newProducts = products.filter((p) => p.isNewProduct);
 
 export const formatPrice = (price: number): string => {
   return new Intl.NumberFormat("th-TH", {

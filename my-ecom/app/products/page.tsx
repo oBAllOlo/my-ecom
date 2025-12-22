@@ -16,7 +16,7 @@ interface Product {
   stock: number;
   rating: number;
   reviews: number;
-  isNew?: boolean;
+  isNewProduct?: boolean;
   isFeatured?: boolean;
 }
 

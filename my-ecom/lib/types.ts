@@ -16,7 +16,7 @@ export interface Product {
   features?: string[];
   switchType?: string;
   connectivity?: string;
-  isNew?: boolean;
+  isNewProduct?: boolean;
   isFeatured?: boolean;
   createdAt?: Date;
   updatedAt?: Date;

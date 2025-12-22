@@ -45,7 +45,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     <Link href={`/products/${product._id}`} className="product-card">
       {/* Badges */}
       <div className="product-badges">
-        {product.isNew && <span className="badge badge-new">ใหม่</span>}
+        {product.isNewProduct && <span className="badge badge-new">ใหม่</span>}
         {discount > 0 && <span className="badge badge-sale">-{discount}%</span>}
       </div>
 

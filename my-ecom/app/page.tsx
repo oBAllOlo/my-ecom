@@ -25,7 +25,7 @@ export default function Home() {
         if (productsData.success) {
           const allProducts = productsData.data;
           setFeaturedProducts(allProducts.filter((p: Product) => p.isFeatured).slice(0, 4));
-          setNewProducts(allProducts.filter((p: Product) => p.isNew).slice(0, 4));
+          setNewProducts(allProducts.filter((p: Product) => p.isNewProduct).slice(0, 4));
         }
 
         if (categoriesData.success) {

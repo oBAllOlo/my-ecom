@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     
     // Featured/New filters
     if (featured === "true") query.isFeatured = true;
-    if (isNew === "true") query.isNew = true;
+    if (isNew === "true") query.isNewProduct = true;
     
     // Brand filter
     if (brand) query.brand = brand;

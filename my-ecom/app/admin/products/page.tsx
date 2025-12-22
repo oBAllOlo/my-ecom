@@ -25,7 +25,7 @@ interface Product {
   switchType?: string;
   connectivity?: string;
   isFeatured?: boolean;
-  isNew?: boolean;
+  isNewProduct?: boolean;
 }
 
 interface Category {
@@ -166,7 +166,7 @@ export default function AdminProducts() {
               <div className="relative aspect-[4/3] overflow-hidden">
                 <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 hover:scale-110" />
                 <div className="absolute top-3 left-3 flex gap-2">
-                  {product.isNew && <span className="py-1 px-3 bg-gradient-to-r from-blue-500 to-blue-700 text-white text-xs font-bold rounded-full">ใหม่</span>}
+                  {product.isNewProduct && <span className="py-1 px-3 bg-gradient-to-r from-blue-500 to-blue-700 text-white text-xs font-bold rounded-full">ใหม่</span>}
                   {product.isFeatured && <span className="py-1 px-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs font-bold rounded-full">แนะนำ</span>}
                 </div>
               </div>
@@ -262,7 +262,7 @@ function ProductModal({ product, categories, onClose, onSave }: ProductModalProp
     features: product?.features?.join(", ") || "",
     switchType: product?.switchType || "",
     connectivity: product?.connectivity || "",
-    isNew: product?.isNew || false,
+    isNewProduct: product?.isNewProduct || false,
     isFeatured: product?.isFeatured || false,
   });
   const [saving, setSaving] = useState(false);
@@ -583,8 +583,8 @@ function ProductModal({ product, categories, onClose, onSave }: ProductModalProp
             <label className="flex items-center gap-2 text-slate-400 cursor-pointer">
               <input
                 type="checkbox"
-                checked={formData.isNew}
-                onChange={(e) => setFormData({ ...formData, isNew: e.target.checked })}
+                checked={formData.isNewProduct}
+                onChange={(e) => setFormData({ ...formData, isNewProduct: e.target.checked })}
                 className="accent-violet-500"
               />
               <span>สินค้าใหม่</span>
