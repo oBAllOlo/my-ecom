@@ -9,7 +9,7 @@ const optimizeUrl = (url: string, width = 200) => {
 };
 
 // Cloudinary URLs from upload script
-const cloudinaryUrls = {
+const cloudinaryUrls: Record<string, Record<string, string>> = {
   base: {
     "black": "https://res.cloudinary.com/dea7e29r0/image/upload/v1766419605/keyboard-parts/base_60/base_60_black.png",
     "blue": "https://res.cloudinary.com/dea7e29r0/image/upload/v1766419609/keyboard-parts/base_60/base_60_blue.png",
@@ -103,8 +103,12 @@ const cloudinaryUrls = {
   }
 };
 
+// Color keys type
+type ColorKey = "black" | "white" | "blue" | "red" | "purple" | "cyan" | "green" | "orange" | 
+  "yellow" | "magenta" | "violet" | "chartreuse" | "dodger-blue" | "spring-green";
+
 // Color list for all parts
-const allColors = [
+const allColors: ColorKey[] = [
   "black", "white", "blue", "red", "purple", "cyan", "green", "orange", 
   "yellow", "magenta", "violet", "chartreuse", "dodger-blue", "spring-green"
 ];
