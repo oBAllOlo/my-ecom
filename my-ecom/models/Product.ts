@@ -16,7 +16,7 @@ export interface IProductData {
   features?: string[];
   switchType?: string;
   connectivity?: string;
-  isNew?: boolean;
+  isNewProduct?: boolean;
   isFeatured?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -41,7 +41,7 @@ const ProductSchema = new Schema<IProductData>(
     features: [{ type: String }],
     switchType: { type: String },
     connectivity: { type: String },
-    isNew: { type: Boolean, default: false },
+    isNewProduct: { type: Boolean, default: false },
     isFeatured: { type: Boolean, default: false },
   },
   { timestamps: true }

@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Standalone output for smaller bundle & lower memory usage
+  output: 'standalone',
+  
   images: {
     remotePatterns: [
       {
@@ -14,6 +17,11 @@ const nextConfig: NextConfig = {
         pathname: "/**",
       },
     ],
+    minimumCacheTTL: 60,
+  },
+  
+  experimental: {
+    webpackMemoryOptimizations: true,
   },
 };
 
