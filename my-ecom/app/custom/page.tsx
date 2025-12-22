@@ -109,18 +109,18 @@ export default function CustomKeyboardPage() {
     return audioMap[switchName] || null;
   };
 
-  // Map switch names to switch image
+  // Map switch names to switch image (Cloudinary URLs with optimization)
   const getSwitchImagePath = (switchName: string) => {
     const imageMap: Record<string, string> = {
-      "Alpacas (Linear)": "/images/switch/switch_alpacas.png",
-      "Cherry MX Blacks": "/images/switch/switch_cherry-mx-blacks.png",
-      "Cherry MX Blues": "/images/switch/switch_cherry-mx-blues.png",
-      "Cherry MX Browns": "/images/switch/switch_cherry-mx-browns.png",
-      "Gateron Black Inks": "/images/switch/switch_gateron-black-inks.png",
-      "Gateron Red Inks": "/images/switch/switch_gateron-red-inks.png",
-      "Holy Pandas (Tactile)": "/images/switch/switch_holy-pandas.png",
-      "NovelKeys Creams": "/images/switch/switch_novelkeys-creams.png",
-      "Turquoise Tealios": "/images/switch/switch_turquoise-tealios.png",
+      "Alpacas (Linear)": "https://res.cloudinary.com/dea7e29r0/image/upload/f_auto,q_auto,w_300/v1766420897/keyboard-parts/switch/switch_alpacas.png",
+      "Cherry MX Blacks": "https://res.cloudinary.com/dea7e29r0/image/upload/f_auto,q_auto,w_300/v1766420898/keyboard-parts/switch/switch_cherry-mx-blacks.png",
+      "Cherry MX Blues": "https://res.cloudinary.com/dea7e29r0/image/upload/f_auto,q_auto,w_300/v1766420902/keyboard-parts/switch/switch_cherry-mx-blues.png",
+      "Cherry MX Browns": "https://res.cloudinary.com/dea7e29r0/image/upload/f_auto,q_auto,w_300/v1766420904/keyboard-parts/switch/switch_cherry-mx-browns.png",
+      "Gateron Black Inks": "https://res.cloudinary.com/dea7e29r0/image/upload/f_auto,q_auto,w_300/v1766420906/keyboard-parts/switch/switch_gateron-black-inks.png",
+      "Gateron Red Inks": "https://res.cloudinary.com/dea7e29r0/image/upload/f_auto,q_auto,w_300/v1766420907/keyboard-parts/switch/switch_gateron-red-inks.png",
+      "Holy Pandas (Tactile)": "https://res.cloudinary.com/dea7e29r0/image/upload/f_auto,q_auto,w_300/v1766420908/keyboard-parts/switch/switch_holy-pandas.png",
+      "NovelKeys Creams": "https://res.cloudinary.com/dea7e29r0/image/upload/f_auto,q_auto,w_300/v1766420909/keyboard-parts/switch/switch_novelkeys-creams.png",
+      "Turquoise Tealios": "https://res.cloudinary.com/dea7e29r0/image/upload/f_auto,q_auto,w_300/v1766420911/keyboard-parts/switch/switch_turquoise-tealios.png",
     };
     return imageMap[switchName] || null;
   };
@@ -139,7 +139,7 @@ export default function CustomKeyboardPage() {
   const handleSelectPart = (category: CategoryType, part: CustomPart) => {
     setSelectedParts((prev) => ({ ...prev, [category]: part }));
     
-    // If selecting a switch, show modal with image and play sound
+    // If selecting a switch, show modal with image (sound plays only when user clicks Play Sound button)
     if (category === "switch") {
       const audioPath = getSwitchAudioPath(part.name);
       const imagePath = getSwitchImagePath(part.name);
@@ -148,10 +148,6 @@ export default function CustomKeyboardPage() {
       setCurrentSwitchAudio(audioPath);
       setCurrentSwitchImage(imagePath);
       setShowSwitchModal(true);
-      
-      if (audioPath) {
-        playSound(audioPath);
-      }
     }
   };
 
