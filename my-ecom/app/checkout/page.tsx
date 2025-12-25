@@ -7,9 +7,8 @@ import Script from "next/script";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
-import { useToast } from "@/context/ToastContext";
+import { toast } from "sonner";
 import { formatPrice } from "@/lib/mockData";
-
 
 declare global {
   interface Window {
@@ -18,7 +17,10 @@ declare global {
       createToken: (
         type: string,
         data: Record<string, string>,
-        callback: (statusCode: number, response: { id?: string; message?: string }) => void
+        callback: (
+          statusCode: number,
+          response: { id?: string; message?: string }
+        ) => void
       ) => void;
     };
     OmiseCard: {
@@ -60,7 +62,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { items, getCartTotal, clearCart } = useCart();
   const { user } = useAuth();
-  const { showToast } = useToast();
+  // const { showToast } = useToast();
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>("card");
   const [selectedBank, setSelectedBank] = useState("scb");
@@ -75,7 +77,9 @@ export default function CheckoutPage() {
   const [districts, setDistricts] = useState<District[]>([]);
   const [subDistricts, setSubDistricts] = useState<SubDistrict[]>([]);
   const [filteredDistricts, setFilteredDistricts] = useState<District[]>([]);
-  const [filteredSubDistricts, setFilteredSubDistricts] = useState<SubDistrict[]>([]);
+  const [filteredSubDistricts, setFilteredSubDistricts] = useState<
+    SubDistrict[]
+  >([]);
 
   const [cardForm, setCardForm] = useState<CardFormData>({
     number: "",
@@ -105,8 +109,14 @@ export default function CheckoutPage() {
   });
 
   const subtotal = getCartTotal();
-  const shipping = subtotal >= shippingSettings.freeShippingThreshold ? 0 : shippingSettings.shippingCost;
-  const amountForFreeShipping = subtotal >= shippingSettings.freeShippingThreshold ? 0 : shippingSettings.freeShippingThreshold - subtotal;
+  const shipping =
+    subtotal >= shippingSettings.freeShippingThreshold
+      ? 0
+      : shippingSettings.shippingCost;
+  const amountForFreeShipping =
+    subtotal >= shippingSettings.freeShippingThreshold
+      ? 0
+      : shippingSettings.freeShippingThreshold - subtotal;
   const total = subtotal + shipping;
 
   // Fetch shipping settings from API
@@ -125,15 +135,20 @@ export default function CheckoutPage() {
     fetchShippingSettings();
   }, []);
 
-
   // Fetch Thai address data
   useEffect(() => {
     const fetchAddressData = async () => {
       try {
         const [provRes, distRes, subDistRes] = await Promise.all([
-          fetch("https://raw.githubusercontent.com/kongvut/thai-province-data/refs/heads/master/api/latest/province.json"),
-          fetch("https://raw.githubusercontent.com/kongvut/thai-province-data/refs/heads/master/api/latest/district.json"),
-          fetch("https://raw.githubusercontent.com/kongvut/thai-province-data/refs/heads/master/api/latest/sub_district.json"),
+          fetch(
+            "https://raw.githubusercontent.com/kongvut/thai-province-data/refs/heads/master/api/latest/province.json"
+          ),
+          fetch(
+            "https://raw.githubusercontent.com/kongvut/thai-province-data/refs/heads/master/api/latest/district.json"
+          ),
+          fetch(
+            "https://raw.githubusercontent.com/kongvut/thai-province-data/refs/heads/master/api/latest/sub_district.json"
+          ),
         ]);
         const provData = await provRes.json();
         const distData = await distRes.json();
@@ -151,7 +166,9 @@ export default function CheckoutPage() {
   // Filter districts when province changes
   useEffect(() => {
     if (shippingForm.provinceId > 0) {
-      const filtered = districts.filter(d => d.province_id === shippingForm.provinceId);
+      const filtered = districts.filter(
+        (d) => d.province_id === shippingForm.provinceId
+      );
       setFilteredDistricts(filtered);
     } else {
       setFilteredDistricts([]);
@@ -163,7 +180,9 @@ export default function CheckoutPage() {
   // Filter subdistricts when district changes
   useEffect(() => {
     if (shippingForm.districtId > 0) {
-      const filtered = subDistricts.filter(s => s.district_id === shippingForm.districtId);
+      const filtered = subDistricts.filter(
+        (s) => s.district_id === shippingForm.districtId
+      );
       setFilteredSubDistricts(filtered);
     } else {
       setFilteredSubDistricts([]);
@@ -174,7 +193,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (user) {
       // First set basic user info
-      setShippingForm(prev => ({
+      setShippingForm((prev) => ({
         ...prev,
         fullName: user.name || prev.fullName,
         email: user.email || prev.email,
@@ -188,7 +207,7 @@ export default function CheckoutPage() {
 
           if (data.success && data.data.address) {
             const addr = data.data.address;
-            setShippingForm(prev => ({
+            setShippingForm((prev) => ({
               ...prev,
               phone: addr.phone || prev.phone,
               street: addr.street || prev.street,
@@ -198,11 +217,12 @@ export default function CheckoutPage() {
               postalCode: addr.postalCode || prev.postalCode,
             }));
 
-
             // Find province ID to load districts
-            const matchedProvince = provinces.find(p => p.name_th === addr.province);
+            const matchedProvince = provinces.find(
+              (p) => p.name_th === addr.province
+            );
             if (matchedProvince) {
-              setShippingForm(prev => ({
+              setShippingForm((prev) => ({
                 ...prev,
                 provinceId: matchedProvince.id,
               }));
@@ -227,7 +247,7 @@ export default function CheckoutPage() {
   // Create order first
   const createOrder = async (): Promise<string | null> => {
     if (!user) {
-      showToast("กรุณาเข้าสู่ระบบก่อนสั่งซื้อ", "error");
+      toast.error("กรุณาเข้าสู่ระบบก่อนสั่งซื้อ");
       return null;
     }
 
@@ -242,10 +262,9 @@ export default function CheckoutPage() {
         postalCode: shippingForm.postalCode,
       };
 
-
       const orderData = {
         userId: user._id,
-        items: items.map(item => ({
+        items: items.map((item) => ({
           productId: item.product._id,
           name: item.product.name,
           description: item.product.description || "",
@@ -286,11 +305,10 @@ export default function CheckoutPage() {
       throw new Error(data.error);
     } catch (error) {
       console.error("Error creating order:", error);
-      showToast("ไม่สามารถสร้างคำสั่งซื้อได้", "error");
+      toast.error("สลิปต้องมีขนาดไม่เกิน 5MB");
       return null;
     }
   };
-
 
   // Handle Credit Card Payment
   const handleCardPayment = async (newOrderId: string) => {
@@ -301,7 +319,10 @@ export default function CheckoutPage() {
       }
 
       const expMonth = cardForm.expMonth.padStart(2, "0");
-      const expYear = cardForm.expYear.length === 2 ? "20" + cardForm.expYear : cardForm.expYear;
+      const expYear =
+        cardForm.expYear.length === 2
+          ? "20" + cardForm.expYear
+          : cardForm.expYear;
 
       window.Omise.createToken(
         "card",
@@ -373,7 +394,7 @@ export default function CheckoutPage() {
       // If no QR code, redirect to authorize URL (Omise payment page)
       if (data.data.authorizeUri) {
         console.log("Redirecting to:", data.data.authorizeUri);
-        showToast("กำลังเปลี่ยนไปหน้าชำระเงิน...", "info");
+        toast.info("กำลังเปลี่ยนไปหน้าชำระเงิน...");
         // Use setTimeout to ensure toast shows before redirect
         setTimeout(() => {
           window.location.href = data.data.authorizeUri;
@@ -382,7 +403,7 @@ export default function CheckoutPage() {
       }
 
       setOrderId(newOrderId);
-      showToast("กรุณาตรวจสอบใน Omise Dashboard", "info");
+      toast.info("กรุณาตรวจสอบใน Omise Dashboard");
       return true;
     }
     throw new Error(data.error || "PromptPay failed");
@@ -414,7 +435,7 @@ export default function CheckoutPage() {
     e.preventDefault();
 
     if (!user) {
-      showToast("กรุณาเข้าสู่ระบบก่อนสั่งซื้อ", "error");
+      toast.error("กรุณาเข้าสู่ระบบก่อนสั่งซื้อ");
       router.push("/login");
       return;
     }
@@ -432,7 +453,7 @@ export default function CheckoutPage() {
     for (const field of requiredFields) {
       const value = shippingForm[field.key as keyof typeof shippingForm];
       if (typeof value === "string" && !value.trim()) {
-        showToast(`กรุณากรอก${field.label}`, "error");
+        toast.error(`กรุณากรอก${field.label}`);
         return;
       }
     }
@@ -453,13 +474,13 @@ export default function CheckoutPage() {
           await handleCardPayment(newOrderId);
           setOrderComplete(true);
           clearCart();
-          showToast("ชำระเงินสำเร็จ!", "success");
+          toast.success("สั่งซื้อสำเร็จ!");
           break;
 
         case "promptpay":
           await handlePromptPayPayment(newOrderId);
           // QR Code will be shown, user scans and pays
-          showToast("กรุณาสแกน QR Code เพื่อชำระเงิน", "info");
+          toast.info("กรุณาสแกน QR Code เพื่อชำระเงิน");
           break;
 
         case "banking":
@@ -469,7 +490,9 @@ export default function CheckoutPage() {
       }
     } catch (error) {
       console.error("Payment error:", error);
-      showToast(error instanceof Error ? error.message : "การชำระเงินล้มเหลว", "error");
+      toast.error(
+        error instanceof Error ? error.message : "การชำระเงินล้มเหลว"
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -479,27 +502,41 @@ export default function CheckoutPage() {
   if (qrCodeUrl && orderId) {
     return (
       <div className="checkout-page">
-        <div className="cart-empty" style={{ background: "rgba(59, 130, 246, 0.1)" }}>
+        <div
+          className="cart-empty"
+          style={{ background: "rgba(59, 130, 246, 0.1)" }}
+        >
           <div className="cart-empty-icon">📱</div>
           <h3 className="cart-empty-title" style={{ color: "#3B82F6" }}>
             สแกน QR Code เพื่อชำระเงิน
           </h3>
-          <p className="cart-empty-text">
-            ยอดชำระ: {formatPrice(total)}
-          </p>
-          <div style={{
-            background: "white",
-            padding: "1rem",
-            borderRadius: "12px",
-            display: "inline-block",
-            margin: "1rem 0"
-          }}>
-            <img src={qrCodeUrl} alt="PromptPay QR Code" width={200} height={200} />
+          <p className="cart-empty-text">ยอดชำระ: {formatPrice(total)}</p>
+          <div
+            style={{
+              background: "white",
+              padding: "1rem",
+              borderRadius: "12px",
+              display: "inline-block",
+              margin: "1rem 0",
+            }}
+          >
+            <img
+              src={qrCodeUrl}
+              alt="PromptPay QR Code"
+              width={200}
+              height={200}
+            />
           </div>
           <p style={{ color: "var(--text-muted)", fontSize: "0.875rem" }}>
             หมายเลขคำสั่งซื้อ: #{orderId.slice(-8)}
           </p>
-          <p style={{ color: "var(--text-muted)", fontSize: "0.875rem", marginBottom: "1rem" }}>
+          <p
+            style={{
+              color: "var(--text-muted)",
+              fontSize: "0.875rem",
+              marginBottom: "1rem",
+            }}
+          >
             เมื่อชำระเงินแล้ว ระบบจะอัปเดตสถานะอัตโนมัติ
           </p>
           <button
@@ -535,7 +572,10 @@ export default function CheckoutPage() {
   if (orderComplete) {
     return (
       <div className="checkout-page">
-        <div className="cart-empty" style={{ background: "rgba(34, 197, 94, 0.1)" }}>
+        <div
+          className="cart-empty"
+          style={{ background: "rgba(34, 197, 94, 0.1)" }}
+        >
           <div className="cart-empty-icon">🎉</div>
           <h3 className="cart-empty-title" style={{ color: "#22C55E" }}>
             สั่งซื้อสำเร็จ!
@@ -575,18 +615,27 @@ export default function CheckoutPage() {
               <h2 className="form-section-title">📦 ข้อมูลการจัดส่ง</h2>
               <div className="form-grid">
                 <div className="form-group full-width">
-                  <label className="form-label">ชื่อ-นามสกุล <span style={{ color: "#ef4444" }}>*</span></label>
+                  <label className="form-label">
+                    ชื่อ-นามสกุล <span style={{ color: "#ef4444" }}>*</span>
+                  </label>
                   <input
                     type="text"
                     className="form-input"
                     placeholder="กรอกชื่อ-นามสกุล"
                     value={shippingForm.fullName}
-                    onChange={(e) => setShippingForm({ ...shippingForm, fullName: e.target.value })}
+                    onChange={(e) =>
+                      setShippingForm({
+                        ...shippingForm,
+                        fullName: e.target.value,
+                      })
+                    }
                     required
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">เบอร์โทรศัพท์ <span style={{ color: "#ef4444" }}>*</span></label>
+                  <label className="form-label">
+                    เบอร์โทรศัพท์ <span style={{ color: "#ef4444" }}>*</span>
+                  </label>
                   <input
                     type="tel"
                     className="form-input"
@@ -594,7 +643,9 @@ export default function CheckoutPage() {
                     value={shippingForm.phone}
                     onChange={(e) => {
                       // Allow only digits, max 10
-                      const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                      const value = e.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 10);
                       setShippingForm({ ...shippingForm, phone: value });
                     }}
                     maxLength={10}
@@ -602,29 +653,45 @@ export default function CheckoutPage() {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">อีเมล <span style={{ color: "#ef4444" }}>*</span></label>
+                  <label className="form-label">
+                    อีเมล <span style={{ color: "#ef4444" }}>*</span>
+                  </label>
                   <input
                     type="email"
                     className="form-input"
                     placeholder="email@example.com"
                     value={shippingForm.email}
-                    onChange={(e) => setShippingForm({ ...shippingForm, email: e.target.value })}
+                    onChange={(e) =>
+                      setShippingForm({
+                        ...shippingForm,
+                        email: e.target.value,
+                      })
+                    }
                     required
                   />
                 </div>
                 <div className="form-group full-width">
-                  <label className="form-label">ที่อยู่ <span style={{ color: "#ef4444" }}>*</span></label>
+                  <label className="form-label">
+                    ที่อยู่ <span style={{ color: "#ef4444" }}>*</span>
+                  </label>
                   <input
                     type="text"
                     className="form-input"
                     placeholder="บ้านเลขที่ ถนน ซอย"
                     value={shippingForm.street}
-                    onChange={(e) => setShippingForm({ ...shippingForm, street: e.target.value })}
+                    onChange={(e) =>
+                      setShippingForm({
+                        ...shippingForm,
+                        street: e.target.value,
+                      })
+                    }
                     required
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">จังหวัด <span style={{ color: "#ef4444" }}>*</span></label>
+                  <label className="form-label">
+                    จังหวัด <span style={{ color: "#ef4444" }}>*</span>
+                  </label>
                   <input
                     type="text"
                     className="form-input"
@@ -633,7 +700,9 @@ export default function CheckoutPage() {
                     value={shippingForm.province}
                     onChange={(e) => {
                       const inputValue = e.target.value;
-                      const selectedProvince = provinces.find(p => p.name_th === inputValue);
+                      const selectedProvince = provinces.find(
+                        (p) => p.name_th === inputValue
+                      );
                       setShippingForm({
                         ...shippingForm,
                         province: inputValue,
@@ -653,7 +722,9 @@ export default function CheckoutPage() {
                   </datalist>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">เขต/อำเภอ <span style={{ color: "#ef4444" }}>*</span></label>
+                  <label className="form-label">
+                    เขต/อำเภอ <span style={{ color: "#ef4444" }}>*</span>
+                  </label>
                   <input
                     type="text"
                     className="form-input"
@@ -662,7 +733,9 @@ export default function CheckoutPage() {
                     value={shippingForm.district}
                     onChange={(e) => {
                       const inputValue = e.target.value;
-                      const selectedDistrict = filteredDistricts.find(d => d.name_th === inputValue);
+                      const selectedDistrict = filteredDistricts.find(
+                        (d) => d.name_th === inputValue
+                      );
                       setShippingForm({
                         ...shippingForm,
                         district: inputValue,
@@ -681,7 +754,9 @@ export default function CheckoutPage() {
                   </datalist>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">แขวง/ตำบล <span style={{ color: "#ef4444" }}>*</span></label>
+                  <label className="form-label">
+                    แขวง/ตำบล <span style={{ color: "#ef4444" }}>*</span>
+                  </label>
                   <input
                     type="text"
                     className="form-input"
@@ -690,11 +765,15 @@ export default function CheckoutPage() {
                     value={shippingForm.subDistrict}
                     onChange={(e) => {
                       const inputValue = e.target.value;
-                      const selectedSubDistrict = filteredSubDistricts.find(s => s.name_th === inputValue);
+                      const selectedSubDistrict = filteredSubDistricts.find(
+                        (s) => s.name_th === inputValue
+                      );
                       setShippingForm({
                         ...shippingForm,
                         subDistrict: inputValue,
-                        postalCode: selectedSubDistrict?.zip_code?.toString() || shippingForm.postalCode,
+                        postalCode:
+                          selectedSubDistrict?.zip_code?.toString() ||
+                          shippingForm.postalCode,
                       });
                     }}
                     required
@@ -707,13 +786,20 @@ export default function CheckoutPage() {
                   </datalist>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">รหัสไปรษณีย์ <span style={{ color: "#ef4444" }}>*</span></label>
+                  <label className="form-label">
+                    รหัสไปรษณีย์ <span style={{ color: "#ef4444" }}>*</span>
+                  </label>
                   <input
                     type="text"
                     className="form-input"
                     placeholder="10xxx"
                     value={shippingForm.postalCode}
-                    onChange={(e) => setShippingForm({ ...shippingForm, postalCode: e.target.value })}
+                    onChange={(e) =>
+                      setShippingForm({
+                        ...shippingForm,
+                        postalCode: e.target.value,
+                      })
+                    }
                     required
                     maxLength={5}
                   />
@@ -725,7 +811,11 @@ export default function CheckoutPage() {
             <div className="form-section">
               <h2 className="form-section-title">💰 วิธีการชำระเงิน</h2>
               <div className="payment-options">
-                <label className={`payment-option ${paymentMethod === "card" ? "selected" : ""}`}>
+                <label
+                  className={`payment-option ${
+                    paymentMethod === "card" ? "selected" : ""
+                  }`}
+                >
                   <input
                     type="radio"
                     name="payment"
@@ -737,8 +827,11 @@ export default function CheckoutPage() {
                   <span className="payment-label">บัตรเครดิต/เดบิต</span>
                 </label>
 
-
-                <label className={`payment-option ${paymentMethod === "banking" ? "selected" : ""}`}>
+                <label
+                  className={`payment-option ${
+                    paymentMethod === "banking" ? "selected" : ""
+                  }`}
+                >
                   <input
                     type="radio"
                     name="payment"
@@ -759,39 +852,79 @@ export default function CheckoutPage() {
 
                 {/* Test Cards Quick Fill */}
                 <div style={{ marginBottom: "1rem" }}>
-                  <p style={{ color: "var(--text-muted)", fontSize: "0.75rem", marginBottom: "0.5rem" }}>
+                  <p
+                    style={{
+                      color: "var(--text-muted)",
+                      fontSize: "0.75rem",
+                      marginBottom: "0.5rem",
+                    }}
+                  >
                     🧪 บัตรทดสอบ Omise (Sandbox Mode):
                   </p>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+                  <div
+                    style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}
+                  >
                     {[
-                      { label: "✅ Visa (สำเร็จ)", number: "4242424242424242", type: "success" },
-                      { label: "✅ Mastercard", number: "5555555555554444", type: "success" },
-                      { label: "✅ JCB", number: "3530111333300000", type: "success" },
-                      { label: "❌ ยอดไม่พอ", number: "4111111111140011", type: "fail" },
-                      { label: "❌ บัตรหาย/ถูกขโมย", number: "4111111111130012", type: "fail" },
-                      { label: "❌ ประมวลผลล้มเหลว", number: "4111111111120013", type: "fail" },
-                      { label: "❌ ปฏิเสธการชำระ", number: "4111111111110014", type: "fail" },
+                      {
+                        label: "✅ Visa (สำเร็จ)",
+                        number: "4242424242424242",
+                        type: "success",
+                      },
+                      {
+                        label: "✅ Mastercard",
+                        number: "5555555555554444",
+                        type: "success",
+                      },
+                      {
+                        label: "✅ JCB",
+                        number: "3530111333300000",
+                        type: "success",
+                      },
+                      {
+                        label: "❌ ยอดไม่พอ",
+                        number: "4111111111140011",
+                        type: "fail",
+                      },
+                      {
+                        label: "❌ บัตรหาย/ถูกขโมย",
+                        number: "4111111111130012",
+                        type: "fail",
+                      },
+                      {
+                        label: "❌ ประมวลผลล้มเหลว",
+                        number: "4111111111120013",
+                        type: "fail",
+                      },
+                      {
+                        label: "❌ ปฏิเสธการชำระ",
+                        number: "4111111111110014",
+                        type: "fail",
+                      },
                     ].map((card) => (
                       <button
                         key={card.number}
                         type="button"
-                        onClick={() => setCardForm({
-                          number: card.number,
-                          name: "TEST USER",
-                          expMonth: "12",
-                          expYear: "30",
-                          cvv: "123",
-                        })}
+                        onClick={() =>
+                          setCardForm({
+                            number: card.number,
+                            name: "TEST USER",
+                            expMonth: "12",
+                            expYear: "30",
+                            cvv: "123",
+                          })
+                        }
                         style={{
                           padding: "0.4rem 0.75rem",
                           fontSize: "0.7rem",
                           borderRadius: "6px",
                           border: "none",
                           cursor: "pointer",
-                          background: card.type === "success"
-                            ? "rgba(34, 197, 94, 0.2)"
-                            : "rgba(239, 68, 68, 0.2)",
-                          color: card.type === "success" ? "#22c55e" : "#ef4444",
+                          background:
+                            card.type === "success"
+                              ? "rgba(34, 197, 94, 0.2)"
+                              : "rgba(239, 68, 68, 0.2)",
+                          color:
+                            card.type === "success" ? "#22c55e" : "#ef4444",
                           transition: "all 0.2s",
                         }}
                       >
@@ -809,7 +942,9 @@ export default function CheckoutPage() {
                       className="form-input"
                       placeholder="4242 4242 4242 4242"
                       value={cardForm.number}
-                      onChange={(e) => setCardForm({ ...cardForm, number: e.target.value })}
+                      onChange={(e) =>
+                        setCardForm({ ...cardForm, number: e.target.value })
+                      }
                       maxLength={19}
                       required
                     />
@@ -821,7 +956,9 @@ export default function CheckoutPage() {
                       className="form-input"
                       placeholder="NAME ON CARD"
                       value={cardForm.name}
-                      onChange={(e) => setCardForm({ ...cardForm, name: e.target.value })}
+                      onChange={(e) =>
+                        setCardForm({ ...cardForm, name: e.target.value })
+                      }
                       required
                     />
                   </div>
@@ -832,7 +969,9 @@ export default function CheckoutPage() {
                       className="form-input"
                       placeholder="MM"
                       value={cardForm.expMonth}
-                      onChange={(e) => setCardForm({ ...cardForm, expMonth: e.target.value })}
+                      onChange={(e) =>
+                        setCardForm({ ...cardForm, expMonth: e.target.value })
+                      }
                       maxLength={2}
                       required
                     />
@@ -844,7 +983,9 @@ export default function CheckoutPage() {
                       className="form-input"
                       placeholder="YY"
                       value={cardForm.expYear}
-                      onChange={(e) => setCardForm({ ...cardForm, expYear: e.target.value })}
+                      onChange={(e) =>
+                        setCardForm({ ...cardForm, expYear: e.target.value })
+                      }
                       maxLength={4}
                       required
                     />
@@ -856,24 +997,37 @@ export default function CheckoutPage() {
                       className="form-input"
                       placeholder="xxx"
                       value={cardForm.cvv}
-                      onChange={(e) => setCardForm({ ...cardForm, cvv: e.target.value })}
+                      onChange={(e) =>
+                        setCardForm({ ...cardForm, cvv: e.target.value })
+                      }
                       maxLength={4}
                       required
                     />
                   </div>
                 </div>
-                <p style={{ color: "var(--text-muted)", fontSize: "0.75rem", marginTop: "0.5rem" }}>
+                <p
+                  style={{
+                    color: "var(--text-muted)",
+                    fontSize: "0.75rem",
+                    marginTop: "0.5rem",
+                  }}
+                >
                   🔒 ข้อมูลบัตรถูกเข้ารหัสผ่าน Omise อย่างปลอดภัย
                 </p>
               </div>
             )}
 
-
             {/* Bank Selection for Internet Banking */}
             {paymentMethod === "banking" && (
               <div className="form-section">
                 <h2 className="form-section-title">🏦 เลือกธนาคาร</h2>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.75rem" }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(2, 1fr)",
+                    gap: "0.75rem",
+                  }}
+                >
                   {banks.map((bank) => (
                     <label
                       key={bank.id}
@@ -883,12 +1037,14 @@ export default function CheckoutPage() {
                         gap: "0.75rem",
                         padding: "1rem",
                         borderRadius: "12px",
-                        border: selectedBank === bank.id
-                          ? `2px solid ${bank.color}`
-                          : "1px solid rgba(255,255,255,0.1)",
-                        background: selectedBank === bank.id
-                          ? `${bank.color}15`
-                          : "rgba(255,255,255,0.02)",
+                        border:
+                          selectedBank === bank.id
+                            ? `2px solid ${bank.color}`
+                            : "1px solid rgba(255,255,255,0.1)",
+                        background:
+                          selectedBank === bank.id
+                            ? `${bank.color}15`
+                            : "rgba(255,255,255,0.02)",
                         cursor: "pointer",
                         transition: "all 0.2s",
                       }}
@@ -907,10 +1063,15 @@ export default function CheckoutPage() {
                           height: "12px",
                           borderRadius: "50%",
                           border: `2px solid ${bank.color}`,
-                          background: selectedBank === bank.id ? bank.color : "transparent",
+                          background:
+                            selectedBank === bank.id
+                              ? bank.color
+                              : "transparent",
                         }}
                       />
-                      <span style={{ color: "white", fontWeight: 500 }}>{bank.name}</span>
+                      <span style={{ color: "white", fontWeight: 500 }}>
+                        {bank.name}
+                      </span>
                     </label>
                   ))}
                 </div>
@@ -925,8 +1086,20 @@ export default function CheckoutPage() {
             <div className="order-items">
               {items.map((item) => (
                 <div key={item.product._id} className="order-item">
-                  <div className="order-item-image" style={{ position: "relative", width: "60px", height: "60px", overflow: "hidden", borderRadius: "8px", backgroundColor: "#1e293b" }}>
-                    {item.product.category === "custom" && item.product.images && item.product.images.length > 1 ? (
+                  <div
+                    className="order-item-image"
+                    style={{
+                      position: "relative",
+                      width: "60px",
+                      height: "60px",
+                      overflow: "hidden",
+                      borderRadius: "8px",
+                      backgroundColor: "#1e293b",
+                    }}
+                  >
+                    {item.product.category === "custom" &&
+                    item.product.images &&
+                    item.product.images.length > 1 ? (
                       <>
                         {item.product.images.map((img, index) => (
                           <Image
@@ -991,20 +1164,26 @@ export default function CheckoutPage() {
 
             {/* Free Shipping Progress */}
             {amountForFreeShipping > 0 && (
-              <div style={{
-                marginTop: "1rem",
-                padding: "0.75rem 1rem",
-                borderRadius: "10px",
-                background: "linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(109, 40, 217, 0.15) 100%)",
-                border: "1px solid rgba(139, 92, 246, 0.3)",
-                textAlign: "center"
-              }}>
+              <div
+                style={{
+                  marginTop: "1rem",
+                  padding: "0.75rem 1rem",
+                  borderRadius: "10px",
+                  background:
+                    "linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(109, 40, 217, 0.15) 100%)",
+                  border: "1px solid rgba(139, 92, 246, 0.3)",
+                  textAlign: "center",
+                }}
+              >
                 <span style={{ color: "#a78bfa", fontSize: "0.85rem" }}>
-                  🚛 สั่งซื้อเพิ่มอีก <strong style={{ color: "#f59e0b" }}>฿{amountForFreeShipping.toLocaleString()}</strong> เพื่อรับส่งฟรี!
+                  🚛 สั่งซื้อเพิ่มอีก{" "}
+                  <strong style={{ color: "#f59e0b" }}>
+                    ฿{amountForFreeShipping.toLocaleString()}
+                  </strong>{" "}
+                  เพื่อรับส่งฟรี!
                 </span>
               </div>
             )}
-
 
             <Link
               href="/cart"

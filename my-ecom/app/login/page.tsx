@@ -1,24 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { useToast } from "@/context/ToastContext";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const router = useRouter();
   const { login, isAuthenticated } = useAuth();
-  const { showToast } = useToast();
+  // const { showToast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   // Redirect if already logged in
-  if (isAuthenticated) {
-    router.push("/");
-    return null;
-  }
+  useEffect(() => {
+    if (isAuthenticated) {
+      toast.info("🚧 ฟีเจอร์นี้กำลังพัฒนา - เร็วๆ นี้!");
+      router.push("/");
+    }
+  }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,15 +29,14 @@ export default function LoginPage() {
     const result = await login(email, password);
 
     if (result.success) {
-      showToast("เข้าสู่ระบบสำเร็จ!", "success");
+      toast.success("เข้าสู่ระบบสำเร็จ!");
       router.push("/");
     } else {
-      showToast(result.error || "เกิดข้อผิดพลาด", "error");
+      toast.error(result.error || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
     }
 
     setIsLoading(false);
   };
-
 
   return (
     <div className="auth-page">
@@ -49,8 +50,6 @@ export default function LoginPage() {
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
-
-
           <div className="form-group">
             <label className="form-label">อีเมล</label>
             <input
@@ -93,9 +92,6 @@ export default function LoginPage() {
             {isLoading ? "⏳ กำลังเข้าสู่ระบบ..." : "🔐 เข้าสู่ระบบ"}
           </button>
         </form>
-
-
-
 
         <p className="auth-footer">
           ยังไม่มีบัญชี?{" "}

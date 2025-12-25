@@ -54,7 +54,11 @@ export default function AdminUsers() {
       });
       const data = await res.json();
       if (data.success) {
-        setUsers(users.map((u) => (u._id === userId ? { ...u, role: newRole as "user" | "admin" } : u)));
+        setUsers(
+          users.map((u) =>
+            u._id === userId ? { ...u, role: newRole as "user" | "admin" } : u
+          )
+        );
       }
     } catch (error) {
       console.error("Error updating user role:", error);
@@ -101,27 +105,34 @@ export default function AdminUsers() {
   return (
     <div className="admin-dashboard min-h-screen bg-slate-900 relative">
       {/* Admin Header */}
-      <header className="admin-header bg-slate-800/50 border-b border-white/5 px-8 py-6">
-        <div className="flex items-center gap-6">
-          <Link href="/admin" className="text-violet-400 no-underline font-medium py-2 px-4 bg-violet-500/10 rounded-lg hover:bg-violet-500/20 transition-all">
+      <header className="admin-header bg-slate-800/50 border-b border-white/5 px-4 md:px-8 py-4 md:py-6">
+        <div className="flex flex-wrap items-center gap-4 md:gap-6">
+          <Link
+            href="/admin"
+            className="text-violet-400 no-underline font-medium py-2 px-3 md:px-4 bg-violet-500/10 rounded-lg hover:bg-violet-500/20 transition-all text-sm md:text-base"
+          >
             ← กลับ
           </Link>
-          <div className="flex items-center gap-4">
-            <span className="text-4xl">👥</span>
+          <div className="flex items-center gap-3 md:gap-4">
+            <span className="text-2xl md:text-4xl">👥</span>
             <div>
-              <h1 className="text-2xl font-extrabold text-slate-50 m-0">จัดการผู้ใช้</h1>
-              <p className="text-sm text-slate-500 m-0">{users.length} ผู้ใช้ทั้งหมด</p>
+              <h1 className="text-xl md:text-2xl font-extrabold text-slate-50 m-0">
+                จัดการผู้ใช้
+              </h1>
+              <p className="text-xs md:text-sm text-slate-500 m-0">
+                {users.length} ผู้ใช้ทั้งหมด
+              </p>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="p-8">
+      <main className="p-4 md:p-8">
         {/* Users Grid */}
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4 md:gap-6">
           {users.map((u, index) => (
-            <div 
-              key={u._id} 
+            <div
+              key={u._id}
               className="bg-slate-800/50 border border-violet-500/20 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:border-violet-500/50 hover:shadow-2xl hover:shadow-violet-500/20 animate-fadeInUp"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
@@ -129,14 +140,24 @@ export default function AdminUsers() {
                 <div className="w-20 h-20 bg-gradient-to-br from-violet-500 to-indigo-500 rounded-full flex items-center justify-center text-4xl font-extrabold text-white shadow-lg shadow-violet-500/40">
                   {u.name.charAt(0).toUpperCase()}
                 </div>
-                <div className={`py-2 px-4 rounded-full text-sm font-semibold ${u.role === "admin" ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white" : "bg-white/10 text-slate-400"}`}>
+                <div
+                  className={`py-2 px-4 rounded-full text-sm font-semibold ${
+                    u.role === "admin"
+                      ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white"
+                      : "bg-white/10 text-slate-400"
+                  }`}
+                >
                   {u.role === "admin" ? "👑 Admin" : "👤 User"}
                 </div>
               </div>
               <div className="p-6 text-center">
-                <h3 className="text-xl font-bold text-slate-50 mb-2">{u.name}</h3>
+                <h3 className="text-xl font-bold text-slate-50 mb-2">
+                  {u.name}
+                </h3>
                 <p className="text-slate-500 text-sm mb-2">{u.email}</p>
-                <p className="text-slate-600 text-xs">สมัครเมื่อ {formatDate(u.createdAt)}</p>
+                <p className="text-slate-600 text-xs">
+                  สมัครเมื่อ {formatDate(u.createdAt)}
+                </p>
               </div>
               <div className="p-6 border-t border-white/5 flex gap-3">
                 <select
@@ -145,8 +166,12 @@ export default function AdminUsers() {
                   disabled={u._id === user._id}
                   className="flex-1 py-3 px-4 bg-violet-500/10 border border-violet-500/30 rounded-xl text-slate-50 font-medium cursor-pointer transition-all hover:border-violet-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <option value="user" className="bg-slate-800">ผู้ใช้ทั่วไป</option>
-                  <option value="admin" className="bg-slate-800">ผู้ดูแลระบบ</option>
+                  <option value="user" className="bg-slate-800">
+                    ผู้ใช้ทั่วไป
+                  </option>
+                  <option value="admin" className="bg-slate-800">
+                    ผู้ดูแลระบบ
+                  </option>
                 </select>
                 {u._id !== user._id && (
                   <button

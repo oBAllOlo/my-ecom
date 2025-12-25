@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Product } from "@/lib/types";
 import { formatPrice } from "@/lib/mockData";
 import { useCart } from "@/context/CartContext";
-import { useToast } from "@/context/ToastContext";
+import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 
 interface ProductCardProps {
@@ -16,7 +16,6 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const router = useRouter();
   const { addToCart } = useCart();
-  const { showToast } = useToast();
   const { user } = useAuth();
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -25,20 +24,19 @@ export default function ProductCard({ product }: ProductCardProps) {
 
     // ต้อง login ก่อนถึงจะเพิ่มสินค้าลงตะกร้าได้
     if (!user) {
-      showToast("กรุณาเข้าสู่ระบบก่อนเพิ่มสินค้าลงตะกร้า", "error");
+      toast.error("กรุณาเข้าสู่ระบบก่อนเพิ่มสินค้าลงตะกร้า");
       router.push("/login");
       return;
     }
 
     addToCart(product, 1);
-    showToast(`เพิ่ม "${product.name}" ลงตะกร้าแล้ว`, "success");
+    toast.success(`เพิ่ม "${product.name}" ลงตะกร้าแล้ว`);
   };
-
 
   const discount = product.originalPrice
     ? Math.round(
-      ((product.originalPrice - product.price) / product.originalPrice) * 100
-    )
+        ((product.originalPrice - product.price) / product.originalPrice) * 100
+      )
     : 0;
 
   return (
@@ -94,18 +92,19 @@ export default function ProductCard({ product }: ProductCardProps) {
 
         {/* Stock */}
         <div
-          className={`stock-status ${product.stock > 10
+          className={`stock-status ${
+            product.stock > 10
               ? "in-stock"
               : product.stock > 0
-                ? "low-stock"
-                : "out-of-stock"
-            }`}
+              ? "low-stock"
+              : "out-of-stock"
+          }`}
         >
           {product.stock > 10
             ? "✓ มีสินค้า"
             : product.stock > 0
-              ? `เหลือ ${product.stock} ชิ้น`
-              : "สินค้าหมด"}
+            ? `เหลือ ${product.stock} ชิ้น`
+            : "สินค้าหมด"}
         </div>
       </div>
     </Link>
