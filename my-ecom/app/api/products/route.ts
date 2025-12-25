@@ -2,6 +2,44 @@ import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Product from "@/models/Product";
 
+// Configuration
+const NEW_PRODUCT_DAYS = 7;
+const FEATURED_COUNT = 4; // Number of featured products to show
+
+// Helper function to check if product is new based on createdAt
+function isProductNew(createdAt: Date | undefined): boolean {
+  if (!createdAt) return false;
+  const now = new Date();
+  const diffTime = now.getTime() - new Date(createdAt).getTime();
+  const diffDays = diffTime / (1000 * 60 * 60 * 24);
+  return diffDays <= NEW_PRODUCT_DAYS;
+}
+
+// Seeded random function for consistent daily rotation
+function seededRandom(seed: number): () => number {
+  return function() {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  };
+}
+
+// Get today's date as seed (rotates daily)
+function getDailySeed(): number {
+  const today = new Date();
+  return today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+}
+
+// Shuffle array with seed
+function shuffleWithSeed<T>(array: T[], seed: number): T[] {
+  const shuffled = [...array];
+  const random = seededRandom(seed);
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 // GET all products with search and filter
 export async function GET(request: Request) {
   try {
@@ -17,15 +55,11 @@ export async function GET(request: Request) {
     const sort = searchParams.get("sort");
     const brand = searchParams.get("brand");
 
-    // Build query
+    // Build query (without featured filter - we'll handle it dynamically)
     const query: Record<string, unknown> = {};
     
     // Category filter
     if (category && category !== "all") query.category = category;
-    
-    // Featured/New filters
-    if (featured === "true") query.isFeatured = true;
-    if (isNew === "true") query.isNewProduct = true;
     
     // Brand filter
     if (brand) query.brand = brand;
@@ -55,7 +89,33 @@ export async function GET(request: Request) {
     if (sort === "rating") sortOption = { rating: -1 };
     if (sort === "newest") sortOption = { createdAt: -1 };
 
-    const products = await Product.find(query).sort(sortOption);
+    let products = await Product.find(query).sort(sortOption).lean();
+
+    // Get daily rotation seed
+    const dailySeed = getDailySeed();
+    
+    // Randomly select featured products (rotates daily)
+    const shuffledForFeatured = shuffleWithSeed(products, dailySeed);
+    const featuredIds = new Set(
+      shuffledForFeatured.slice(0, FEATURED_COUNT).map(p => p._id.toString())
+    );
+
+    // Add dynamic properties
+    products = products.map((product) => ({
+      ...product,
+      isNewProduct: product.isNewProduct || isProductNew(product.createdAt),
+      isFeatured: featuredIds.has(product._id.toString()),
+    }));
+
+    // Filter by featured if requested
+    if (featured === "true") {
+      products = products.filter((p) => p.isFeatured);
+    }
+
+    // Filter by new products if requested
+    if (isNew === "true") {
+      products = products.filter((p) => p.isNewProduct);
+    }
 
     return NextResponse.json({ success: true, data: products });
   } catch (error) {

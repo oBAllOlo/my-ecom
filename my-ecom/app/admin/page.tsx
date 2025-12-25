@@ -781,7 +781,7 @@ export default function AdminDashboard() {
                     margin: "0.1rem 0 0",
                   }}
                 >
-                  KeyBoardTH Management
+                  Custom Keyboard System
                 </p>
               </div>
             </div>

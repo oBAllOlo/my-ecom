@@ -573,20 +573,7 @@ export default function ProductDetailPage() {
             </button>
           </div>
 
-          {/* Extra Info */}
-          <div
-            style={{
-              padding: "1rem",
-              background: "rgba(139, 92, 246, 0.1)",
-              borderRadius: "var(--radius-md)",
-              fontSize: "0.9rem",
-              color: "var(--text-secondary)",
-            }}
-          >
-            <p>🚚 ส่งฟรีเมื่อสั่งซื้อครบ ฿1,500</p>
-            <p>🔒 รับประกันสินค้า 1 ปี</p>
-            <p>↩️ เปลี่ยน/คืนสินค้าภายใน 7 วัน</p>
-          </div>
+
         </div>
       </div>
 

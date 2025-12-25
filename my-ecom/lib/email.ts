@@ -12,9 +12,9 @@ const transporter = nodemailer.createTransport({
 export async function sendOTPEmail(to: string, otp: string): Promise<boolean> {
   try {
     await transporter.sendMail({
-      from: `"My E-com" <${process.env.EMAIL_USER}>`,
+      from: `"Custom Keyboard System" <${process.env.EMAIL_USER}>`,
       to,
-      subject: "🔐 รหัส OTP ยืนยันตัวตน - My E-com",
+      subject: "🔐 รหัส OTP ยืนยันตัวตน - Custom Keyboard System",
       html: `
         <div style="font-family: 'Segoe UI', sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px;">
           <div style="background: white; border-radius: 12px; padding: 32px; text-align: center;">
@@ -73,7 +73,7 @@ export async function sendShippingEmail(params: ShippingEmailParams): Promise<bo
 
   try {
     await transporter.sendMail({
-      from: `"KeyboardTH" <${process.env.EMAIL_USER}>`,
+      from: `"Custom Keyboard System" <${process.env.EMAIL_USER}>`,
       to,
       subject: `🚚 พัสดุของคุณถูกจัดส่งแล้ว! - คำสั่งซื้อ #${orderId.slice(-8).toUpperCase()}`,
       html: `
@@ -110,7 +110,7 @@ export async function sendShippingEmail(params: ShippingEmailParams): Promise<bo
             
             <p style="color: #999; font-size: 12px; margin-top: 24px; text-align: center;">
               คำสั่งซื้อ #${orderId.slice(-8).toUpperCase()}<br>
-              ขอบคุณที่ใช้บริการ KeyboardTH 💜
+              ขอบคุณที่ใช้บริการ Custom Keyboard System 💜
             </p>
           </div>
         </div>

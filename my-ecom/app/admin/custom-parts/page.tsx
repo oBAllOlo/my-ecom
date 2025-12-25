@@ -190,15 +190,13 @@ export default function AdminCustomPartsPage() {
         </Link>
       </div>
 
-      {/* Category Filter */}
 
-      {/* Category Filter */}
       <div className="flex gap-2 mb-8 flex-wrap">
         <button
-          className={`py-2 px-4 rounded-full border cursor-pointer transition-all ${
+          className={`py-2 px-4 rounded-full border transition-all ${
             selectedCategory === "all"
-              ? "bg-blue-500 text-white border-blue-500"
-              : "bg-transparent text-slate-400 border-white/10 hover:bg-blue-500 hover:text-white hover:border-blue-500"
+              ? "bg-violet-600 text-white border-violet-600"
+              : "bg-slate-800 text-slate-400 border-transparent hover:bg-slate-700 hover:text-white hover:border-slate-600"
           }`}
           onClick={() => setSelectedCategory("all")}
         >
@@ -207,10 +205,10 @@ export default function AdminCustomPartsPage() {
         {Object.entries(categoryLabels).map(([key, label]) => (
           <button
             key={key}
-            className={`py-2 px-4 rounded-full border cursor-pointer transition-all ${
+            className={`py-2 px-4 rounded-full border transition-all ${
               selectedCategory === key
-                ? "bg-blue-500 text-white border-blue-500"
-                : "bg-transparent text-slate-400 border-white/10 hover:bg-blue-500 hover:text-white hover:border-blue-500"
+                ? "bg-violet-600 text-white border-violet-600"
+                : "bg-slate-800 text-slate-400 border-transparent hover:bg-slate-700 hover:text-white hover:border-slate-600"
             }`}
             onClick={() => setSelectedCategory(key)}
           >
@@ -397,9 +395,12 @@ function PartCard({
 
   return (
     <div
-      className={`bg-white/5 rounded-xl overflow-hidden border border-white/10 ${
+      className={`rounded-xl overflow-hidden ${
         !part.isActive ? "opacity-50" : ""
       }`}
+      style={{
+        background: "rgba(30, 41, 59, 0.5)"
+      }}
     >
       <div className="relative h-[120px] bg-black/20">
         {part.image ? (
@@ -440,7 +441,7 @@ function PartCard({
               }
             }}
             min="0"
-            className="w-[60px] py-1 px-2 rounded border border-white/10 bg-black/20 text-slate-50 text-center"
+            className="w-[60px] py-1 px-2 rounded border border-slate-700 bg-slate-900 text-slate-50 text-center outline-none focus:border-violet-500 transition-colors"
           />
         </div>
         <div className="flex gap-2">

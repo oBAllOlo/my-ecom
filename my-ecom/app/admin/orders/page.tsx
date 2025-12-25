@@ -393,7 +393,11 @@ export default function AdminOrders() {
             return (
               <div
                 key={order._id}
-                className="bg-slate-800/50 border border-violet-500/20 rounded-xl p-4"
+                className="rounded-xl p-4"
+                style={{
+                  background: "rgba(30, 41, 59, 0.5)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)"
+                }}
                 onClick={() => setSelectedOrder(order)}
               >
                 <div className="flex justify-between items-start mb-3">
@@ -499,7 +503,13 @@ export default function AdminOrders() {
         </div>
 
         {/* Orders Table - Desktop only */}
-        <div className="hidden lg:block bg-slate-800/50 border border-violet-500/20 rounded-2xl overflow-hidden">
+        <div 
+          className="hidden lg:block rounded-2xl overflow-hidden"
+          style={{
+            background: "rgba(30, 41, 59, 0.5)",
+            border: "1px solid rgba(255, 255, 255, 0.1)"
+          }}
+        >
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
@@ -650,7 +660,13 @@ export default function AdminOrders() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-6 bg-slate-800/50 border border-violet-500/20 rounded-xl p-4">
+          <div 
+            className="flex flex-col md:flex-row items-center justify-between gap-4 mt-6 rounded-xl p-4"
+            style={{
+              background: "rgba(30, 41, 59, 0.5)",
+              border: "1px solid rgba(255, 255, 255, 0.1)"
+            }}
+          >
             <div className="text-slate-400 text-xs md:text-sm text-center md:text-left">
               แสดง {(currentPage - 1) * ITEMS_PER_PAGE + 1} -{" "}
               {Math.min(currentPage * ITEMS_PER_PAGE, filteredOrders.length)}{" "}

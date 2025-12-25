@@ -54,45 +54,11 @@ export default function Home() {
             <br />
             <span className="bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">สำหรับทุกสไตล์การใช้งาน</span>
           </h1>
-          <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-            เลือกช้อปคีย์บอร์ด Mechanical และ Gaming จากแบรนด์ชั้นนำทั่วโลก
-            พร้อมรับประกันสินค้าและบริการหลังการขายครบวงจร
-          </p>
+
         </div>
       </section>
 
-      {/* Categories Section */}
-      <section className="section py-16 px-8">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold text-white">
-            หมวดหมู่<span className="bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">สินค้า</span>
-          </h2>
-          <Link href="/products" className="text-violet-400 hover:text-violet-300 transition-colors">
-            ดูทั้งหมด →
-          </Link>
-        </div>
-        {loading ? (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-[120px] bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 bg-[length:200%_100%] animate-shimmer rounded-2xl"></div>
-            ))}
-          </div>
-        ) : (
-          <div className="categories-grid grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
-            {categories.map((category) => (
-              <Link
-                key={category._id}
-                href={`/products?category=${encodeURIComponent(category.name)}`}
-                className="category-card bg-slate-800/50 border border-white/10 rounded-2xl p-6 text-center hover:border-violet-500/50 hover:-translate-y-1 hover:shadow-xl hover:shadow-violet-500/10 transition-all group"
-              >
-                <span className="text-4xl block mb-3 group-hover:scale-110 transition-transform">{category.icon}</span>
-                <span className="text-white font-semibold block mb-1">{category.name}</span>
-                <span className="text-slate-500 text-sm">{category.productCount} สินค้า</span>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
+
 
       {/* Featured Products Section */}
       <section className="section py-16 px-8">

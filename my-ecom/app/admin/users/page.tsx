@@ -142,8 +142,12 @@ export default function AdminUsers() {
           {users.map((u, index) => (
             <div
               key={u._id}
-              className="bg-slate-800/50 border border-violet-500/20 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:border-violet-500/50 hover:shadow-2xl hover:shadow-violet-500/20 animate-fadeInUp"
-              style={{ animationDelay: `${index * 0.1}s` }}
+              className="rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-violet-500/20 animate-fadeInUp"
+              style={{ 
+                animationDelay: `${index * 0.1}s`,
+                background: "rgba(30, 41, 59, 0.5)",
+                border: "1px solid rgba(255, 255, 255, 0.1)"
+              }}
             >
               <div className="bg-gradient-to-br from-violet-500/30 to-indigo-500/20 p-8 flex flex-col items-center gap-4">
                 <div className="w-20 h-20 bg-gradient-to-br from-violet-500 to-indigo-500 rounded-full flex items-center justify-center text-4xl font-extrabold text-white shadow-lg shadow-violet-500/40">
