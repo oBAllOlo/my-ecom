@@ -227,7 +227,15 @@ export default function ProfilePage() {
         </div>
 
         {/* Profile Form Section */}
-        <section className="bg-slate-800/50 rounded-2xl p-6 border border-white/5">
+        <section 
+          className="mb-8"
+          style={{
+            background: "rgba(30, 41, 59, 0.5)",
+            borderRadius: "16px",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            padding: "1.5rem",
+          }}
+        >
           <div className="flex items-center gap-2 mb-6">
             <span className="text-2xl">✏️</span>
             <span className="text-white font-semibold text-lg">
@@ -237,7 +245,13 @@ export default function ProfilePage() {
 
           <form onSubmit={handleSubmit}>
             {/* User Avatar Card */}
-            <div className="bg-slate-700/30 rounded-xl p-6 mb-6 flex items-center gap-6">
+            <div 
+              className="rounded-xl p-6 mb-6 flex items-center gap-6"
+              style={{
+                background: "rgba(15, 23, 42, 0.5)",
+                border: "1px solid rgba(255, 255, 255, 0.05)"
+              }}
+            >
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-500 flex items-center justify-center text-4xl font-bold text-white shadow-lg shadow-violet-500/40 relative">
                 {user.name.charAt(0).toUpperCase()}
                 <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-4 border-slate-800"></div>
@@ -247,7 +261,7 @@ export default function ProfilePage() {
                   {user.name}
                 </h3>
                 <p className="text-slate-400 mb-2">{user.email}</p>
-                <span className="inline-block py-1 px-3 bg-violet-500/20 text-violet-400 rounded-full text-xs font-semibold uppercase tracking-wide border border-violet-500/30">
+                <span className="inline-block py-1 px-3 bg-violet-500/20 text-violet-400 rounded-full text-xs font-semibold uppercase tracking-wide">
                   {user.role}
                 </span>
               </div>
@@ -256,10 +270,7 @@ export default function ProfilePage() {
             <div className="row g-3 mb-4">
               {/* Name Field */}
               <div className="col-12 col-md-6">
-                <div
-                  className="bg-slate-700/30 rounded-xl p-4"
-                  style={{ height: "100%" }}
-                >
+                <div className="h-full">
                   <label className="block text-slate-400 text-sm mb-2 font-medium">
                     ชื่อ-นามสกุล
                   </label>
@@ -269,7 +280,12 @@ export default function ProfilePage() {
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
                     }
-                    className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-violet-500/50 transition-colors"
+                    style={{
+                      background: "rgba(15, 23, 42, 0.5)",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      color: "white"
+                    }}
+                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-violet-500/50 transition-all placeholder-slate-500"
                     placeholder="กรอกชื่อ-นามสกุล"
                   />
                 </div>
@@ -277,10 +293,7 @@ export default function ProfilePage() {
 
               {/* Email Field */}
               <div className="col-12 col-md-6">
-                <div
-                  className="bg-slate-700/30 rounded-xl p-4"
-                  style={{ height: "100%" }}
-                >
+                <div className="h-full">
                   <label className="block text-slate-400 text-sm mb-2 font-medium">
                     อีเมล
                   </label>
@@ -288,7 +301,12 @@ export default function ProfilePage() {
                     type="email"
                     value={formData.email}
                     disabled
-                    className="w-full p-3 bg-slate-900/30 border border-white/5 rounded-xl text-slate-500 text-base cursor-not-allowed"
+                    style={{
+                      background: "rgba(15, 23, 42, 0.5)",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      color: "rgb(148, 163, 184)"
+                    }}
+                    className="w-full p-3 rounded-xl text-base outline-none cursor-not-allowed"
                   />
                   <p className="text-slate-500 text-xs mt-2">
                     ไม่สามารถเปลี่ยนอีเมลได้
@@ -307,7 +325,7 @@ export default function ProfilePage() {
 
             <div className="row g-3">
               <div className="col-12">
-                <div className="bg-slate-700/30 rounded-xl p-4">
+                <div className="mb-3">
                   <label className="block text-slate-400 text-sm mb-2 font-medium">
                     ชื่อผู้รับ
                   </label>
@@ -323,14 +341,19 @@ export default function ProfilePage() {
                         },
                       })
                     }
-                    className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-violet-500/50 transition-colors"
+                    style={{
+                      background: "rgba(15, 23, 42, 0.5)",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      color: "white"
+                    }}
+                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-violet-500/50 transition-all placeholder-slate-500"
                     placeholder="ชื่อ-นามสกุล ผู้รับ"
                   />
                 </div>
               </div>
 
               <div className="col-12 col-md-6">
-                <div className="bg-slate-700/30 rounded-xl p-4">
+                <div className="mb-3">
                   <label className="block text-slate-400 text-sm mb-2 font-medium">
                     เบอร์โทรศัพท์
                   </label>
@@ -343,14 +366,19 @@ export default function ProfilePage() {
                         address: { ...formData.address, phone: e.target.value },
                       })
                     }
-                    className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-violet-500/50 transition-colors"
+                    style={{
+                      background: "rgba(15, 23, 42, 0.5)",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      color: "white"
+                    }}
+                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-violet-500/50 transition-all placeholder-slate-500"
                     placeholder="08x-xxx-xxxx"
                   />
                 </div>
               </div>
 
               <div className="col-12 col-md-6">
-                <div className="bg-slate-700/30 rounded-xl p-4">
+                <div className="mb-3">
                   <label className="block text-slate-400 text-sm mb-2 font-medium">
                     เขต/อำเภอ
                   </label>
@@ -366,13 +394,18 @@ export default function ProfilePage() {
                         },
                       })
                     }
-                    className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-violet-500/50 transition-colors"
+                    style={{
+                      background: "rgba(15, 23, 42, 0.5)",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      color: "white"
+                    }}
+                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-violet-500/50 transition-all placeholder-slate-500"
                   />
                 </div>
               </div>
 
               <div className="col-12 col-md-6">
-                <div className="bg-slate-700/30 rounded-xl p-4">
+                <div className="mb-3">
                   <label className="block text-slate-400 text-sm mb-2 font-medium">
                     แขวง/ตำบล
                   </label>
@@ -388,13 +421,18 @@ export default function ProfilePage() {
                         },
                       })
                     }
-                    className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-violet-500/50 transition-colors"
+                    style={{
+                      background: "rgba(15, 23, 42, 0.5)",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      color: "white"
+                    }}
+                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-violet-500/50 transition-all placeholder-slate-500"
                   />
                 </div>
               </div>
 
               <div className="col-12">
-                <div className="bg-slate-700/30 rounded-xl p-4">
+                <div className="mb-3">
                   <label className="block text-slate-400 text-sm mb-2 font-medium">
                     ที่อยู่ (บ้านเลขที่, ซอย, ถนน)
                   </label>
@@ -410,14 +448,19 @@ export default function ProfilePage() {
                       })
                     }
                     rows={3}
-                    className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-violet-500/50 transition-colors resize-none"
+                    style={{
+                      background: "rgba(15, 23, 42, 0.5)",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      color: "white"
+                    }}
+                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-violet-500/50 transition-all placeholder-slate-500 resize-none"
                     placeholder="บ้านเลขที่, ซอย, ถนน"
                   />
                 </div>
               </div>
 
               <div className="col-12 col-md-6">
-                <div className="bg-slate-700/30 rounded-xl p-4">
+                <div className="mb-3">
                   <label className="block text-slate-400 text-sm mb-2 font-medium">
                     จังหวัด
                   </label>
@@ -433,13 +476,18 @@ export default function ProfilePage() {
                         },
                       })
                     }
-                    className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-violet-500/50 transition-colors"
+                    style={{
+                      background: "rgba(15, 23, 42, 0.5)",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      color: "white"
+                    }}
+                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-violet-500/50 transition-all placeholder-slate-500"
                   />
                 </div>
               </div>
 
               <div className="col-12 col-md-6">
-                <div className="bg-slate-700/30 rounded-xl p-4">
+                <div className="mb-3">
                   <label className="block text-slate-400 text-sm mb-2 font-medium">
                     รหัสไปรษณีย์
                   </label>
@@ -455,7 +503,12 @@ export default function ProfilePage() {
                         },
                       })
                     }
-                    className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-violet-500/50 transition-colors"
+                    style={{
+                      background: "rgba(15, 23, 42, 0.5)",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      color: "white"
+                    }}
+                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-violet-500/50 transition-all placeholder-slate-500"
                   />
                 </div>
               </div>
@@ -489,7 +542,15 @@ export default function ProfilePage() {
         </section>
 
         {/* Security Section */}
-        <section className="bg-slate-800/50 rounded-2xl p-6 border border-white/5 mt-8">
+        <section 
+          className="mt-8"
+          style={{
+            background: "rgba(30, 41, 59, 0.5)",
+            borderRadius: "16px",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            padding: "1.5rem",
+          }}
+        >
           <div className="flex items-center gap-2 mb-6">
             <span className="text-2xl">🔐</span>
             <span className="text-white font-semibold text-lg">
@@ -497,7 +558,13 @@ export default function ProfilePage() {
             </span>
           </div>
 
-          <div className="bg-slate-700/30 rounded-xl p-6 flex justify-between items-center">
+          <div 
+            className="rounded-xl p-6 flex justify-between items-center"
+            style={{
+              background: "rgba(15, 23, 42, 0.5)",
+              border: "1px solid rgba(255, 255, 255, 0.05)"
+            }}
+          >
             <div>
               <h4 className="text-white font-semibold mb-1">เปลี่ยนรหัสผ่าน</h4>
               <p className="text-slate-500 text-sm">
@@ -506,7 +573,12 @@ export default function ProfilePage() {
             </div>
             <button
               onClick={() => setShowPasswordModal(true)}
-              className="py-3 px-6 bg-white/5 border border-white/10 rounded-xl text-white font-medium cursor-pointer hover:bg-white/10 transition-all"
+              className="py-3 px-6 rounded-xl font-semibold cursor-pointer transition-all hover:scale-[1.02]"
+              style={{
+                background: "rgba(59, 130, 246, 0.15)",
+                border: "1px solid rgba(59, 130, 246, 0.3)",
+                color: "#60a5fa",
+              }}
             >
               เปลี่ยนรหัสผ่าน
             </button>

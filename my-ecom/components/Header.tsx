@@ -21,7 +21,7 @@ export default function Header() {
         <Link href="/" className="logo">
           <span className="logo-icon">⌨️</span>
           <span className="logo-text">
-            KeyBoard<span className="logo-highlight">TH</span>
+            Custom<span className="logo-highlight">KB</span>
           </span>
         </Link>
 

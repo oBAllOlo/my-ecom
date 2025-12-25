@@ -377,14 +377,18 @@ export default function OrdersPage() {
               setStatusFilter(e.target.value);
               setCurrentPage(1);
             }}
-            className="bg-slate-800/50 border border-violet-500/30 text-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-violet-500 transition-all cursor-pointer"
+            style={{
+              background: "rgba(15, 23, 42, 0.5)",
+              border: "1px solid rgba(255, 255, 255, 0.1)"
+            }}
+            className="text-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-violet-500 transition-all cursor-pointer"
           >
-            <option value="all">📋 สถานะทั้งหมด</option>
-            <option value="pending">⏳ รอดำเนินการ</option>
-            <option value="processing">📦 กำลังจัดเตรียม</option>
-            <option value="shipped">🚚 จัดส่งแล้ว</option>
-            <option value="delivered">✅ ส่งสำเร็จ</option>
-            <option value="cancelled">❌ ยกเลิก</option>
+            <option value="all" className="bg-slate-900 text-slate-200">📋 สถานะทั้งหมด</option>
+            <option value="pending" className="bg-slate-900 text-slate-200">⏳ รอดำเนินการ</option>
+            <option value="processing" className="bg-slate-900 text-slate-200">📦 กำลังจัดเตรียม</option>
+            <option value="shipped" className="bg-slate-900 text-slate-200">🚚 จัดส่งแล้ว</option>
+            <option value="delivered" className="bg-slate-900 text-slate-200">✅ ส่งสำเร็จ</option>
+            <option value="cancelled" className="bg-slate-900 text-slate-200">❌ ยกเลิก</option>
           </select>
 
           <input
@@ -395,7 +399,11 @@ export default function OrdersPage() {
               setSearchQuery(e.target.value);
               setCurrentPage(1);
             }}
-            className="flex-1 bg-slate-800/50 border border-violet-500/30 text-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-violet-500 transition-all placeholder:text-slate-500"
+            style={{
+              background: "rgba(15, 23, 42, 0.5)",
+              border: "1px solid rgba(255, 255, 255, 0.1)"
+            }}
+            className="flex-1 text-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-violet-500 transition-all placeholder:text-slate-500"
           />
         </div>
         {/* Orders - Mobile Cards (visible on mobile) */}
@@ -412,7 +420,11 @@ export default function OrdersPage() {
             return (
               <div
                 key={order._id}
-                className="bg-slate-800/50 border border-violet-500/20 rounded-xl p-4"
+                style={{
+                  background: "rgba(15, 23, 42, 0.5)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)"
+                }}
+                className="bg-transparent rounded-xl p-4"
                 onClick={() => setSelectedOrder(order)}
               >
                 <div className="flex justify-between items-start mb-3">
@@ -510,7 +522,13 @@ export default function OrdersPage() {
         </div>
 
         {/* Orders Table - Desktop only */}
-        <div className="hidden lg:block bg-slate-800/50 border border-violet-500/20 rounded-2xl overflow-hidden">
+        <div 
+          className="hidden lg:block rounded-2xl overflow-hidden"
+          style={{
+            background: "rgba(15, 23, 42, 0.5)",
+            border: "1px solid rgba(255, 255, 255, 0.1)"
+          }}
+        >
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
@@ -648,7 +666,13 @@ export default function OrdersPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-6 bg-slate-800/50 border border-violet-500/20 rounded-xl p-4">
+          <div 
+            className="flex flex-col md:flex-row items-center justify-between gap-4 mt-6 rounded-xl p-4"
+            style={{
+              background: "rgba(15, 23, 42, 0.5)",
+              border: "1px solid rgba(255, 255, 255, 0.1)"
+            }}
+          >
             <div className="text-slate-400 text-xs md:text-sm text-center md:text-left">
               แสดง {(currentPage - 1) * ITEMS_PER_PAGE + 1} -{" "}
               {Math.min(currentPage * ITEMS_PER_PAGE, filteredOrders.length)}{" "}

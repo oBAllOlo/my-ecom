@@ -49,6 +49,14 @@ export default function AdminProducts() {
     name: string;
   }>({ show: false, id: "", name: "" });
 
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState("");
+
+  // Get unique brands from products
+  const brands = [...new Set(products.map((p) => p.brand))].sort();
+
   useEffect(() => {
     if (!isLoading && (!user || user.role !== "admin")) {
       router.push("/login");
@@ -168,13 +176,107 @@ export default function AdminProducts() {
       </header>
 
       <main className="p-4 md:p-8">
-        {/* Products Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 md:gap-6">
-          {products.map((product, index) => (
+        {/* Filters Bar */}
+        <div
+          style={{
+            background: "rgba(30, 41, 59, 0.5)",
+            borderRadius: "16px",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            padding: "1.5rem",
+            marginBottom: "1.5rem",
+          }}
+        >
+          <div className="flex flex-wrap gap-4 items-center">
+            {/* Search */}
+            <div className="flex-1 min-w-[200px]">
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+                <input
+                  type="text"
+                  placeholder="ค้นหาสินค้า..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    background: "rgba(255, 255, 255, 0.05)",
+                    border: "none",
+                    color: "rgb(148, 163, 184)",
+                  }}
+                  className="w-full py-2.5 pl-10 pr-4 rounded-xl text-sm outline-none focus:ring-1 focus:ring-violet-500/50 transition-all placeholder-slate-500"
+                />
+              </div>
+            </div>
+
+            {/* Category Filter */}
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              style={{
+                background: "rgba(255, 255, 255, 0.05)",
+                border: "none",
+                color: "rgb(148, 163, 184)",
+              }}
+              className="py-2.5 px-4 rounded-xl text-sm outline-none focus:ring-1 focus:ring-violet-500/50 transition-all min-w-[150px] cursor-pointer"
+            >
+              <option value="">ทุกหมวดหมู่</option>
+              {categories.map((cat) => (
+                <option key={cat._id} value={cat.name} className="bg-slate-800 text-slate-200">
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+
+            {/* Brand Filter */}
+            <select
+              value={selectedBrand}
+              onChange={(e) => setSelectedBrand(e.target.value)}
+              style={{
+                background: "rgba(255, 255, 255, 0.05)",
+                border: "none",
+                color: "rgb(148, 163, 184)",
+              }}
+              className="py-2.5 px-4 rounded-xl text-sm outline-none focus:ring-1 focus:ring-violet-500/50 transition-all min-w-[150px] cursor-pointer"
+            >
+              <option value="">ทุกแบรนด์</option>
+              {brands.map((brand) => (
+                <option key={brand} value={brand} className="bg-slate-800 text-slate-200">
+                  {brand}
+                </option>
+              ))}
+            </select>
+
+
+          </div>
+        </div>
+
+        {/* Filtered Products */}
+        {(() => {
+          const filteredProducts = products.filter((product) => {
+            const matchesSearch = searchQuery === "" || 
+              product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              product.brand.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesCategory = selectedCategory === "" || product.category === selectedCategory;
+            const matchesBrand = selectedBrand === "" || product.brand === selectedBrand;
+            return matchesSearch && matchesCategory && matchesBrand;
+          });
+
+          return (
+            <>
+              {/* Results count */}
+              <p className="text-slate-400 text-sm mb-4">
+                แสดง {filteredProducts.length} จาก {products.length} สินค้า
+              </p>
+
+              {/* Products Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 md:gap-6">
+                {filteredProducts.map((product, index) => (
             <div
               key={product._id}
-              className="bg-slate-800/50 border border-violet-500/20 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:border-violet-500/50 hover:shadow-2xl hover:shadow-violet-500/20 animate-fadeInUp"
-              style={{ animationDelay: `${index * 0.05}s` }}
+              className="rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-violet-500/20 animate-fadeInUp"
+              style={{ 
+                animationDelay: `${index * 0.05}s`,
+                background: "rgba(30, 41, 59, 0.5)",
+                border: "1px solid rgba(255, 255, 255, 0.1)"
+              }}
             >
               <div className="relative aspect-[4/3] overflow-hidden">
                 <img
@@ -234,13 +336,23 @@ export default function AdminProducts() {
                 </button>
               </div>
             </div>
-          ))}
-        </div>
+                ))}
+              </div>
+
+              {filteredProducts.length === 0 && (
+                <div className="text-center py-16 text-slate-500 bg-slate-800/20 border border-white/5 rounded-2xl">
+                  <span className="text-4xl block mb-4">🔍</span>
+                  <p>ไม่พบสินค้าที่ตรงกับเงื่อนไข</p>
+                </div>
+              )}
+            </>
+          );
+        })()}
 
         {products.length === 0 && (
           <div className="text-center py-16 text-slate-500">
             <span className="text-6xl block mb-4">📦</span>
-            <p>ยังไม่มีสินค้า</p>
+            <p>ยังไม่มีสินค้าในระบบ</p>
           </div>
         )}
       </main>
@@ -317,37 +429,52 @@ function ProductModal({
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const handleImageUpload = async (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      toast.error("กรุณาเลือกไฟล์รูปภาพเท่านั้น");
-      return;
-    }
+  const handleImageUpload = async (files: FileList | File[]) => {
+    const fileArray = Array.from(files);
+    const validFiles = fileArray.filter(file => {
+      if (!file.type.startsWith("image/")) {
+        toast.error(`${file.name}: ไม่ใช่ไฟล์รูปภาพ`);
+        return false;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`${file.name}: ไฟล์ต้องมีขนาดไม่เกิน 5MB`);
+        return false;
+      }
+      return true;
+    });
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("ไฟล์ต้องมีขนาดไม่เกิน 5MB");
-      return;
-    }
+    if (validFiles.length === 0) return;
 
     setUploading(true);
     try {
-      const formDataUpload = new FormData();
-      formDataUpload.append("file", file);
+      const uploadPromises = validFiles.map(async (file) => {
+        const formDataUpload = new FormData();
+        formDataUpload.append("file", file);
 
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formDataUpload,
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formDataUpload,
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          return data.url;
+        } else {
+          toast.error(`${file.name}: ${data.error || "อัพโหลดไม่สำเร็จ"}`);
+          return null;
+        }
       });
 
-      const data = await res.json();
-      if (data.success) {
-        const newImages = [...formData.images, data.url];
+      const uploadedUrls = (await Promise.all(uploadPromises)).filter(Boolean) as string[];
+      
+      if (uploadedUrls.length > 0) {
+        const newImages = [...formData.images, ...uploadedUrls];
         if (!formData.image) {
-          setFormData({ ...formData, image: data.url, images: newImages });
+          setFormData({ ...formData, image: uploadedUrls[0], images: newImages });
         } else {
           setFormData({ ...formData, images: newImages });
         }
-      } else {
-        toast.error(data.error || "อัพโหลดรูปไม่สำเร็จ");
+        toast.success(`อัพโหลดสำเร็จ ${uploadedUrls.length} รูป`);
       }
     } catch (error) {
       console.error("Upload error:", error);
@@ -389,14 +516,15 @@ function ProductModal({
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleImageUpload(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleImageUpload(e.dataTransfer.files);
     }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      handleImageUpload(e.target.files[0]);
+    if (e.target.files && e.target.files.length > 0) {
+      handleImageUpload(e.target.files);
+      e.target.value = ""; // Reset input to allow selecting same files again
     }
   };
 
@@ -573,7 +701,7 @@ function ProductModal({
               </option>
               {categories.map((cat) => (
                 <option key={cat._id} value={cat.name} className="bg-slate-800">
-                  {cat.icon} {cat.name}
+                  {cat.name}
                 </option>
               ))}
             </select>
@@ -600,6 +728,7 @@ function ProductModal({
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
+                multiple
                 onChange={handleFileSelect}
                 className="hidden"
               />
@@ -678,70 +807,8 @@ function ProductModal({
               </div>
             )}
 
-            {/* Fallback URL input */}
-            <div className="mt-4 pt-4 border-t border-white/10">
-              <label className="block text-slate-500 text-xs mb-2">
-                หรือใส่ URL รูปภาพ:
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="url"
-                  id="urlInput"
-                  placeholder="https://example.com/image.jpg"
-                  className="flex-1 py-3 px-4 bg-violet-500/10 border border-violet-500/30 rounded-xl text-slate-50 text-sm outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    const input = document.getElementById(
-                      "urlInput"
-                    ) as HTMLInputElement;
-                    if (input.value) {
-                      const newImages = [...formData.images, input.value];
-                      if (!formData.image) {
-                        setFormData({
-                          ...formData,
-                          image: input.value,
-                          images: newImages,
-                        });
-                      } else {
-                        setFormData({ ...formData, images: newImages });
-                      }
-                      input.value = "";
-                    }
-                  }}
-                  className="py-2 px-4 bg-violet-500 border-none rounded-lg text-white cursor-pointer"
-                >
-                  เพิ่ม
-                </button>
-              </div>
-            </div>
           </div>
 
-          <div className="flex gap-8 mb-6">
-            <label className="flex items-center gap-2 text-slate-400 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.isNewProduct}
-                onChange={(e) =>
-                  setFormData({ ...formData, isNewProduct: e.target.checked })
-                }
-                className="accent-violet-500"
-              />
-              <span>สินค้าใหม่</span>
-            </label>
-            <label className="flex items-center gap-2 text-slate-400 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.isFeatured}
-                onChange={(e) =>
-                  setFormData({ ...formData, isFeatured: e.target.checked })
-                }
-                className="accent-violet-500"
-              />
-              <span>สินค้าแนะนำ</span>
-            </label>
-          </div>
 
           <div className="flex gap-4">
             <button

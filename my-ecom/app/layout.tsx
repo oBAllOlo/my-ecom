@@ -14,11 +14,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "KeyBoardTH - ร้านคีย์บอร์ดคุณภาพ | Mechanical & Gaming Keyboards",
+  title: "Custom Keyboard System | ระบบเว็บแอปพลิเคชันสำหรับการปรับแต่งและสั่งซื้อคีย์บอร์ดคอมพิวเตอร์",
   description:
-    "ร้านจำหน่ายคีย์บอร์ด Mechanical และ Gaming จากแบรนด์ชั้นนำทั่วโลก พร้อมบริการหลังการขาย ส่งฟรีทั่วประเทศ",
+    "ระบบเว็บแอปพลิเคชันสำหรับการปรับแต่งและสั่งซื้อคีย์บอร์ดคอมพิวเตอร์ พร้อมฟีเจอร์ Custom Keyboard Builder",
   keywords:
-    "คีย์บอร์ด, keyboard, mechanical keyboard, gaming keyboard, Keychron, Razer, Ducky",
+    "คีย์บอร์ด, keyboard, mechanical keyboard, gaming keyboard, custom keyboard, ปรับแต่งคีย์บอร์ด",
 };
 
 export default function RootLayout({

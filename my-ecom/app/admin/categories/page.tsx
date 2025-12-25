@@ -152,24 +152,7 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  const iconOptions = [
-    "📁",
-    "⌨️",
-    "🖱️",
-    "🎧",
-    "🖥️",
-    "💾",
-    "🎮",
-    "📱",
-    "💻",
-    "🔌",
-    "🔋",
-    "📦",
-    "🛒",
-    "⭐",
-    "🎨",
-    "🔧",
-  ];
+
 
   if (isLoading || loading) {
     return (
@@ -392,40 +375,16 @@ export default function AdminCategoriesPage() {
                     gap: "1rem",
                   }}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "1rem",
-                    }}
-                  >
-                    <div
+                  <div>
+                    <h4
                       style={{
-                        width: "56px",
-                        height: "56px",
-                        background:
-                          "linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%)",
-                        borderRadius: "12px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "1.75rem",
-                        border: "1px solid rgba(139, 92, 246, 0.2)",
+                        color: "white",
+                        fontWeight: 600,
+                        marginBottom: "0.25rem",
                       }}
                     >
-                      {category.icon}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <h4
-                        style={{
-                          color: "white",
-                          fontWeight: 600,
-                          marginBottom: "0.25rem",
-                        }}
-                      >
-                        {category.name}
-                      </h4>
-                    </div>
+                      {category.name}
+                    </h4>
                   </div>
 
                   <div
@@ -551,51 +510,6 @@ export default function AdminCategoriesPage() {
             )}
 
             <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: "1.25rem" }}>
-                <label
-                  style={{
-                    display: "block",
-                    color: "#94a3b8",
-                    fontSize: "0.875rem",
-                    marginBottom: "0.5rem",
-                    fontWeight: 500,
-                  }}
-                >
-                  ไอคอน
-                </label>
-                <div
-                  style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}
-                >
-                  {iconOptions.map((icon) => (
-                    <button
-                      key={icon}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, icon })}
-                      style={{
-                        width: "48px",
-                        height: "48px",
-                        borderRadius: "12px",
-                        border:
-                          formData.icon === icon
-                            ? "2px solid #8b5cf6"
-                            : "1px solid rgba(255, 255, 255, 0.1)",
-                        background:
-                          formData.icon === icon
-                            ? "rgba(139, 92, 246, 0.2)"
-                            : "rgba(15, 23, 42, 0.5)",
-                        fontSize: "1.5rem",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {icon}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               <div style={{ marginBottom: "1.5rem" }}>
                 <label
                   style={{
@@ -625,7 +539,7 @@ export default function AdminCategoriesPage() {
                     fontSize: "1rem",
                     outline: "none",
                   }}
-                  placeholder="เช่น คีย์บอร์ด, เมาส์, หูฟัง"
+                  placeholder="กรุณาใส่หมวดหมู่"
                 />
               </div>
 

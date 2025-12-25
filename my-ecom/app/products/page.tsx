@@ -372,7 +372,7 @@ function ProductsContent() {
                         style={{ accentColor: "#8b5cf6" }}
                       />
                       <span>
-                        {category.icon} {category.name}
+                        {category.name}
                       </span>
                     </label>
                   ))}
