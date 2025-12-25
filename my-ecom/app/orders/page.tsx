@@ -1,43 +1,116 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 
-interface OrderItem {
-  productId:
-    | string
-    | {
-        _id: string;
-        name: string;
-        image: string;
-      };
-  name: string;
-  price: number;
-  image: string;
-  images?: string[];
-  quantity: number;
-}
-
 interface Order {
   _id: string;
-  items: OrderItem[];
+  userId: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  items: Array<{
+    productId:
+      | string
+      | {
+          _id: string;
+          name: string;
+          image: string;
+        };
+    name: string;
+    description?: string;
+    price: number;
+    quantity: number;
+    image: string;
+    images?: string[];
+    customParts?: {
+      base?: { name?: string; image?: string };
+      switch?: { name?: string; image?: string };
+      keycapBase?: { name?: string; image?: string };
+      keycapAdd1?: { name?: string; image?: string };
+      keycapAdd2?: { name?: string; image?: string };
+      wire?: { name?: string; image?: string };
+    };
+  }>;
   total: number;
-  status: string;
+  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+  paymentMethod: string;
+  shippingAddress: {
+    fullName: string;
+    phone: string;
+    street: string;
+    district: string;
+    province: string;
+    postalCode: string;
+  };
+  trackingNumber?: string;
+  carrier?: string;
+  shippedAt?: string;
   createdAt: string;
 }
+
+const carriers = [
+  { id: "kerry", name: "Kerry Express", icon: "🟠" },
+  { id: "flash", name: "Flash Express", icon: "🟡" },
+  { id: "jt", name: "J&T Express", icon: "🔴" },
+  { id: "thaipost", name: "ไปรษณีย์ไทย", icon: "🟤" },
+  { id: "scg", name: "SCG Express", icon: "🟢" },
+  { id: "other", name: "อื่นๆ", icon: "⚪" },
+];
+
+const statusConfig: Record<
+  string,
+  { label: string; bgClass: string; textClass: string; icon: string }
+> = {
+  pending: {
+    label: "รอดำเนินการ",
+    bgClass: "bg-amber-500/20",
+    textClass: "text-amber-400",
+    icon: "⏳",
+  },
+  processing: {
+    label: "กำลังจัดส่ง",
+    bgClass: "bg-blue-500/20",
+    textClass: "text-blue-400",
+    icon: "📦",
+  },
+  shipped: {
+    label: "จัดส่งแล้ว",
+    bgClass: "bg-violet-500/20",
+    textClass: "text-violet-400",
+    icon: "🚚",
+  },
+  delivered: {
+    label: "ส่งสำเร็จ",
+    bgClass: "bg-emerald-500/20",
+    textClass: "text-emerald-400",
+    icon: "✅",
+  },
+  cancelled: {
+    label: "ยกเลิก",
+    bgClass: "bg-red-500/20",
+    textClass: "text-red-400",
+    icon: "❌",
+  },
+};
 
 export default function OrdersPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
-  // const { showToast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<
     "all" | "custom" | "regular"
   >("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   // Helper function to check if order contains custom products
   const isCustomOrder = (order: Order) => {
@@ -50,12 +123,46 @@ export default function OrdersPage() {
     });
   };
 
-  // Filter orders based on category
+  // Filter orders based on category, status, and search
   const filteredOrders = orders.filter((order) => {
-    if (categoryFilter === "all") return true;
-    if (categoryFilter === "custom") return isCustomOrder(order);
-    return !isCustomOrder(order);
+    // Category filter
+    let categoryMatch = true;
+    if (categoryFilter === "custom") categoryMatch = isCustomOrder(order);
+    else if (categoryFilter === "regular")
+      categoryMatch = !isCustomOrder(order);
+
+    // Status filter
+    let statusMatch = true;
+    if (statusFilter !== "all") {
+      statusMatch = order.status === statusFilter;
+    }
+
+    // Search filter
+    let searchMatch = true;
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      const orderIdMatch = order._id.toLowerCase().includes(query);
+      const productNameMatch = order.items.some((item) =>
+        item.name.toLowerCase().includes(query)
+      );
+      searchMatch = orderIdMatch || productNameMatch;
+    }
+
+    return categoryMatch && statusMatch && searchMatch;
   });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE);
+  const paginatedOrders = filteredOrders.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // Reset to page 1 when filter changes
+  const handleCategoryChange = (category: "all" | "custom" | "regular") => {
+    setCategoryFilter(category);
+    setCurrentPage(1);
+  };
 
   const customOrdersCount = orders.filter(isCustomOrder).length;
   const regularOrdersCount = orders.length - customOrdersCount;
@@ -91,789 +198,805 @@ export default function OrdersPage() {
     }
   }, [user]);
 
-  const getStatusConfig = (status: string) => {
-    switch (status) {
-      case "pending":
-        return {
-          label: "รอชำระเงิน",
-          bg: "#f59e0b",
-          bgLight: "rgba(245, 158, 11, 0.15)",
-        };
-      case "processing":
-        return {
-          label: "กำลังเตรียมสินค้า",
-          bg: "#3b82f6",
-          bgLight: "rgba(59, 130, 246, 0.15)",
-        };
-      case "shipped":
-        return {
-          label: "จัดส่งแล้ว",
-          bg: "#8b5cf6",
-          bgLight: "rgba(139, 92, 246, 0.15)",
-        };
-      case "delivered":
-        return {
-          label: "สำเร็จ",
-          bg: "#10b981",
-          bgLight: "rgba(16, 185, 129, 0.15)",
-        };
-      default:
-        return {
-          label: "ยกเลิก",
-          bg: "#ef4444",
-          bgLight: "rgba(239, 68, 68, 0.15)",
-        };
-    }
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat("th-TH", {
+      style: "currency",
+      currency: "THB",
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString("th-TH", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   if (isLoading || loading) {
     return (
-      <div className="admin-loading">
-        <div className="admin-loading-spinner"></div>
-        <p>กำลังโหลดข้อมูล...</p>
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-400">กำลังโหลดข้อมูล...</p>
+        </div>
       </div>
     );
   }
 
   if (!user) return null;
 
-  const totalSpent = orders.reduce((sum, order) => sum + order.total, 0);
-  const completedOrders = orders.filter((o) => o.status === "delivered").length;
-  const pendingOrders = orders.filter((o) => o.status === "pending").length;
-
   return (
-    <div className="admin-dashboard">
-      {/* Background */}
-      <div className="admin-bg-pattern"></div>
-
-      <main className="admin-main" style={{ paddingTop: "2rem" }}>
-        {/* Welcome Section */}
-        <section style={{ marginBottom: "2rem" }}>
-          <div
-            style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}
+    <div className="min-h-screen bg-slate-900 relative">
+      {/* Header */}
+      <header className="bg-slate-800/50 border-b border-white/5 px-4 md:px-8 py-4 md:py-6">
+        <div className="flex flex-wrap items-center gap-4 md:gap-6">
+          <Link
+            href="/"
+            className="text-violet-400 no-underline font-medium py-2 px-3 md:px-4 bg-violet-500/10 rounded-lg hover:bg-violet-500/20 transition-all text-sm md:text-base"
           >
-            <span style={{ fontSize: "2rem" }}>📦</span>
+            ← กลับ
+          </Link>
+          <div className="flex items-center gap-3 md:gap-4">
+            <span className="text-2xl md:text-4xl">🛒</span>
             <div>
-              <h2
-                style={{
-                  color: "white",
-                  fontSize: "1.5rem",
-                  fontWeight: 700,
-                  margin: 0,
-                }}
-              >
+              <h1 className="text-xl md:text-2xl font-extrabold text-slate-50 m-0">
                 ประวัติการสั่งซื้อ
-              </h2>
-              <p
-                style={{
-                  color: "#94a3b8",
-                  fontSize: "0.9rem",
-                  margin: "0.25rem 0 0",
-                }}
-              >
-                ติดตามสถานะและดูประวัติการสั่งซื้อทั้งหมดของคุณ
+              </h1>
+              <p className="text-xs md:text-sm text-slate-500 m-0">
+                {orders.length} คำสั่งซื้อทั้งหมด
               </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Stats Cards */}
-
-        <div className="row g-3 mb-4">
-          <div className="col-6 col-lg-3">
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                padding: "1.25rem 1.5rem",
-                background: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
-                borderRadius: "16px",
-                height: "100%",
-              }}
-            >
-              <div
-                style={{
-                  width: "48px",
-                  height: "48px",
-                  background: "rgba(255,255,255,0.2)",
-                  borderRadius: "12px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "1.5rem",
-                }}
-              >
-                📦
-              </div>
-              <div>
-                <p
-                  style={{
-                    color: "rgba(255,255,255,0.8)",
-                    fontSize: "0.75rem",
-                    marginBottom: "0.25rem",
-                  }}
-                >
-                  คำสั่งซื้อทั้งหมด
-                </p>
-                <p
-                  style={{
-                    color: "white",
-                    fontSize: "1.5rem",
-                    fontWeight: 700,
-                  }}
-                >
-                  {orders.length}
-                </p>
-                <p
-                  style={{
-                    color: "rgba(255,255,255,0.6)",
-                    fontSize: "0.75rem",
-                  }}
-                >
-                  รายการ
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-6 col-lg-3">
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                padding: "1.25rem 1.5rem",
-                background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                borderRadius: "16px",
-                height: "100%",
-              }}
-            >
-              <div
-                style={{
-                  width: "48px",
-                  height: "48px",
-                  background: "rgba(255,255,255,0.2)",
-                  borderRadius: "12px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "1.5rem",
-                }}
-              >
-                ✅
-              </div>
-              <div>
-                <p
-                  style={{
-                    color: "rgba(255,255,255,0.8)",
-                    fontSize: "0.75rem",
-                    marginBottom: "0.25rem",
-                  }}
-                >
-                  สำเร็จแล้ว
-                </p>
-                <p
-                  style={{
-                    color: "white",
-                    fontSize: "1.5rem",
-                    fontWeight: 700,
-                  }}
-                >
-                  {completedOrders}
-                </p>
-                <p
-                  style={{
-                    color: "rgba(255,255,255,0.6)",
-                    fontSize: "0.75rem",
-                  }}
-                >
-                  ได้รับสินค้าแล้ว
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-6 col-lg-3">
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                padding: "1.25rem 1.5rem",
-                background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-                borderRadius: "16px",
-                height: "100%",
-              }}
-            >
-              <div
-                style={{
-                  width: "48px",
-                  height: "48px",
-                  background: "rgba(255,255,255,0.2)",
-                  borderRadius: "12px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "1.5rem",
-                }}
-              >
-                ⏳
-              </div>
-              <div>
-                <p
-                  style={{
-                    color: "rgba(255,255,255,0.8)",
-                    fontSize: "0.75rem",
-                    marginBottom: "0.25rem",
-                  }}
-                >
-                  รอดำเนินการ
-                </p>
-                <p
-                  style={{
-                    color: "white",
-                    fontSize: "1.5rem",
-                    fontWeight: 700,
-                  }}
-                >
-                  {pendingOrders}
-                </p>
-                <p
-                  style={{
-                    color: "rgba(255,255,255,0.6)",
-                    fontSize: "0.75rem",
-                  }}
-                >
-                  รอชำระ/จัดส่ง
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-6 col-lg-3">
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                padding: "1.25rem 1.5rem",
-                background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
-                borderRadius: "16px",
-                height: "100%",
-              }}
-            >
-              <div
-                style={{
-                  width: "48px",
-                  height: "48px",
-                  background: "rgba(255,255,255,0.2)",
-                  borderRadius: "12px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "1.5rem",
-                }}
-              >
-                💰
-              </div>
-              <div>
-                <p
-                  style={{
-                    color: "rgba(255,255,255,0.8)",
-                    fontSize: "0.75rem",
-                    marginBottom: "0.25rem",
-                  }}
-                >
-                  ยอดรวมทั้งหมด
-                </p>
-                <p
-                  style={{
-                    color: "white",
-                    fontSize: "1.5rem",
-                    fontWeight: 700,
-                  }}
-                >
-                  ฿{totalSpent.toLocaleString()}
-                </p>
-                <p
-                  style={{
-                    color: "rgba(255,255,255,0.6)",
-                    fontSize: "0.75rem",
-                  }}
-                >
-                  บาท
-                </p>
-              </div>
             </div>
           </div>
         </div>
+      </header>
 
-        {/* Orders List */}
-        <section style={{ width: "100%" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: "1rem",
-              flexWrap: "wrap",
-              gap: "1rem",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.75rem",
-                color: "white",
-                fontSize: "1.1rem",
-                fontWeight: 600,
-              }}
-            >
-              <span>🛒</span>
-              <span>รายการคำสั่งซื้อ</span>
+      <main className="p-4 md:p-8">
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-4 md:mb-6">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-3 flex items-center gap-3 shadow-lg shadow-blue-500/20">
+            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-base">
+              📦
             </div>
-
-            {/* Category Filter Tabs */}
-            <div style={{ display: "flex", gap: "0.5rem" }}>
-              <button
-                onClick={() => setCategoryFilter("all")}
-                style={{
-                  padding: "0.5rem 1rem",
-                  borderRadius: "10px",
-                  border: "none",
-                  cursor: "pointer",
-                  fontWeight: 600,
-                  fontSize: "0.85rem",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.4rem",
-                  background:
-                    categoryFilter === "all"
-                      ? "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)"
-                      : "rgba(255,255,255,0.1)",
-                  color: categoryFilter === "all" ? "white" : "#94a3b8",
-                  boxShadow:
-                    categoryFilter === "all"
-                      ? "0 4px 12px rgba(139, 92, 246, 0.3)"
-                      : "none",
-                }}
-              >
-                📦 ทั้งหมด
-                <span
-                  style={{
-                    background:
-                      categoryFilter === "all"
-                        ? "rgba(255,255,255,0.2)"
-                        : "rgba(255,255,255,0.1)",
-                    padding: "0.15rem 0.5rem",
-                    borderRadius: "20px",
-                    fontSize: "0.75rem",
-                  }}
-                >
-                  {orders.length}
-                </span>
-              </button>
-              <button
-                onClick={() => setCategoryFilter("custom")}
-                style={{
-                  padding: "0.5rem 1rem",
-                  borderRadius: "10px",
-                  border: "none",
-                  cursor: "pointer",
-                  fontWeight: 600,
-                  fontSize: "0.85rem",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.4rem",
-                  background:
-                    categoryFilter === "custom"
-                      ? "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)"
-                      : "rgba(255,255,255,0.1)",
-                  color: categoryFilter === "custom" ? "white" : "#94a3b8",
-                  boxShadow:
-                    categoryFilter === "custom"
-                      ? "0 4px 12px rgba(168, 85, 247, 0.3)"
-                      : "none",
-                }}
-              >
-                🛠️ Custom
-                <span
-                  style={{
-                    background:
-                      categoryFilter === "custom"
-                        ? "rgba(255,255,255,0.2)"
-                        : "rgba(255,255,255,0.1)",
-                    padding: "0.15rem 0.5rem",
-                    borderRadius: "20px",
-                    fontSize: "0.75rem",
-                  }}
-                >
-                  {customOrdersCount}
-                </span>
-              </button>
-              <button
-                onClick={() => setCategoryFilter("regular")}
-                style={{
-                  padding: "0.5rem 1rem",
-                  borderRadius: "10px",
-                  border: "none",
-                  cursor: "pointer",
-                  fontWeight: 600,
-                  fontSize: "0.85rem",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.4rem",
-                  background:
-                    categoryFilter === "regular"
-                      ? "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)"
-                      : "rgba(255,255,255,0.1)",
-                  color: categoryFilter === "regular" ? "white" : "#94a3b8",
-                  boxShadow:
-                    categoryFilter === "regular"
-                      ? "0 4px 12px rgba(59, 130, 246, 0.3)"
-                      : "none",
-                }}
-              >
-                🛒 สินค้าทั่วไป
-                <span
-                  style={{
-                    background:
-                      categoryFilter === "regular"
-                        ? "rgba(255,255,255,0.2)"
-                        : "rgba(255,255,255,0.1)",
-                    padding: "0.15rem 0.5rem",
-                    borderRadius: "20px",
-                    fontSize: "0.75rem",
-                  }}
-                >
-                  {regularOrdersCount}
-                </span>
-              </button>
+            <div>
+              <p className="text-white text-lg font-bold m-0 leading-tight">
+                {orders.length}
+              </p>
+              <p className="text-blue-100 text-xs m-0">คำสั่งซื้อ</p>
             </div>
           </div>
 
-          {filteredOrders.length === 0 ? (
-            <div
-              style={{
-                padding: "4rem 2rem",
-                textAlign: "center",
-                background: "rgba(30, 41, 59, 0.5)",
-                borderRadius: "16px",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <div
-                style={{
-                  width: "100px",
-                  height: "100px",
-                  marginBottom: "1.5rem",
-                  borderRadius: "20px",
-                  background:
-                    "linear-gradient(135deg, rgba(139, 92, 246, 0.3) 0%, rgba(99, 102, 241, 0.3) 100%)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "3rem",
-                  border: "1px solid rgba(139, 92, 246, 0.3)",
-                }}
-              >
-                📦
-              </div>
-              <h3
-                style={{
-                  color: "white",
-                  fontSize: "1.5rem",
-                  fontWeight: 700,
-                  marginBottom: "0.75rem",
-                }}
-              >
-                ยังไม่มีคำสั่งซื้อ
-              </h3>
-              <p
-                style={{
-                  color: "#94a3b8",
-                  marginBottom: "2rem",
-                  maxWidth: "300px",
-                }}
-              >
-                คุณยังไม่ได้ทำการสั่งซื้อสินค้า
-                เริ่มช้อปปิ้งสินค้าที่คุณชื่นชอบได้เลย!
-              </p>
-              <Link
-                href="/products"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                  padding: "1rem 2rem",
-                  background:
-                    "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
-                  borderRadius: "12px",
-                  color: "white",
-                  fontSize: "1rem",
-                  fontWeight: 600,
-                  textDecoration: "none",
-                  boxShadow: "0 8px 24px rgba(139, 92, 246, 0.4)",
-                }}
-              >
-                <span>🛍️</span>
-                <span>เริ่มช้อปเลย</span>
-              </Link>
+          <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-3 flex items-center gap-3 shadow-lg shadow-emerald-500/20">
+            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-base">
+              ✅
             </div>
-          ) : (
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+            <div>
+              <p className="text-white text-lg font-bold m-0 leading-tight">
+                {orders.filter((o) => o.status === "delivered").length}
+              </p>
+              <p className="text-emerald-100 text-xs m-0">สำเร็จ</p>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl p-3 flex items-center gap-3 shadow-lg shadow-amber-500/20">
+            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-base">
+              ⏳
+            </div>
+            <div>
+              <p className="text-white text-lg font-bold m-0 leading-tight">
+                {
+                  orders.filter(
+                    (o) => o.status === "pending" || o.status === "processing"
+                  ).length
+                }
+              </p>
+              <p className="text-amber-100 text-xs m-0">รอ...</p>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl p-3 flex items-center gap-3 shadow-lg shadow-violet-500/20">
+            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-base">
+              💰
+            </div>
+            <div>
+              <p className="text-white text-base md:text-lg font-bold m-0 leading-tight break-all">
+                {new Intl.NumberFormat("th-TH", {
+                  style: "currency",
+                  currency: "THB",
+                  notation: "compact",
+                  maximumFractionDigits: 1,
+                }).format(orders.reduce((sum, order) => sum + order.total, 0))}
+              </p>
+              <p className="text-purple-100 text-xs m-0">ยอดรวม</p>
+            </div>
+          </div>
+        </div>
+        {/* Category Filter Tabs */}
+        <div className="flex gap-2 md:gap-3 mb-6 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
+          <button
+            onClick={() => handleCategoryChange("all")}
+            className={`px-3 md:px-5 py-2 md:py-2.5 rounded-xl font-semibold transition-all flex items-center gap-1 md:gap-2 whitespace-nowrap text-sm md:text-base ${
+              categoryFilter === "all"
+                ? "bg-violet-500 text-white shadow-lg shadow-violet-500/30"
+                : "bg-slate-800/50 text-slate-400 hover:bg-slate-700/50"
+            }`}
+          >
+            📦 ทั้งหมด
+            <span
+              className={`text-xs px-2 py-0.5 rounded-full ${
+                categoryFilter === "all" ? "bg-white/20" : "bg-slate-600"
+              }`}
             >
-              {filteredOrders.map((order) => {
-                const statusConfig = getStatusConfig(order.status);
-                const isCustom = isCustomOrder(order);
-                return (
-                  <div
-                    key={order._id}
-                    style={{
-                      padding: 0,
-                      overflow: "hidden",
-                      background: "rgba(30, 41, 59, 0.5)",
-                      borderRadius: "12px",
-                      border: isCustom
-                        ? "1px solid rgba(168, 85, 247, 0.3)"
-                        : "1px solid rgba(255, 255, 255, 0.1)",
-                      width: "100%",
-                    }}
-                  >
-                    {/* Order Row - Flexbox Layout */}
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: "1rem",
-                        padding: "1rem 1.5rem",
-                        background: "rgba(0, 0, 0, 0.2)",
-                      }}
-                    >
-                      {/* Order ID */}
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.5rem",
-                          padding: "0.5rem 0.75rem",
-                          background: "rgba(139, 92, 246, 0.15)",
-                          borderRadius: "8px",
-                          border: "1px solid rgba(139, 92, 246, 0.3)",
-                          minWidth: "130px",
-                        }}
-                      >
-                        <span style={{ fontSize: "0.9rem" }}>🧾</span>
-                        <span
-                          style={{
-                            color: "#a78bfa",
-                            fontWeight: 700,
-                            fontFamily: "monospace",
-                            fontSize: "0.85rem",
-                          }}
-                        >
-                          #{order._id.slice(-8).toUpperCase()}
-                        </span>
-                      </div>
+              {orders.length}
+            </span>
+          </button>
+          <button
+            onClick={() => handleCategoryChange("custom")}
+            className={`px-5 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 ${
+              categoryFilter === "custom"
+                ? "bg-purple-500 text-white shadow-lg shadow-purple-500/30"
+                : "bg-slate-800/50 text-slate-400 hover:bg-slate-700/50"
+            }`}
+          >
+            🛠️ Custom Build
+            <span
+              className={`text-xs px-2 py-0.5 rounded-full ${
+                categoryFilter === "custom" ? "bg-white/20" : "bg-slate-600"
+              }`}
+            >
+              {customOrdersCount}
+            </span>
+          </button>
+          <button
+            onClick={() => handleCategoryChange("regular")}
+            className={`px-5 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 ${
+              categoryFilter === "regular"
+                ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
+                : "bg-slate-800/50 text-slate-400 hover:bg-slate-700/50"
+            }`}
+          >
+            🛒 สินค้าทั่วไป
+            <span
+              className={`text-xs px-2 py-0.5 rounded-full ${
+                categoryFilter === "regular" ? "bg-white/20" : "bg-slate-600"
+              }`}
+            >
+              {regularOrdersCount}
+            </span>
+          </button>
+        </div>
 
-                      {/* Date */}
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.4rem",
-                          color: "#94a3b8",
-                          fontSize: "0.85rem",
-                          minWidth: "120px",
-                        }}
-                      >
-                        <span>📅</span>
-                        <span>
-                          {new Date(order.createdAt).toLocaleDateString(
-                            "th-TH",
-                            {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            }
-                          )}
-                        </span>
-                      </div>
+        {/* Status Filter Dropdown & Search */}
+        <div className="flex flex-col md:flex-row gap-3 mb-4">
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="bg-slate-800/50 border border-violet-500/30 text-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-violet-500 transition-all cursor-pointer"
+          >
+            <option value="all">📋 สถานะทั้งหมด</option>
+            <option value="pending">⏳ รอดำเนินการ</option>
+            <option value="processing">📦 กำลังจัดเตรียม</option>
+            <option value="shipped">🚚 จัดส่งแล้ว</option>
+            <option value="delivered">✅ ส่งสำเร็จ</option>
+            <option value="cancelled">❌ ยกเลิก</option>
+          </select>
 
-                      {/* Price */}
-                      <div
-                        style={{
-                          padding: "0.5rem 0.75rem",
-                          background: "rgba(16, 185, 129, 0.1)",
-                          borderRadius: "8px",
-                          minWidth: "90px",
-                          textAlign: "center",
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: "#10b981",
-                            fontWeight: 700,
-                            fontSize: "0.95rem",
-                          }}
-                        >
-                          ฿{order.total.toLocaleString()}
-                        </span>
-                      </div>
+          <input
+            type="text"
+            placeholder="🔍 ค้นหารหัสคำสั่งซื้อ หรือชื่อสินค้า..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="flex-1 bg-slate-800/50 border border-violet-500/30 text-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-violet-500 transition-all placeholder:text-slate-500"
+          />
+        </div>
+        {/* Orders - Mobile Cards (visible on mobile) */}
+        <div className="lg:hidden flex flex-col gap-3 mb-4">
+          {paginatedOrders.map((order) => {
+            const status = statusConfig[order.status];
+            const isCustom = isCustomOrder(order);
+            const firstItem = order.items[0];
+            const orderIdFormatted = order._id.slice(-8).toUpperCase();
 
-                      {/* Status */}
-                      <span
-                        style={{
-                          padding: "0.5rem 0.75rem",
-                          borderRadius: "8px",
-                          fontSize: "0.8rem",
-                          fontWeight: 600,
-                          background: statusConfig.bg,
-                          color: "white",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "0.35rem",
-                          whiteSpace: "nowrap",
-                          minWidth: "140px",
-                        }}
-                      >
-                        {order.status === "pending" && "⏳"}
-                        {order.status === "processing" && "📦"}
-                        {order.status === "shipped" && "🚚"}
-                        {order.status === "delivered" && "✅"}
-                        {order.status === "cancelled" && "❌"}
-                        {statusConfig.label}
+            // Handle displaying first item's image and name
+            // For custom orders, items might be complex, simplified for display
+
+            return (
+              <div
+                key={order._id}
+                className="bg-slate-800/50 border border-violet-500/20 rounded-xl p-4"
+                onClick={() => setSelectedOrder(order)}
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <span className="font-mono text-slate-50 font-semibold text-sm">
+                      #{orderIdFormatted}
+                    </span>
+                    {isCustom ? (
+                      <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-500/20 text-purple-400">
+                        🛠️
                       </span>
+                    ) : (
+                      <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400">
+                        🛒
+                      </span>
+                    )}
+                  </div>
+                  <span
+                    className={`inline-flex items-center gap-1 py-1 px-2 rounded-full text-xs font-semibold ${status.bgClass} ${status.textClass}`}
+                  >
+                    {status.icon} {status.label}
+                  </span>
+                </div>
+                {/* Product preview */}
+                <div className="flex items-center gap-3 mb-3 pb-3 border-b border-white/5">
+                  <div className="relative w-14 h-14 flex-shrink-0">
+                    {/* Check if first item is custom with multiple images */}
+                    {firstItem?.images && firstItem.images.length > 1 ? (
+                      <div className="relative w-full h-full rounded-lg overflow-hidden bg-slate-700">
+                        {firstItem.images.map((img: string, imgIdx: number) => (
+                          <img
+                            key={imgIdx}
+                            src={img}
+                            alt={`${firstItem?.name} layer ${imgIdx + 1}`}
+                            className="absolute inset-0 w-full h-full object-contain"
+                            style={{ zIndex: imgIdx + 1 }}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <img
+                        src={firstItem?.image || "/placeholder.png"}
+                        alt={firstItem?.name || "Product"}
+                        className="w-full h-full rounded-lg object-cover bg-slate-700"
+                      />
+                    )}
+                    {order.items.length > 1 && (
+                      <span className="absolute -top-1 -right-1 bg-violet-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold z-10">
+                        +{order.items.length - 1}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-slate-50 text-sm font-medium m-0 truncate">
+                      {firstItem?.name || "ไม่ระบุ"}
+                    </p>
+                    <p className="text-slate-500 text-xs m-0">
+                      {order.items.length} รายการ
+                    </p>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center mb-3">
+                  <div>
+                    <p className="text-slate-50 font-medium text-sm m-0">
+                      ยอดรวม
+                    </p>
+                  </div>
+                  <span className="text-emerald-400 font-bold">
+                    {formatPrice(order.total)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center pt-3 border-t border-white/10">
+                  <span className="text-slate-500 text-xs">
+                    {formatDate(order.createdAt)}
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedOrder(order);
+                    }}
+                    className="py-2 px-4 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-lg font-semibold text-sm border-none cursor-pointer"
+                  >
+                    ดูรายละเอียด
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+          {orders.length === 0 && (
+            <div className="text-center py-16 text-slate-500">
+              <span className="text-6xl block mb-4">📭</span>
+              <p>ยังไม่มีคำสั่งซื้อ</p>
+            </div>
+          )}
+        </div>
 
-                      {/* Product Images + Count */}
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.5rem",
-                          flex: 1,
-                          justifyContent: "center",
-                        }}
-                      >
-                        {order.items.slice(0, 2).map((item, index) => {
-                          const itemProductId =
-                            typeof item.productId === "string"
-                              ? item.productId
-                              : item.productId?._id;
-                          const isCustomItem =
-                            itemProductId?.startsWith("custom-");
-                          return (
-                            <div
-                              key={index}
-                              style={{
-                                position: "relative",
-                                width: "150px",
-                                height: "150px",
-                                borderRadius: "8px",
-                                overflow: "hidden",
-                                background: "rgba(15, 23, 42, 0.5)",
-                                border: isCustomItem
-                                  ? "2px solid rgba(168, 85, 247, 0.5)"
-                                  : "1px solid rgba(255, 255, 255, 0.08)",
-                                flexShrink: 0,
-                              }}
-                            >
-                              {isCustomItem &&
-                              item.images &&
-                              item.images.length > 1 ? (
-                                <>
-                                  {item.images.map((img, imgIdx) => (
+        {/* Orders Table - Desktop only */}
+        <div className="hidden lg:block bg-slate-800/50 border border-violet-500/20 rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr>
+                  <th className="text-left p-4 bg-violet-500/10 text-violet-400 font-semibold text-sm uppercase tracking-wide">
+                    รหัสคำสั่งซื้อ
+                  </th>
+                  <th className="text-left p-4 bg-violet-500/10 text-violet-400 font-semibold text-sm uppercase tracking-wide">
+                    สินค้า
+                  </th>
+                  <th className="text-left p-4 bg-violet-500/10 text-violet-400 font-semibold text-sm uppercase tracking-wide">
+                    ยอดรวม
+                  </th>
+                  <th className="text-left p-4 bg-violet-500/10 text-violet-400 font-semibold text-sm uppercase tracking-wide">
+                    สถานะ
+                  </th>
+                  <th className="text-left p-4 bg-violet-500/10 text-violet-400 font-semibold text-sm uppercase tracking-wide">
+                    วันที่
+                  </th>
+                  <th className="text-left p-4 bg-violet-500/10 text-violet-400 font-semibold text-sm uppercase tracking-wide">
+                    จัดการ
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedOrders.map((order) => {
+                  const status = statusConfig[order.status];
+                  const isCustom = isCustomOrder(order);
+                  const firstItem = order.items[0];
+
+                  return (
+                    <tr
+                      key={order._id}
+                      className="hover:bg-violet-500/5 transition-colors"
+                    >
+                      <td className="p-4 border-b border-white/5">
+                        <div className="flex flex-col gap-1">
+                          <span className="font-mono text-slate-50 font-semibold">
+                            #{order._id.slice(-8).toUpperCase()}
+                          </span>
+                          {isCustom ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-500/20 text-purple-400 w-fit">
+                              🛠️ Custom
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 w-fit">
+                              🛒 ปกติ
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-4 border-b border-white/5">
+                        <div className="flex items-center gap-2">
+                          <div className="relative w-12 h-12 flex-shrink-0">
+                            {/* Check if first item is custom with multiple images */}
+                            {firstItem?.images &&
+                            firstItem.images.length > 1 ? (
+                              <div className="relative w-full h-full rounded-lg overflow-hidden bg-slate-700">
+                                {firstItem.images.map(
+                                  (img: string, imgIdx: number) => (
                                     <img
                                       key={imgIdx}
                                       src={img}
-                                      alt={`${item.name} layer ${imgIdx + 1}`}
-                                      style={{
-                                        position: "absolute",
-                                        inset: "8px",
-                                        width: "calc(100% - 16px)",
-                                        height: "calc(100% - 16px)",
-                                        objectFit: "contain",
-                                        zIndex: imgIdx + 1,
-                                      }}
+                                      alt={`${firstItem?.name} layer ${
+                                        imgIdx + 1
+                                      }`}
+                                      className="absolute inset-0 w-full h-full object-contain"
+                                      style={{ zIndex: imgIdx + 1 }}
                                     />
-                                  ))}
-                                </>
-                              ) : (
-                                <img
-                                  src={item.image}
-                                  alt={item.name}
-                                  style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    objectFit: "cover",
-                                    display: "block",
-                                  }}
-                                />
-                              )}
-                            </div>
-                          );
-                        })}
-                        {order.items.length > 2 && (
-                          <span
-                            style={{
-                              color: "#64748b",
-                              fontSize: "0.75rem",
-                              padding: "0.25rem 0.5rem",
-                              background: "rgba(255, 255, 255, 0.05)",
-                              borderRadius: "4px",
-                            }}
-                          >
-                            +{order.items.length - 2}
-                          </span>
-                        )}
-                        <span style={{ color: "#64748b", fontSize: "0.8rem" }}>
-                          {order.items.reduce(
-                            (sum, item) => sum + item.quantity,
-                            0
-                          )}{" "}
-                          ชิ้น
+                                  )
+                                )}
+                              </div>
+                            ) : (
+                              <img
+                                src={firstItem?.image || "/placeholder.png"}
+                                alt={firstItem?.name || "Product"}
+                                className="w-full h-full rounded-lg object-cover bg-slate-700"
+                              />
+                            )}
+                            {order.items.length > 1 && (
+                              <span className="absolute -top-1 -right-1 bg-violet-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold z-10">
+                                +{order.items.length - 1}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-slate-50 text-sm font-medium truncate max-w-[150px]">
+                              {firstItem?.name || "ไม่ระบุ"}
+                            </span>
+                            <span className="text-slate-500 text-xs">
+                              {order.items.length} รายการ
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4 border-b border-white/5">
+                        <span className="text-emerald-400 font-bold text-lg">
+                          {formatPrice(order.total)}
                         </span>
-                      </div>
+                      </td>
+                      <td className="p-4 border-b border-white/5">
+                        <span
+                          className={`inline-flex items-center gap-2 py-2 px-4 rounded-full text-sm font-semibold ${status.bgClass} ${status.textClass}`}
+                        >
+                          {status.icon} {status.label}
+                        </span>
+                      </td>
+                      <td className="p-4 border-b border-white/5">
+                        <span className="text-slate-400 text-sm">
+                          {formatDate(order.createdAt)}
+                        </span>
+                      </td>
+                      <td className="p-4 border-b border-white/5">
+                        <button
+                          onClick={() => setSelectedOrder(order)}
+                          className="py-2 px-4 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-lg font-semibold border-none cursor-pointer hover:-translate-y-0.5 hover:shadow-lg hover:shadow-violet-500/30 transition-all"
+                        >
+                          ดูรายละเอียด
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
 
-                      {/* Action Button */}
-                      <Link
-                        href={`/tracking?order=${order._id}`}
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "0.4rem",
-                          padding: "0.6rem 1rem",
-                          background:
-                            "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)",
-                          borderRadius: "8px",
-                          color: "white",
-                          fontSize: "0.8rem",
-                          fontWeight: 600,
-                          textDecoration: "none",
-                          whiteSpace: "nowrap",
-                          minWidth: "120px",
-                        }}
-                      >
-                        📍 ดูรายละเอียด
-                      </Link>
-                    </div>
-                  </div>
-                );
-              })}
+          {orders.length === 0 && (
+            <div className="text-center py-16 text-slate-500">
+              <span className="text-6xl block mb-4">📭</span>
+              <p>ยังไม่มีคำสั่งซื้อ</p>
             </div>
           )}
-        </section>
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-6 bg-slate-800/50 border border-violet-500/20 rounded-xl p-4">
+            <div className="text-slate-400 text-xs md:text-sm text-center md:text-left">
+              แสดง {(currentPage - 1) * ITEMS_PER_PAGE + 1} -{" "}
+              {Math.min(currentPage * ITEMS_PER_PAGE, filteredOrders.length)}{" "}
+              จาก {filteredOrders.length} รายการ
+            </div>
+            <div className="flex items-center gap-1 md:gap-2 flex-wrap justify-center">
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                className={`px-2 md:px-3 py-2 rounded-lg font-medium transition-all text-sm ${
+                  currentPage === 1
+                    ? "bg-slate-700/50 text-slate-500 cursor-not-allowed"
+                    : "bg-slate-700 text-slate-200 hover:bg-slate-600"
+                }`}
+              >
+                ⏮️
+              </button>
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className={`px-2 md:px-4 py-2 rounded-lg font-medium transition-all text-sm ${
+                  currentPage === 1
+                    ? "bg-slate-700/50 text-slate-500 cursor-not-allowed"
+                    : "bg-slate-700 text-slate-200 hover:bg-slate-600"
+                }`}
+              >
+                <span className="hidden md:inline">← ก่อนหน้า</span>
+                <span className="md:hidden">←</span>
+              </button>
+
+              {/* Page numbers - show only on md+ */}
+              <div className="hidden md:flex items-center gap-1 px-2">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum: number;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`w-10 h-10 rounded-lg font-semibold transition-all ${
+                        currentPage === pageNum
+                          ? "bg-violet-500 text-white shadow-lg shadow-violet-500/30"
+                          : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Mobile page indicator */}
+              <span className="md:hidden text-slate-400 text-sm px-2">
+                {currentPage}/{totalPages}
+              </span>
+
+              <button
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={currentPage === totalPages}
+                className={`px-2 md:px-4 py-2 rounded-lg font-medium transition-all text-sm ${
+                  currentPage === totalPages
+                    ? "bg-slate-700/50 text-slate-500 cursor-not-allowed"
+                    : "bg-slate-700 text-slate-200 hover:bg-slate-600"
+                }`}
+              >
+                <span className="hidden md:inline">ถัดไป →</span>
+                <span className="md:hidden">→</span>
+              </button>
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className={`px-2 md:px-3 py-2 rounded-lg font-medium transition-all text-sm ${
+                  currentPage === totalPages
+                    ? "bg-slate-700/50 text-slate-500 cursor-not-allowed"
+                    : "bg-slate-700 text-slate-200 hover:bg-slate-600"
+                }`}
+              >
+                ⏭️
+              </button>
+            </div>
+          </div>
+        )}
       </main>
+
+      {/* Order Detail Modal */}
+      {selectedOrder && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-[1000] p-2 md:p-8"
+          onClick={() => setSelectedOrder(null)}
+        >
+          <div
+            className="bg-gradient-to-br from-slate-800 to-slate-900 border border-violet-500/30 rounded-2xl md:rounded-3xl max-w-xl w-full max-h-[95vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center p-4 md:p-6 border-b border-white/10">
+              <h2 className="text-base md:text-xl text-slate-50 m-0">
+                คำสั่งซื้อ #{selectedOrder._id.slice(-8).toUpperCase()}
+              </h2>
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="bg-none border-none text-slate-500 text-xl md:text-2xl cursor-pointer hover:text-white transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-4 md:p-6">
+              {/* Order Items */}
+              <div className="mb-8">
+                <h3 className="text-slate-50 text-sm md:text-base mb-3 md:mb-4">
+                  📦 รายการสินค้า
+                </h3>
+                <div className="flex flex-col gap-3">
+                  {selectedOrder.items.map((item, idx) => {
+                    const productId =
+                      typeof item.productId === "string"
+                        ? item.productId
+                        : item.productId?._id;
+                    const isCustomProduct = productId?.startsWith("custom-");
+
+                    return (
+                      <div key={idx} className="p-4 bg-white/5 rounded-xl">
+                        <div className="flex items-start gap-4">
+                          {/* Image - Stack for custom products */}
+                          <div
+                            className={`relative flex-shrink-0 bg-slate-700 rounded-xl overflow-hidden ${
+                              isCustomProduct ? "w-24 h-24" : "w-16 h-16"
+                            }`}
+                          >
+                            {isCustomProduct &&
+                            item.images &&
+                            item.images.length > 1 ? (
+                              <>
+                                {item.images.map((img, imgIdx) => (
+                                  <img
+                                    key={imgIdx}
+                                    src={img}
+                                    alt={`${item.name} layer ${imgIdx + 1}`}
+                                    className="absolute inset-0 w-full h-full object-contain"
+                                    style={{ zIndex: imgIdx + 1 }}
+                                  />
+                                ))}
+                              </>
+                            ) : (
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                className="w-full h-full object-cover"
+                              />
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-slate-50 m-0 font-semibold">
+                              {item.name}
+                            </p>
+                            <p className="text-slate-500 text-sm m-0">
+                              x{item.quantity}
+                            </p>
+
+                            {/* Custom Product Details */}
+                            {isCustomProduct && (
+                              <div className="mt-2 text-xs space-y-1">
+                                <p className="m-0 text-purple-400 font-medium">
+                                  🛠️ ชิ้นส่วนที่เลือก:
+                                </p>
+                                {item.customParts ? (
+                                  <div className="bg-purple-500/10 rounded-lg p-3 mt-2 space-y-2">
+                                    {item.customParts.base?.name && (
+                                      <div className="flex items-center gap-2">
+                                        {item.customParts.base.image && (
+                                          <img
+                                            src={item.customParts.base.image}
+                                            alt="Base"
+                                            className="w-16 h-16 rounded object-contain bg-slate-700"
+                                          />
+                                        )}
+                                        <span className="text-slate-300">
+                                          🖥️ Base:
+                                        </span>
+                                        <span className="text-white">
+                                          {item.customParts.base.name}
+                                        </span>
+                                      </div>
+                                    )}
+                                    {item.customParts.switch?.name && (
+                                      <div className="flex items-center gap-2">
+                                        {item.customParts.switch.image && (
+                                          <img
+                                            src={item.customParts.switch.image}
+                                            alt="Switch"
+                                            className="w-16 h-16 rounded object-contain bg-slate-700"
+                                          />
+                                        )}
+                                        <span className="text-slate-300">
+                                          🔘 Switch:
+                                        </span>
+                                        <span className="text-white">
+                                          {item.customParts.switch.name}
+                                        </span>
+                                      </div>
+                                    )}
+                                    {item.customParts.keycapBase?.name && (
+                                      <div className="flex items-center gap-2">
+                                        {item.customParts.keycapBase.image && (
+                                          <img
+                                            src={
+                                              item.customParts.keycapBase.image
+                                            }
+                                            alt="Keycap"
+                                            className="w-16 h-16 rounded object-contain bg-slate-700"
+                                          />
+                                        )}
+                                        <span className="text-slate-300">
+                                          ⌨️ Keycap:
+                                        </span>
+                                        <span className="text-white">
+                                          {item.customParts.keycapBase.name}
+                                        </span>
+                                      </div>
+                                    )}
+                                    {item.customParts.keycapAdd1?.name && (
+                                      <div className="flex items-center gap-2">
+                                        {item.customParts.keycapAdd1.image && (
+                                          <img
+                                            src={
+                                              item.customParts.keycapAdd1.image
+                                            }
+                                            alt="Add-on 1"
+                                            className="w-16 h-16 rounded object-contain bg-slate-700"
+                                          />
+                                        )}
+                                        <span className="text-slate-300">
+                                          🎨 Add-on 1:
+                                        </span>
+                                        <span className="text-white">
+                                          {item.customParts.keycapAdd1.name}
+                                        </span>
+                                      </div>
+                                    )}
+                                    {item.customParts.keycapAdd2?.name && (
+                                      <div className="flex items-center gap-2">
+                                        {item.customParts.keycapAdd2.image && (
+                                          <img
+                                            src={
+                                              item.customParts.keycapAdd2.image
+                                            }
+                                            alt="Add-on 2"
+                                            className="w-16 h-16 rounded object-contain bg-slate-700"
+                                          />
+                                        )}
+                                        <span className="text-slate-300">
+                                          🎨 Add-on 2:
+                                        </span>
+                                        <span className="text-white">
+                                          {item.customParts.keycapAdd2.name}
+                                        </span>
+                                      </div>
+                                    )}
+                                    {item.customParts.wire?.name && (
+                                      <div className="flex items-center gap-2">
+                                        {item.customParts.wire.image && (
+                                          <img
+                                            src={item.customParts.wire.image}
+                                            alt="Wire"
+                                            className="w-16 h-16 rounded object-contain bg-slate-700"
+                                          />
+                                        )}
+                                        <span className="text-slate-300">
+                                          🔌 Wire:
+                                        </span>
+                                        <span className="text-white">
+                                          {item.customParts.wire.name}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <p className="m-0 text-slate-500 italic">
+                                    ไม่พบข้อมูลชิ้นส่วน
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-emerald-400 font-semibold m-0 ml-auto">
+                            {formatPrice(item.price * item.quantity)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex justify-between pt-3 md:pt-4 mt-3 md:mt-4 border-t border-white/10 text-slate-400">
+                  <span className="text-sm md:text-base">ยอดรวม</span>
+                  <span className="text-lg md:text-2xl font-extrabold text-emerald-400">
+                    {formatPrice(selectedOrder.total)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Shipping Address */}
+              <div className="mb-8">
+                <h3 className="text-slate-50 text-sm md:text-base mb-3 md:mb-4">
+                  📍 ที่อยู่จัดส่ง
+                </h3>
+                <div className="bg-white/5 p-4 rounded-xl text-slate-400">
+                  <p className="text-slate-50 font-semibold mb-2">
+                    {selectedOrder.shippingAddress.fullName}
+                  </p>
+                  <p>{selectedOrder.shippingAddress.phone}</p>
+                  <p>{selectedOrder.shippingAddress.street}</p>
+                  <p>
+                    {selectedOrder.shippingAddress.district},{" "}
+                    {selectedOrder.shippingAddress.province}{" "}
+                    {selectedOrder.shippingAddress.postalCode}
+                  </p>
+                </div>
+              </div>
+
+              {/* Tracking Info if available */}
+              {selectedOrder.trackingNumber && (
+                <div className="bg-violet-500/15 border border-violet-500/30 rounded-xl p-4">
+                  <p className="text-violet-400 m-0 mb-1 text-sm">
+                    📦 หมายเลขพัสดุ
+                  </p>
+                  <p className="text-white m-0 text-lg font-bold tracking-wider">
+                    {selectedOrder.trackingNumber}
+                  </p>
+                  <p className="text-slate-500 mt-2 mb-0 text-sm">
+                    🏢{" "}
+                    {carriers.find((c) => c.id === selectedOrder.carrier)
+                      ?.name || selectedOrder.carrier}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
