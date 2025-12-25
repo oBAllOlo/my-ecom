@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 import ProductCard from "@/components/ProductCard";
 
 interface Product {
@@ -29,6 +31,7 @@ interface Category {
 function ProductsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const categoryParam = searchParams.get("category");
   const searchParam = searchParams.get("search");
   const newParam = searchParams.get("new");
@@ -44,6 +47,17 @@ function ProductsContent() {
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
   const [sortBy, setSortBy] = useState<string>("featured");
   const [showFilters, setShowFilters] = useState(false);
+
+  // Check authentication when page loads
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      // ใช้ toast.id เพื่อป้องกันการแสดง toast ซ้ำ
+      toast.error("กรุณาเข้าสู่ระบบก่อนดูสินค้า", {
+        id: "products-auth-required",
+      });
+      router.push("/login");
+    }
+  }, [isAuthenticated, authLoading, router]);
 
   // Fetch categories
   useEffect(() => {

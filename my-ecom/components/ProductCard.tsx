@@ -24,7 +24,10 @@ export default function ProductCard({ product }: ProductCardProps) {
 
     // ต้อง login ก่อนถึงจะเพิ่มสินค้าลงตะกร้าได้
     if (!user) {
-      toast.error("กรุณาเข้าสู่ระบบก่อนเพิ่มสินค้าลงตะกร้า");
+      // ใช้ toast.id เพื่อป้องกันการแสดง toast ซ้ำ
+      toast.error("กรุณาเข้าสู่ระบบก่อนเพิ่มสินค้าลงตะกร้า", {
+        id: "product-add-to-cart-auth",
+      });
       router.push("/login");
       return;
     }

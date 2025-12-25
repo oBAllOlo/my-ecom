@@ -8,6 +8,7 @@ import React, {
   ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { User } from "@/lib/types";
 
 interface RegisterResult {
@@ -148,6 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("currentUser");
+    toast.success("ออกจากระบบสำเร็จ!");
     router.push("/login");
   };
 

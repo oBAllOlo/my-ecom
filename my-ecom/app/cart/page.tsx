@@ -1,12 +1,29 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import CartItemComponent from "@/components/CartItem";
 import { formatPrice } from "@/lib/mockData";
+import { toast } from "sonner";
 
 export default function CartPage() {
+  const router = useRouter();
   const { items, getCartTotal, clearCart } = useCart();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+
+  // Check authentication when page loads
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      // ใช้ toast.id เพื่อป้องกันการแสดง toast ซ้ำ
+      toast.error("กรุณาเข้าสู่ระบบก่อนใช้งานตะกร้าสินค้า", {
+        id: "cart-auth-required",
+      });
+      router.push("/login");
+    }
+  }, [isAuthenticated, authLoading, router]);
 
   const subtotal = getCartTotal();
   const shipping = subtotal >= 1500 ? 0 : 50;
@@ -104,7 +121,12 @@ export default function CartPage() {
 
             {/* Clear Cart Button */}
             <button
-              onClick={clearCart}
+              onClick={() => {
+                if (confirm("ต้องการลบสินค้าทั้งหมดออกจากตะกร้าหรือไม่?")) {
+                  clearCart();
+                  toast.success("ลบสินค้าทั้งหมดออกจากตะกร้าแล้ว");
+                }
+              }}
               className="btn btn-secondary"
               style={{ alignSelf: "flex-start", marginTop: "1rem" }}
             >

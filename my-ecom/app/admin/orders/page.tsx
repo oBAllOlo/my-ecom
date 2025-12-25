@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
 interface Order {
   _id: string;
@@ -185,9 +186,20 @@ export default function AdminOrders() {
           )
         );
         setSelectedOrder(null);
+        const statusLabels: Record<string, string> = {
+          pending: "รอดำเนินการ",
+          processing: "กำลังจัดส่ง",
+          shipped: "จัดส่งแล้ว",
+          delivered: "ส่งสำเร็จ",
+          cancelled: "ยกเลิก",
+        };
+        toast.success(`อัปเดตสถานะเป็น "${statusLabels[newStatus] || newStatus}" สำเร็จ`);
+      } else {
+        toast.error(data.error || "ไม่สามารถอัปเดตสถานะได้");
       }
     } catch (error) {
       console.error("Error updating order:", error);
+      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
     }
   };
 
@@ -236,6 +248,7 @@ export default function AdminOrders() {
               : o
           )
         );
+        toast.success("จัดส่งสำเร็จและส่งอีเมลแจ้งลูกค้าแล้ว!");
         setTimeout(() => {
           setShowShippingModal(false);
         }, 2000);
@@ -244,6 +257,7 @@ export default function AdminOrders() {
           type: "error",
           text: data.error || "เกิดข้อผิดพลาด",
         });
+        toast.error(data.error || "ไม่สามารถจัดส่งได้");
       }
     } catch (error) {
       console.error("Error shipping order:", error);
@@ -251,6 +265,7 @@ export default function AdminOrders() {
         type: "error",
         text: "เกิดข้อผิดพลาดในการเชื่อมต่อ",
       });
+      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
     } finally {
       setIsShipping(false);
     }
