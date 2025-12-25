@@ -34,116 +34,131 @@ export default function CartPage() {
         🛒 ตะกร้าสินค้า ({items.length} รายการ)
       </h1>
 
-      <div className="cart-layout">
+      <div className="row g-4">
         {/* Cart Items */}
-        <div className="cart-items">
-          {/* Custom Build Section */}
-          {items.filter(item => item.product.category === "custom").length > 0 && (
-            <div style={{ marginBottom: "2rem" }}>
-              <h2 style={{ 
-                color: "#A855F7", 
-                fontSize: "1.25rem", 
-                fontWeight: "bold", 
-                marginBottom: "1rem",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem"
-              }}>
-                🛠️ คีย์บอร์ด Custom Build
-              </h2>
-              <div style={{ 
-                borderLeft: "3px solid #A855F7", 
-                paddingLeft: "1rem" 
-              }}>
-                {items
-                  .filter(item => item.product.category === "custom")
-                  .map((item) => (
-                    <CartItemComponent key={item.product._id} item={item} />
-                  ))}
+        <div className="col-12 col-lg-8">
+          <div className="cart-items">
+            {/* Custom Build Section */}
+            {items.filter((item) => item.product.category === "custom").length >
+              0 && (
+              <div style={{ marginBottom: "2rem" }}>
+                <h2
+                  style={{
+                    color: "#A855F7",
+                    fontSize: "1.25rem",
+                    fontWeight: "bold",
+                    marginBottom: "1rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                  }}
+                >
+                  🛠️ คีย์บอร์ด Custom Build
+                </h2>
+                <div
+                  style={{
+                    borderLeft: "3px solid #A855F7",
+                    paddingLeft: "1rem",
+                  }}
+                >
+                  {items
+                    .filter((item) => item.product.category === "custom")
+                    .map((item) => (
+                      <CartItemComponent key={item.product._id} item={item} />
+                    ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Regular Products Section */}
-          {items.filter(item => item.product.category !== "custom").length > 0 && (
-            <div style={{ marginBottom: "2rem" }}>
-              <h2 style={{ 
-                color: "#3B82F6", 
-                fontSize: "1.25rem", 
-                fontWeight: "bold", 
-                marginBottom: "1rem",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem"
-              }}>
-                🛒 สินค้าทั่วไป
-              </h2>
-              <div style={{ 
-                borderLeft: "3px solid #3B82F6", 
-                paddingLeft: "1rem" 
-              }}>
-                {items
-                  .filter(item => item.product.category !== "custom")
-                  .map((item) => (
-                    <CartItemComponent key={item.product._id} item={item} />
-                  ))}
+            {/* Regular Products Section */}
+            {items.filter((item) => item.product.category !== "custom").length >
+              0 && (
+              <div style={{ marginBottom: "2rem" }}>
+                <h2
+                  style={{
+                    color: "#3B82F6",
+                    fontSize: "1.25rem",
+                    fontWeight: "bold",
+                    marginBottom: "1rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                  }}
+                >
+                  🛒 สินค้าทั่วไป
+                </h2>
+                <div
+                  style={{
+                    borderLeft: "3px solid #3B82F6",
+                    paddingLeft: "1rem",
+                  }}
+                >
+                  {items
+                    .filter((item) => item.product.category !== "custom")
+                    .map((item) => (
+                      <CartItemComponent key={item.product._id} item={item} />
+                    ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Clear Cart Button */}
-          <button
-            onClick={clearCart}
-            className="btn btn-secondary"
-            style={{ alignSelf: "flex-start", marginTop: "1rem" }}
-          >
-            🗑️ ลบสินค้าทั้งหมด
-          </button>
+            {/* Clear Cart Button */}
+            <button
+              onClick={clearCart}
+              className="btn btn-secondary"
+              style={{ alignSelf: "flex-start", marginTop: "1rem" }}
+            >
+              🗑️ ลบสินค้าทั้งหมด
+            </button>
+          </div>
         </div>
 
         {/* Cart Summary */}
-        <div className="cart-summary">
-          <h2 className="cart-summary-title">สรุปคำสั่งซื้อ</h2>
+        <div className="col-12 col-lg-4">
+          <div className="cart-summary">
+            <h2 className="cart-summary-title">สรุปคำสั่งซื้อ</h2>
 
-          <div className="cart-summary-row">
-            <span>ราคาสินค้า</span>
-            <span>{formatPrice(subtotal)}</span>
-          </div>
-
-          <div className="cart-summary-row">
-            <span>ค่าจัดส่ง</span>
-            <span style={{ color: shipping === 0 ? "#22C55E" : "inherit" }}>
-              {shipping === 0 ? "ฟรี!" : formatPrice(shipping)}
-            </span>
-          </div>
-
-          <div className="cart-summary-total">
-            <span>ยอดรวมทั้งสิ้น</span>
-            <span className="total-price">{formatPrice(total)}</span>
-          </div>
-
-          <Link href="/checkout" className="btn btn-primary checkout-button">
-            💳 ดำเนินการชำระเงิน
-          </Link>
-
-          {subtotal < 1500 && (
-            <div className="cart-summary-note">
-              🚚 สั่งซื้อเพิ่มอีก {formatPrice(1500 - subtotal)} เพื่อรับส่งฟรี!
+            <div className="cart-summary-row">
+              <span>ราคาสินค้า</span>
+              <span>{formatPrice(subtotal)}</span>
             </div>
-          )}
 
-          <Link
-            href="/products"
-            style={{
-              display: "block",
-              textAlign: "center",
-              marginTop: "1rem",
-              color: "var(--primary-light)",
-              textDecoration: "none",
-            }}
-          >
-            ← เลือกซื้อสินค้าเพิ่มเติม
-          </Link>
+            <div className="cart-summary-row">
+              <span>ค่าจัดส่ง</span>
+              <span style={{ color: shipping === 0 ? "#22C55E" : "inherit" }}>
+                {shipping === 0 ? "ฟรี!" : formatPrice(shipping)}
+              </span>
+            </div>
+
+            <div className="cart-summary-total">
+              <span>ยอดรวมทั้งสิ้น</span>
+              <span className="total-price">{formatPrice(total)}</span>
+            </div>
+
+            <Link href="/checkout" className="btn btn-primary checkout-button">
+              💳 ดำเนินการชำระเงิน
+            </Link>
+
+            {subtotal < 1500 && (
+              <div className="cart-summary-note">
+                🚚 สั่งซื้อเพิ่มอีก {formatPrice(1500 - subtotal)}{" "}
+                เพื่อรับส่งฟรี!
+              </div>
+            )}
+
+            <Link
+              href="/products"
+              style={{
+                display: "block",
+                textAlign: "center",
+                marginTop: "1rem",
+                color: "var(--primary-light)",
+                textDecoration: "none",
+              }}
+            >
+              ← เลือกซื้อสินค้าเพิ่มเติม
+            </Link>
+          </div>
         </div>
       </div>
     </div>

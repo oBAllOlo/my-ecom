@@ -7,6 +7,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
+import { useRouter } from "next/navigation";
 import { User } from "@/lib/types";
 
 interface RegisterResult {
@@ -42,6 +43,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   // Load user from localStorage on mount
   useEffect(() => {
@@ -107,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return {
         success: true,
         requireVerification: data.requireVerification,
-        email: data.email
+        email: data.email,
       };
     } catch (error) {
       console.error("Register error:", error);
@@ -146,6 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("currentUser");
+    router.push("/login");
   };
 
   return (

@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import "bootstrap/dist/css/bootstrap.min.css";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
-import { ToastProvider } from "@/context/ToastContext";
+
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { Toaster } from "sonner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -28,17 +30,16 @@ export default function RootLayout({
   return (
     <html lang="th">
       <body className={`${inter.variable} antialiased`}>
-        <ToastProvider>
-          <AuthProvider>
-            <CartProvider>
-              <div className="page-container">
-                <Header />
-                <main className="main-content">{children}</main>
-                <Footer />
-              </div>
-            </CartProvider>
-          </AuthProvider>
-        </ToastProvider>
+        <AuthProvider>
+          <CartProvider>
+            <div className="page-container">
+              <Header />
+              <main className="main-content">{children}</main>
+              <Footer />
+            </div>
+          </CartProvider>
+        </AuthProvider>
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   );

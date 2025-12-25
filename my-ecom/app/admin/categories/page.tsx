@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { useToast } from "@/context/ToastContext";
+import { toast } from "sonner";
 import ConfirmModal from "@/components/ConfirmModal";
 
 interface Category {
@@ -18,7 +18,7 @@ interface Category {
 export default function AdminCategoriesPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
-  const { showToast } = useToast();
+  // const { showToast } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -29,7 +29,11 @@ export default function AdminCategoriesPage() {
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: "", content: "" });
-  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; id: string; name: string }>({ show: false, id: "", name: "" });
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    show: boolean;
+    id: string;
+    name: string;
+  }>({ show: false, id: "", name: "" });
 
   useEffect(() => {
     if (!isLoading && (!user || user.role !== "admin")) {
@@ -97,10 +101,14 @@ export default function AdminCategoriesPage() {
       const data = await res.json();
 
       if (data.success) {
-        showToast(editingCategory ? "อัปเดตหมวดหมู่สำเร็จ!" : "เพิ่มหมวดหมู่สำเร็จ!", "success");
+        toast.success(
+          editingCategory ? "อัปเดตหมวดหมู่สำเร็จ!" : "เพิ่มหมวดหมู่สำเร็จ!"
+        );
         setMessage({
           type: "success",
-          content: editingCategory ? "อัปเดตหมวดหมู่สำเร็จ!" : "เพิ่มหมวดหมู่สำเร็จ!",
+          content: editingCategory
+            ? "อัปเดตหมวดหมู่สำเร็จ!"
+            : "เพิ่มหมวดหมู่สำเร็จ!",
         });
         fetchCategories();
         setTimeout(() => {
@@ -124,7 +132,7 @@ export default function AdminCategoriesPage() {
   const handleDeleteConfirm = async () => {
     const id = deleteConfirm.id;
     setDeleteConfirm({ show: false, id: "", name: "" });
-    
+
     try {
       const res = await fetch(`/api/categories/${id}`, {
         method: "DELETE",
@@ -133,18 +141,35 @@ export default function AdminCategoriesPage() {
       const data = await res.json();
 
       if (data.success) {
-        showToast("ลบหมวดหมู่แล้ว", "success");
+        toast.success("ลบหมวดหมู่แล้ว");
         fetchCategories();
       } else {
-        showToast(data.error || "ไม่สามารถลบหมวดหมู่ได้", "error");
+        toast.error(data.error || "ไม่สามารถลบหมวดหมู่ได้");
       }
     } catch (error) {
       console.error("Error deleting category:", error);
-      showToast("เกิดข้อผิดพลาดในการลบ", "error");
+      toast.error("เกิดข้อผิดพลาดในการลบ");
     }
   };
 
-  const iconOptions = ["📁", "⌨️", "🖱️", "🎧", "🖥️", "💾", "🎮", "📱", "💻", "🔌", "🔋", "📦", "🛒", "⭐", "🎨", "🔧"];
+  const iconOptions = [
+    "📁",
+    "⌨️",
+    "🖱️",
+    "🎧",
+    "🖥️",
+    "💾",
+    "🎮",
+    "📱",
+    "💻",
+    "🔌",
+    "🔋",
+    "📦",
+    "🛒",
+    "⭐",
+    "🎨",
+    "🔧",
+  ];
 
   if (isLoading || loading) {
     return (
@@ -165,46 +190,25 @@ export default function AdminCategoriesPage() {
 
       <main className="admin-main" style={{ paddingTop: "2rem" }}>
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 md:mb-8">
           <div>
-            <h1 style={{ color: "white", fontSize: "1.75rem", fontWeight: 700, marginBottom: "0.5rem" }}>
+            <h1 className="text-white text-xl md:text-2xl font-bold mb-1 md:mb-2">
               🏷️ จัดการหมวดหมู่
             </h1>
-            <p style={{ color: "#64748b" }}>เพิ่ม แก้ไข หรือลบหมวดหมู่สินค้า</p>
+            <p className="text-slate-500 text-sm md:text-base">
+              เพิ่ม แก้ไข หรือลบหมวดหมู่สินค้า
+            </p>
           </div>
-          <div style={{ display: "flex", gap: "1rem" }}>
+          <div className="flex flex-wrap gap-2 md:gap-4 w-full md:w-auto">
             <Link
               href="/admin"
-              style={{
-                padding: "0.75rem 1.5rem",
-                background: "rgba(255, 255, 255, 0.05)",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-                borderRadius: "12px",
-                color: "white",
-                textDecoration: "none",
-                fontWeight: 500,
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-              }}
+              className="flex-1 md:flex-initial text-center py-2 md:py-3 px-3 md:px-6 bg-white/5 border border-white/10 rounded-xl text-white no-underline font-medium text-sm md:text-base"
             >
-              ← กลับ Dashboard
+              ← กลับ
             </Link>
             <button
               onClick={() => handleOpenModal()}
-              style={{
-                padding: "0.75rem 1.5rem",
-                background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
-                border: "none",
-                borderRadius: "12px",
-                color: "white",
-                fontWeight: 600,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                boxShadow: "0 4px 16px rgba(139, 92, 246, 0.3)",
-              }}
+              className="flex-1 md:flex-initial py-2 md:py-3 px-3 md:px-6 bg-gradient-to-r from-violet-500 to-indigo-500 border-none rounded-xl text-white font-semibold cursor-pointer text-sm md:text-base"
             >
               ➕ เพิ่มหมวดหมู่
             </button>
@@ -212,83 +216,116 @@ export default function AdminCategoriesPage() {
         </div>
 
         {/* Stats */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: "1rem",
-          marginBottom: "2rem",
-        }}>
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "1rem",
-            padding: "1.25rem 1.5rem",
-            background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
-            borderRadius: "16px",
-          }}>
-            <div style={{
-              width: "48px",
-              height: "48px",
-              background: "rgba(255,255,255,0.2)",
-              borderRadius: "12px",
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
+          <div
+            style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
-              fontSize: "1.5rem",
-            }}>🏷️</div>
+              gap: "1rem",
+              padding: "1.25rem 1.5rem",
+              background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
+              borderRadius: "16px",
+            }}
+          >
+            <div
+              style={{
+                width: "48px",
+                height: "48px",
+                background: "rgba(255,255,255,0.2)",
+                borderRadius: "12px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "1.5rem",
+              }}
+            >
+              🏷️
+            </div>
             <div>
-              <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.75rem" }}>หมวดหมู่ทั้งหมด</p>
-              <p style={{ color: "white", fontSize: "1.5rem", fontWeight: 700 }}>{categories.length}</p>
+              <p
+                style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.75rem" }}
+              >
+                หมวดหมู่ทั้งหมด
+              </p>
+              <p
+                style={{ color: "white", fontSize: "1.5rem", fontWeight: 700 }}
+              >
+                {categories.length}
+              </p>
             </div>
           </div>
 
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "1rem",
-            padding: "1.25rem 1.5rem",
-            background: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
-            borderRadius: "16px",
-          }}>
-            <div style={{
-              width: "48px",
-              height: "48px",
-              background: "rgba(255,255,255,0.2)",
-              borderRadius: "12px",
+          <div
+            style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
-              fontSize: "1.5rem",
-            }}>📦</div>
+              gap: "1rem",
+              padding: "1.25rem 1.5rem",
+              background: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
+              borderRadius: "16px",
+            }}
+          >
+            <div
+              style={{
+                width: "48px",
+                height: "48px",
+                background: "rgba(255,255,255,0.2)",
+                borderRadius: "12px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "1.5rem",
+              }}
+            >
+              📦
+            </div>
             <div>
-              <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.75rem" }}>สินค้าทั้งหมด</p>
-              <p style={{ color: "white", fontSize: "1.5rem", fontWeight: 700 }}>
+              <p
+                style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.75rem" }}
+              >
+                สินค้าทั้งหมด
+              </p>
+              <p
+                style={{ color: "white", fontSize: "1.5rem", fontWeight: 700 }}
+              >
                 {categories.reduce((sum, c) => sum + c.productCount, 0)}
               </p>
             </div>
           </div>
 
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "1rem",
-            padding: "1.25rem 1.5rem",
-            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-            borderRadius: "16px",
-          }}>
-            <div style={{
-              width: "48px",
-              height: "48px",
-              background: "rgba(255,255,255,0.2)",
-              borderRadius: "12px",
+          <div
+            style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
-              fontSize: "1.5rem",
-            }}>✅</div>
+              gap: "1rem",
+              padding: "1.25rem 1.5rem",
+              background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+              borderRadius: "16px",
+            }}
+          >
+            <div
+              style={{
+                width: "48px",
+                height: "48px",
+                background: "rgba(255,255,255,0.2)",
+                borderRadius: "12px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "1.5rem",
+              }}
+            >
+              ✅
+            </div>
             <div>
-              <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.75rem" }}>หมวดหมู่ที่ใช้งาน</p>
-              <p style={{ color: "white", fontSize: "1.5rem", fontWeight: 700 }}>
+              <p
+                style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.75rem" }}
+              >
+                หมวดหมู่ที่ใช้งาน
+              </p>
+              <p
+                style={{ color: "white", fontSize: "1.5rem", fontWeight: 700 }}
+              >
                 {categories.filter((c) => c.productCount > 0).length}
               </p>
             </div>
@@ -296,25 +333,40 @@ export default function AdminCategoriesPage() {
         </div>
 
         {/* Categories Grid */}
-        <section style={{
-          background: "rgba(30, 41, 59, 0.5)",
-          borderRadius: "16px",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-          padding: "1.5rem",
-        }}>
-          <h3 style={{ color: "white", fontSize: "1.125rem", fontWeight: 600, marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <section
+          style={{
+            background: "rgba(30, 41, 59, 0.5)",
+            borderRadius: "16px",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            padding: "1.5rem",
+          }}
+        >
+          <h3
+            style={{
+              color: "white",
+              fontSize: "1.125rem",
+              fontWeight: 600,
+              marginBottom: "1.5rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+            }}
+          >
             <span>📋</span> รายการหมวดหมู่
           </h3>
 
           {categories.length === 0 ? (
             <div style={{ textAlign: "center", padding: "3rem" }}>
               <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>📁</div>
-              <p style={{ color: "#64748b", marginBottom: "1rem" }}>ยังไม่มีหมวดหมู่</p>
+              <p style={{ color: "#64748b", marginBottom: "1rem" }}>
+                ยังไม่มีหมวดหมู่
+              </p>
               <button
                 onClick={() => handleOpenModal()}
                 style={{
                   padding: "0.75rem 1.5rem",
-                  background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
+                  background:
+                    "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
                   border: "none",
                   borderRadius: "12px",
                   color: "white",
@@ -326,11 +378,7 @@ export default function AdminCategoriesPage() {
               </button>
             </div>
           ) : (
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-              gap: "1rem",
-            }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-3 md:gap-4">
               {categories.map((category) => (
                 <div
                   key={category._id}
@@ -344,40 +392,61 @@ export default function AdminCategoriesPage() {
                     gap: "1rem",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                    <div style={{
-                      width: "56px",
-                      height: "56px",
-                      background: "linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%)",
-                      borderRadius: "12px",
+                  <div
+                    style={{
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "1.75rem",
-                      border: "1px solid rgba(139, 92, 246, 0.2)",
-                    }}>
+                      gap: "1rem",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "56px",
+                        height: "56px",
+                        background:
+                          "linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%)",
+                        borderRadius: "12px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "1.75rem",
+                        border: "1px solid rgba(139, 92, 246, 0.2)",
+                      }}
+                    >
                       {category.icon}
                     </div>
                     <div style={{ flex: 1 }}>
-                      <h4 style={{ color: "white", fontWeight: 600, marginBottom: "0.25rem" }}>{category.name}</h4>
+                      <h4
+                        style={{
+                          color: "white",
+                          fontWeight: 600,
+                          marginBottom: "0.25rem",
+                        }}
+                      >
+                        {category.name}
+                      </h4>
                     </div>
                   </div>
 
-                  <div style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    paddingTop: "1rem",
-                    borderTop: "1px solid rgba(255, 255, 255, 0.05)",
-                  }}>
-                    <span style={{
-                      padding: "0.375rem 0.75rem",
-                      background: "rgba(139, 92, 246, 0.15)",
-                      borderRadius: "8px",
-                      color: "#a78bfa",
-                      fontSize: "0.75rem",
-                      fontWeight: 600,
-                    }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      paddingTop: "1rem",
+                      borderTop: "1px solid rgba(255, 255, 255, 0.05)",
+                    }}
+                  >
+                    <span
+                      style={{
+                        padding: "0.375rem 0.75rem",
+                        background: "rgba(139, 92, 246, 0.15)",
+                        borderRadius: "8px",
+                        color: "#a78bfa",
+                        fontSize: "0.75rem",
+                        fontWeight: 600,
+                      }}
+                    >
                       {category.productCount} สินค้า
                     </span>
                     <div style={{ display: "flex", gap: "0.5rem" }}>
@@ -422,51 +491,81 @@ export default function AdminCategoriesPage() {
 
       {/* Modal */}
       {showModal && (
-        <div style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: "rgba(0, 0, 0, 0.7)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1000,
-          padding: "1rem",
-        }}>
-          <div style={{
-            background: "#1e293b",
-            borderRadius: "20px",
-            padding: "2rem",
-            maxWidth: "500px",
-            width: "100%",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
-            boxShadow: "0 24px 48px rgba(0, 0, 0, 0.5)",
-          }}>
-            <h2 style={{ color: "white", fontSize: "1.5rem", fontWeight: 700, marginBottom: "1.5rem" }}>
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.7)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "1rem",
+          }}
+        >
+          <div
+            style={{
+              background: "#1e293b",
+              borderRadius: "20px",
+              padding: "2rem",
+              maxWidth: "500px",
+              width: "100%",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+              boxShadow: "0 24px 48px rgba(0, 0, 0, 0.5)",
+            }}
+          >
+            <h2
+              style={{
+                color: "white",
+                fontSize: "1.5rem",
+                fontWeight: 700,
+                marginBottom: "1.5rem",
+              }}
+            >
               {editingCategory ? "✏️ แก้ไขหมวดหมู่" : "➕ เพิ่มหมวดหมู่ใหม่"}
             </h2>
 
             {message.content && (
-              <div style={{
-                padding: "1rem",
-                borderRadius: "12px",
-                marginBottom: "1rem",
-                background: message.type === "success" ? "rgba(16, 185, 129, 0.15)" : "rgba(239, 68, 68, 0.15)",
-                border: `1px solid ${message.type === "success" ? "rgba(16, 185, 129, 0.3)" : "rgba(239, 68, 68, 0.3)"}`,
-                color: message.type === "success" ? "#10b981" : "#ef4444",
-              }}>
+              <div
+                style={{
+                  padding: "1rem",
+                  borderRadius: "12px",
+                  marginBottom: "1rem",
+                  background:
+                    message.type === "success"
+                      ? "rgba(16, 185, 129, 0.15)"
+                      : "rgba(239, 68, 68, 0.15)",
+                  border: `1px solid ${
+                    message.type === "success"
+                      ? "rgba(16, 185, 129, 0.3)"
+                      : "rgba(239, 68, 68, 0.3)"
+                  }`,
+                  color: message.type === "success" ? "#10b981" : "#ef4444",
+                }}
+              >
                 {message.content}
               </div>
             )}
 
             <form onSubmit={handleSubmit}>
               <div style={{ marginBottom: "1.25rem" }}>
-                <label style={{ display: "block", color: "#94a3b8", fontSize: "0.875rem", marginBottom: "0.5rem", fontWeight: 500 }}>
+                <label
+                  style={{
+                    display: "block",
+                    color: "#94a3b8",
+                    fontSize: "0.875rem",
+                    marginBottom: "0.5rem",
+                    fontWeight: 500,
+                  }}
+                >
                   ไอคอน
                 </label>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+                <div
+                  style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}
+                >
                   {iconOptions.map((icon) => (
                     <button
                       key={icon}
@@ -476,8 +575,14 @@ export default function AdminCategoriesPage() {
                         width: "48px",
                         height: "48px",
                         borderRadius: "12px",
-                        border: formData.icon === icon ? "2px solid #8b5cf6" : "1px solid rgba(255, 255, 255, 0.1)",
-                        background: formData.icon === icon ? "rgba(139, 92, 246, 0.2)" : "rgba(15, 23, 42, 0.5)",
+                        border:
+                          formData.icon === icon
+                            ? "2px solid #8b5cf6"
+                            : "1px solid rgba(255, 255, 255, 0.1)",
+                        background:
+                          formData.icon === icon
+                            ? "rgba(139, 92, 246, 0.2)"
+                            : "rgba(15, 23, 42, 0.5)",
                         fontSize: "1.5rem",
                         cursor: "pointer",
                         display: "flex",
@@ -492,13 +597,23 @@ export default function AdminCategoriesPage() {
               </div>
 
               <div style={{ marginBottom: "1.5rem" }}>
-                <label style={{ display: "block", color: "#94a3b8", fontSize: "0.875rem", marginBottom: "0.5rem", fontWeight: 500 }}>
+                <label
+                  style={{
+                    display: "block",
+                    color: "#94a3b8",
+                    fontSize: "0.875rem",
+                    marginBottom: "0.5rem",
+                    fontWeight: 500,
+                  }}
+                >
                   ชื่อหมวดหมู่
                 </label>
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   required
                   style={{
                     width: "100%",
@@ -537,7 +652,8 @@ export default function AdminCategoriesPage() {
                   style={{
                     flex: 1,
                     padding: "0.875rem",
-                    background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
+                    background:
+                      "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
                     border: "none",
                     borderRadius: "12px",
                     color: "white",
@@ -546,7 +662,11 @@ export default function AdminCategoriesPage() {
                     opacity: saving ? 0.5 : 1,
                   }}
                 >
-                  {saving ? "กำลังบันทึก..." : editingCategory ? "อัปเดต" : "เพิ่มหมวดหมู่"}
+                  {saving
+                    ? "กำลังบันทึก..."
+                    : editingCategory
+                    ? "อัปเดต"
+                    : "เพิ่มหมวดหมู่"}
                 </button>
               </div>
             </form>
