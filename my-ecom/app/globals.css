@@ -449,7 +449,6 @@ body {
   overflow: hidden;
   transition: all 0.3s ease;
   position: relative;
-  cursor: pointer;
   text-decoration: none;
 }
 
@@ -457,6 +456,19 @@ body {
   transform: translateY(-8px);
   border-color: var(--border-hover);
   box-shadow: var(--shadow-lg), var(--shadow-glow);
+}
+
+.product-image-link {
+  display: block;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.product-info-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
 }
 
 .product-badges {
@@ -501,15 +513,13 @@ body {
   transition: transform 0.5s ease;
 }
 
-.product-card:hover .product-image {
+.product-image-link:hover .product-image {
   transform: scale(1.1);
 }
 
 .quick-add-button {
-  position: absolute;
-  bottom: -50px;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
+  width: 100%;
   padding: 0.75rem 1.5rem;
   background: var(--gradient-primary);
   border: none;
@@ -520,14 +530,11 @@ body {
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
-}
-
-.product-card:hover .quick-add-button {
-  bottom: 1rem;
+  margin-top: 0.75rem;
 }
 
 .quick-add-button:hover {
-  transform: translateX(-50%) scale(1.05);
+  transform: scale(1.02);
   box-shadow: var(--shadow-md);
 }
 

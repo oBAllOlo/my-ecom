@@ -54,7 +54,6 @@ export default function ProductDetailPage() {
   const { addToCart } = useCart();
   const { user } = useAuth();
 
-
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -64,7 +63,11 @@ export default function ProductDetailPage() {
 
   // Review form state
   const [showReviewForm, setShowReviewForm] = useState(false);
-  const [reviewForm, setReviewForm] = useState({ rating: 5, title: "", comment: "" });
+  const [reviewForm, setReviewForm] = useState({
+    rating: 5,
+    title: "",
+    comment: "",
+  });
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewError, setReviewError] = useState("");
   const [reviewSuccess, setReviewSuccess] = useState(false);
@@ -82,10 +85,16 @@ export default function ProductDetailPage() {
         if (data.success) {
           setProduct(data.data);
           // Fetch related products
-          const relatedRes = await fetch(`/api/products?category=${data.data.category}`);
+          const relatedRes = await fetch(
+            `/api/products?category=${data.data.category}`
+          );
           const relatedData = await relatedRes.json();
           if (relatedData.success) {
-            setRelatedProducts(relatedData.data.filter((p: Product) => p._id !== productId).slice(0, 4));
+            setRelatedProducts(
+              relatedData.data
+                .filter((p: Product) => p._id !== productId)
+                .slice(0, 4)
+            );
           }
         }
       } catch (error) {
@@ -134,6 +143,7 @@ export default function ProductDetailPage() {
     }
 
     addToCart(product, quantity);
+    toast.success(`เพิ่ม "${product.name}" ลงตะกร้าแล้ว`);
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
   };
@@ -182,11 +192,19 @@ export default function ProductDetailPage() {
     }
   };
 
-  const hasUserReviewed = reviews.some(r => r.userId === user?._id);
+  const hasUserReviewed = reviews.some((r) => r.userId === user?._id);
 
   if (loading) {
     return (
-      <div className="product-detail" style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "50vh" }}>
+      <div
+        className="product-detail"
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "50vh",
+        }}
+      >
         <div className="admin-loading-spinner"></div>
       </div>
     );
@@ -211,12 +229,45 @@ export default function ProductDetailPage() {
 
   const discount = product.originalPrice
     ? Math.round(
-      ((product.originalPrice - product.price) / product.originalPrice) * 100
-    )
+        ((product.originalPrice - product.price) / product.originalPrice) * 100
+      )
     : 0;
 
   return (
     <div className="product-detail">
+      {/* Back Button */}
+      <div style={{ marginBottom: "1.5rem" }}>
+        <Link
+          href="/products"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            padding: "0.75rem 1.5rem",
+            background: "var(--gradient-card)",
+            border: "1px solid var(--border-color)",
+            borderRadius: "var(--radius-full)",
+            color: "var(--text-primary)",
+            textDecoration: "none",
+            fontWeight: 600,
+            fontSize: "0.9rem",
+            transition: "all 0.3s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "var(--gradient-primary)";
+            e.currentTarget.style.color = "white";
+            e.currentTarget.style.transform = "translateX(-4px)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "var(--gradient-card)";
+            e.currentTarget.style.color = "var(--text-primary)";
+            e.currentTarget.style.transform = "translateX(0)";
+          }}
+        >
+          ← ย้อนกลับ
+        </Link>
+      </div>
+
       {/* Breadcrumb */}
       <nav style={{ marginBottom: "2rem", color: "var(--text-muted)" }}>
         <Link
@@ -243,59 +294,69 @@ export default function ProductDetailPage() {
           <div
             className="product-main-image"
             onClick={() => setLightboxOpen(true)}
-            style={{ cursor: 'zoom-in', position: 'relative' }}
+            style={{ cursor: "zoom-in", position: "relative" }}
           >
-
             <img
               src={selectedImage || product.image}
               alt={product.name}
               style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'contain',
-                borderRadius: '16px'
+                width: "100%",
+                height: "100%",
+                objectFit: "contain",
+                borderRadius: "16px",
               }}
             />
-            <div style={{
-              position: 'absolute',
-              bottom: '12px',
-              right: '12px',
-              background: 'rgba(0,0,0,0.6)',
-              color: 'white',
-              padding: '6px 12px',
-              borderRadius: '8px',
-              fontSize: '0.85rem'
-            }}>
+            <div
+              style={{
+                position: "absolute",
+                bottom: "12px",
+                right: "12px",
+                background: "rgba(0,0,0,0.6)",
+                color: "white",
+                padding: "6px 12px",
+                borderRadius: "8px",
+                fontSize: "0.85rem",
+              }}
+            >
               🔍 คลิกเพื่อขยาย
             </div>
           </div>
 
           {/* Thumbnails */}
           {product.images && product.images.length > 0 && (
-            <div style={{
-              display: 'flex',
-              gap: '0.75rem',
-              marginTop: '1rem',
-              flexWrap: 'wrap'
-            }}>
+            <div
+              style={{
+                display: "flex",
+                gap: "0.75rem",
+                marginTop: "1rem",
+                flexWrap: "wrap",
+              }}
+            >
               {product.images.map((img, index) => (
                 <div
                   key={index}
                   onClick={() => setSelectedImage(img)}
                   style={{
-                    width: '80px',
-                    height: '80px',
-                    borderRadius: '12px',
-                    overflow: 'hidden',
-                    cursor: 'pointer',
-                    border: selectedImage === img ? '3px solid #8b5cf6' : '2px solid rgba(255,255,255,0.1)',
-                    transition: 'all 0.2s ease'
+                    width: "80px",
+                    height: "80px",
+                    borderRadius: "12px",
+                    overflow: "hidden",
+                    cursor: "pointer",
+                    border:
+                      selectedImage === img
+                        ? "3px solid #8b5cf6"
+                        : "2px solid rgba(255,255,255,0.1)",
+                    transition: "all 0.2s ease",
                   }}
                 >
                   <img
                     src={img}
                     alt={`${product.name} ${index + 1}`}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
                   />
                 </div>
               ))}
@@ -307,34 +368,34 @@ export default function ProductDetailPage() {
         {lightboxOpen && (
           <div
             style={{
-              position: 'fixed',
+              position: "fixed",
               top: 0,
               left: 0,
               right: 0,
               bottom: 0,
-              background: 'rgba(0,0,0,0.95)',
+              background: "rgba(0,0,0,0.95)",
               zIndex: 10000,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '2rem'
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "2rem",
             }}
             onClick={() => setLightboxOpen(false)}
           >
             <button
               onClick={() => setLightboxOpen(false)}
               style={{
-                position: 'absolute',
-                top: '20px',
-                right: '20px',
-                background: 'rgba(255,255,255,0.2)',
-                border: 'none',
-                color: 'white',
-                fontSize: '2rem',
-                width: '50px',
-                height: '50px',
-                borderRadius: '50%',
-                cursor: 'pointer'
+                position: "absolute",
+                top: "20px",
+                right: "20px",
+                background: "rgba(255,255,255,0.2)",
+                border: "none",
+                color: "white",
+                fontSize: "2rem",
+                width: "50px",
+                height: "50px",
+                borderRadius: "50%",
+                cursor: "pointer",
               }}
             >
               ✕
@@ -343,10 +404,10 @@ export default function ProductDetailPage() {
               src={selectedImage || product.image}
               alt={product.name}
               style={{
-                maxWidth: '90%',
-                maxHeight: '90%',
-                objectFit: 'contain',
-                borderRadius: '12px'
+                maxWidth: "90%",
+                maxHeight: "90%",
+                objectFit: "contain",
+                borderRadius: "12px",
               }}
               onClick={(e) => e.stopPropagation()}
             />
@@ -354,10 +415,10 @@ export default function ProductDetailPage() {
             {product.images && product.images.length > 1 && (
               <div
                 style={{
-                  position: 'absolute',
-                  bottom: '20px',
-                  display: 'flex',
-                  gap: '0.5rem'
+                  position: "absolute",
+                  bottom: "20px",
+                  display: "flex",
+                  gap: "0.5rem",
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
@@ -366,18 +427,25 @@ export default function ProductDetailPage() {
                     key={index}
                     onClick={() => setSelectedImage(img)}
                     style={{
-                      width: '60px',
-                      height: '60px',
-                      borderRadius: '8px',
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      border: selectedImage === img ? '2px solid #8b5cf6' : '2px solid rgba(255,255,255,0.3)',
+                      width: "60px",
+                      height: "60px",
+                      borderRadius: "8px",
+                      overflow: "hidden",
+                      cursor: "pointer",
+                      border:
+                        selectedImage === img
+                          ? "2px solid #8b5cf6"
+                          : "2px solid rgba(255,255,255,0.3)",
                     }}
                   >
                     <img
                       src={img}
                       alt={`${product.name} ${index + 1}`}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
                     />
                   </div>
                 ))}
@@ -390,7 +458,9 @@ export default function ProductDetailPage() {
         <div className="product-detail-info">
           {/* Badges */}
           <div style={{ display: "flex", gap: "0.5rem" }}>
-            {product.isNewProduct && <span className="badge badge-new">ใหม่</span>}
+            {product.isNewProduct && (
+              <span className="badge badge-new">ใหม่</span>
+            )}
             {discount > 0 && (
               <span className="badge badge-sale">ลด {discount}%</span>
             )}
@@ -457,8 +527,8 @@ export default function ProductDetailPage() {
                     product.stock > 10
                       ? "#22C55E"
                       : product.stock > 0
-                        ? "#F59E0B"
-                        : "#EF4444",
+                      ? "#F59E0B"
+                      : "#EF4444",
                 }}
               >
                 {product.stock > 0
@@ -522,7 +592,14 @@ export default function ProductDetailPage() {
 
       {/* Reviews Section */}
       <section style={{ marginTop: "4rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "2rem",
+          }}
+        >
           <h2 style={{ color: "white", fontSize: "1.5rem", fontWeight: 700 }}>
             ⭐ รีวิวจากลูกค้า ({reviews.length})
           </h2>
@@ -546,24 +623,30 @@ export default function ProductDetailPage() {
 
         {/* Review Form */}
         {showReviewForm && (
-          <div style={{
-            background: "rgba(30, 41, 59, 0.5)",
-            borderRadius: "16px",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
-            padding: "2rem",
-            marginBottom: "2rem"
-          }}>
-            <h3 style={{ color: "white", marginBottom: "1.5rem" }}>เขียนรีวิว</h3>
+          <div
+            style={{
+              background: "rgba(30, 41, 59, 0.5)",
+              borderRadius: "16px",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+              padding: "2rem",
+              marginBottom: "2rem",
+            }}
+          >
+            <h3 style={{ color: "white", marginBottom: "1.5rem" }}>
+              เขียนรีวิว
+            </h3>
 
             {reviewError && (
-              <div style={{
-                padding: "1rem",
-                background: "rgba(239, 68, 68, 0.15)",
-                border: "1px solid rgba(239, 68, 68, 0.3)",
-                borderRadius: "12px",
-                color: "#ef4444",
-                marginBottom: "1rem"
-              }}>
+              <div
+                style={{
+                  padding: "1rem",
+                  background: "rgba(239, 68, 68, 0.15)",
+                  border: "1px solid rgba(239, 68, 68, 0.3)",
+                  borderRadius: "12px",
+                  color: "#ef4444",
+                  marginBottom: "1rem",
+                }}
+              >
                 {reviewError}
               </div>
             )}
@@ -571,7 +654,14 @@ export default function ProductDetailPage() {
             <form onSubmit={handleSubmitReview}>
               {/* Rating */}
               <div style={{ marginBottom: "1.5rem" }}>
-                <label style={{ display: "block", color: "#94a3b8", fontSize: "0.875rem", marginBottom: "0.5rem" }}>
+                <label
+                  style={{
+                    display: "block",
+                    color: "#94a3b8",
+                    fontSize: "0.875rem",
+                    marginBottom: "0.5rem",
+                  }}
+                >
                   คะแนน
                 </label>
                 <div style={{ display: "flex", gap: "0.5rem" }}>
@@ -579,13 +669,16 @@ export default function ProductDetailPage() {
                     <button
                       key={star}
                       type="button"
-                      onClick={() => setReviewForm({ ...reviewForm, rating: star })}
+                      onClick={() =>
+                        setReviewForm({ ...reviewForm, rating: star })
+                      }
                       style={{
                         background: "none",
                         border: "none",
                         fontSize: "2rem",
                         cursor: "pointer",
-                        color: star <= reviewForm.rating ? "#fbbf24" : "#4b5563"
+                        color:
+                          star <= reviewForm.rating ? "#fbbf24" : "#4b5563",
                       }}
                     >
                       ★
@@ -596,13 +689,22 @@ export default function ProductDetailPage() {
 
               {/* Title */}
               <div style={{ marginBottom: "1.5rem" }}>
-                <label style={{ display: "block", color: "#94a3b8", fontSize: "0.875rem", marginBottom: "0.5rem" }}>
+                <label
+                  style={{
+                    display: "block",
+                    color: "#94a3b8",
+                    fontSize: "0.875rem",
+                    marginBottom: "0.5rem",
+                  }}
+                >
                   หัวข้อรีวิว
                 </label>
                 <input
                   type="text"
                   value={reviewForm.title}
-                  onChange={(e) => setReviewForm({ ...reviewForm, title: e.target.value })}
+                  onChange={(e) =>
+                    setReviewForm({ ...reviewForm, title: e.target.value })
+                  }
                   required
                   style={{
                     width: "100%",
@@ -612,7 +714,7 @@ export default function ProductDetailPage() {
                     borderRadius: "12px",
                     color: "white",
                     fontSize: "1rem",
-                    outline: "none"
+                    outline: "none",
                   }}
                   placeholder="เช่น คุณภาพดีมาก"
                 />
@@ -620,12 +722,21 @@ export default function ProductDetailPage() {
 
               {/* Comment */}
               <div style={{ marginBottom: "1.5rem" }}>
-                <label style={{ display: "block", color: "#94a3b8", fontSize: "0.875rem", marginBottom: "0.5rem" }}>
+                <label
+                  style={{
+                    display: "block",
+                    color: "#94a3b8",
+                    fontSize: "0.875rem",
+                    marginBottom: "0.5rem",
+                  }}
+                >
                   รายละเอียด
                 </label>
                 <textarea
                   value={reviewForm.comment}
-                  onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                  onChange={(e) =>
+                    setReviewForm({ ...reviewForm, comment: e.target.value })
+                  }
                   required
                   rows={4}
                   style={{
@@ -637,7 +748,7 @@ export default function ProductDetailPage() {
                     color: "white",
                     fontSize: "1rem",
                     outline: "none",
-                    resize: "vertical"
+                    resize: "vertical",
                   }}
                   placeholder="แชร์ประสบการณ์การใช้งานของคุณ..."
                 />
@@ -655,7 +766,7 @@ export default function ProductDetailPage() {
                     borderRadius: "12px",
                     color: "white",
                     fontWeight: 500,
-                    cursor: "pointer"
+                    cursor: "pointer",
                   }}
                 >
                   ยกเลิก
@@ -666,13 +777,14 @@ export default function ProductDetailPage() {
                   style={{
                     flex: 1,
                     padding: "0.875rem",
-                    background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
+                    background:
+                      "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
                     border: "none",
                     borderRadius: "12px",
                     color: "white",
                     fontWeight: 600,
                     cursor: submittingReview ? "not-allowed" : "pointer",
-                    opacity: submittingReview ? 0.5 : 1
+                    opacity: submittingReview ? 0.5 : 1,
                   }}
                 >
                   {submittingReview ? "กำลังส่ง..." : "ส่งรีวิว"}
@@ -684,28 +796,32 @@ export default function ProductDetailPage() {
 
         {/* Success Message */}
         {reviewSuccess && (
-          <div style={{
-            padding: "1rem",
-            background: "rgba(16, 185, 129, 0.15)",
-            border: "1px solid rgba(16, 185, 129, 0.3)",
-            borderRadius: "12px",
-            color: "#10b981",
-            marginBottom: "2rem",
-            textAlign: "center"
-          }}>
+          <div
+            style={{
+              padding: "1rem",
+              background: "rgba(16, 185, 129, 0.15)",
+              border: "1px solid rgba(16, 185, 129, 0.3)",
+              borderRadius: "12px",
+              color: "#10b981",
+              marginBottom: "2rem",
+              textAlign: "center",
+            }}
+          >
             ✅ ส่งรีวิวสำเร็จ! ขอบคุณสำหรับความคิดเห็นของคุณ
           </div>
         )}
 
         {/* Reviews List */}
         {reviews.length === 0 ? (
-          <div style={{
-            background: "rgba(30, 41, 59, 0.5)",
-            borderRadius: "16px",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
-            padding: "3rem",
-            textAlign: "center"
-          }}>
+          <div
+            style={{
+              background: "rgba(30, 41, 59, 0.5)",
+              borderRadius: "16px",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+              padding: "3rem",
+              textAlign: "center",
+            }}
+          >
             <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>💬</div>
             <p style={{ color: "#64748b" }}>ยังไม่มีรีวิวสำหรับสินค้านี้</p>
             {user && !hasUserReviewed && (
@@ -714,25 +830,37 @@ export default function ProductDetailPage() {
                 style={{
                   marginTop: "1rem",
                   padding: "0.75rem 1.5rem",
-                  background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
+                  background:
+                    "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
                   border: "none",
                   borderRadius: "12px",
                   color: "white",
                   fontWeight: 600,
-                  cursor: "pointer"
+                  cursor: "pointer",
                 }}
               >
                 เขียนรีวิวแรก
               </button>
             )}
             {!user && (
-              <p style={{ color: "#64748b", marginTop: "1rem", fontSize: "0.875rem" }}>
-                <Link href="/login" style={{ color: "#8b5cf6" }}>เข้าสู่ระบบ</Link> เพื่อเขียนรีวิว
+              <p
+                style={{
+                  color: "#64748b",
+                  marginTop: "1rem",
+                  fontSize: "0.875rem",
+                }}
+              >
+                <Link href="/login" style={{ color: "#8b5cf6" }}>
+                  เข้าสู่ระบบ
+                </Link>{" "}
+                เพื่อเขียนรีวิว
               </p>
             )}
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
+          >
             {reviews.map((review) => (
               <div
                 key={review._id}
@@ -740,39 +868,78 @@ export default function ProductDetailPage() {
                   background: "rgba(30, 41, 59, 0.5)",
                   borderRadius: "16px",
                   border: "1px solid rgba(255, 255, 255, 0.1)",
-                  padding: "1.5rem"
+                  padding: "1.5rem",
                 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    marginBottom: "1rem",
+                  }}
+                >
                   <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem" }}>
-                      <div style={{
-                        width: "40px",
-                        height: "40px",
-                        borderRadius: "50%",
-                        background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
+                    <div
+                      style={{
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "center",
-                        color: "white",
-                        fontWeight: 600
-                      }}>
+                        gap: "0.75rem",
+                        marginBottom: "0.5rem",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "40px",
+                          height: "40px",
+                          borderRadius: "50%",
+                          background:
+                            "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: "white",
+                          fontWeight: 600,
+                        }}
+                      >
                         {review.userName.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p style={{ color: "white", fontWeight: 600, fontSize: "0.875rem" }}>{review.userName}</p>
+                        <p
+                          style={{
+                            color: "white",
+                            fontWeight: 600,
+                            fontSize: "0.875rem",
+                          }}
+                        >
+                          {review.userName}
+                        </p>
                         <p style={{ color: "#64748b", fontSize: "0.75rem" }}>
-                          {new Date(review.createdAt).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" })}
+                          {new Date(review.createdAt).toLocaleDateString(
+                            "th-TH",
+                            { day: "numeric", month: "short", year: "numeric" }
+                          )}
                         </p>
                       </div>
                     </div>
                   </div>
                   <div style={{ color: "#fbbf24", fontSize: "1rem" }}>
-                    {"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}
+                    {"★".repeat(review.rating)}
+                    {"☆".repeat(5 - review.rating)}
                   </div>
                 </div>
-                <h4 style={{ color: "white", fontWeight: 600, marginBottom: "0.5rem" }}>{review.title}</h4>
-                <p style={{ color: "#94a3b8", lineHeight: 1.6 }}>{review.comment}</p>
+                <h4
+                  style={{
+                    color: "white",
+                    fontWeight: 600,
+                    marginBottom: "0.5rem",
+                  }}
+                >
+                  {review.title}
+                </h4>
+                <p style={{ color: "#94a3b8", lineHeight: 1.6 }}>
+                  {review.comment}
+                </p>
               </div>
             ))}
           </div>

@@ -43,73 +43,79 @@ export default function ProductCard({ product }: ProductCardProps) {
     : 0;
 
   return (
-    <Link href={`/products/${product._id}`} className="product-card">
+    <div className="product-card">
       {/* Badges */}
       <div className="product-badges">
         {product.isNewProduct && <span className="badge badge-new">ใหม่</span>}
         {discount > 0 && <span className="badge badge-sale">-{discount}%</span>}
       </div>
 
-      {/* Image */}
-      <div className="product-image-container">
-        <Image
-          src={product.image}
-          alt={product.name}
-          width={400}
-          height={300}
-          className="product-image"
-        />
+      {/* Image - Clickable Link */}
+      <Link href={`/products/${product._id}`} className="product-image-link">
+        <div className="product-image-container">
+          <Image
+            src={product.image}
+            alt={product.name}
+            width={400}
+            height={300}
+            className="product-image"
+          />
+        </div>
+      </Link>
+
+      {/* Info */}
+      <div className="product-info">
+        <Link href={`/products/${product._id}`} className="product-info-link">
+          <span className="product-brand">{product.brand}</span>
+          <h3 className="product-name">{product.name}</h3>
+
+          {/* Rating */}
+          <div className="product-rating">
+            <span className="stars">
+              {"★".repeat(Math.round(product.rating))}
+              {"☆".repeat(5 - Math.round(product.rating))}
+            </span>
+            <span className="rating-text">({product.reviews})</span>
+          </div>
+
+          {/* Switch Type */}
+          {product.switchType && (
+            <p className="product-switch">🔘 {product.switchType}</p>
+          )}
+
+          {/* Price */}
+          <div className="product-price-container">
+            <span className="product-price">{formatPrice(product.price)}</span>
+            {product.originalPrice && (
+              <span className="product-original-price">
+                {formatPrice(product.originalPrice)}
+              </span>
+            )}
+          </div>
+
+          {/* Stock */}
+          <div
+            className={`stock-status ${
+              product.stock > 10
+                ? "in-stock"
+                : product.stock > 0
+                ? "low-stock"
+                : "out-of-stock"
+            }`}
+          >
+            {product.stock > 10
+              ? "✓ มีสินค้า"
+              : product.stock > 0
+              ? `เหลือ ${product.stock} ชิ้น`
+              : "สินค้าหมด"}
+          </div>
+        </Link>
+
+        {/* Add to Cart Button */}
         <button className="quick-add-button" onClick={handleAddToCart}>
           🛒 เพิ่มลงตะกร้า
         </button>
       </div>
-
-      {/* Info */}
-      <div className="product-info">
-        <span className="product-brand">{product.brand}</span>
-        <h3 className="product-name">{product.name}</h3>
-
-        {/* Rating */}
-        <div className="product-rating">
-          <span className="stars">
-            {"★".repeat(Math.round(product.rating))}
-            {"☆".repeat(5 - Math.round(product.rating))}
-          </span>
-          <span className="rating-text">({product.reviews})</span>
-        </div>
-
-        {/* Switch Type */}
-        {product.switchType && (
-          <p className="product-switch">🔘 {product.switchType}</p>
-        )}
-
-        {/* Price */}
-        <div className="product-price-container">
-          <span className="product-price">{formatPrice(product.price)}</span>
-          {product.originalPrice && (
-            <span className="product-original-price">
-              {formatPrice(product.originalPrice)}
-            </span>
-          )}
-        </div>
-
-        {/* Stock */}
-        <div
-          className={`stock-status ${
-            product.stock > 10
-              ? "in-stock"
-              : product.stock > 0
-              ? "low-stock"
-              : "out-of-stock"
-          }`}
-        >
-          {product.stock > 10
-            ? "✓ มีสินค้า"
-            : product.stock > 0
-            ? `เหลือ ${product.stock} ชิ้น`
-            : "สินค้าหมด"}
-        </div>
-      </div>
-    </Link>
+    </div>
   );
 }
