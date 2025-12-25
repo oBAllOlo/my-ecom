@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -13,11 +13,23 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const wasAuthenticatedOnMount = useRef(isAuthenticated);
+  const hasJustLoggedIn = useRef(false);
 
-  // Redirect if already logged in
+  // Redirect if already logged in (แต่ไม่ใช่การ login ใหม่)
   useEffect(() => {
-    if (isAuthenticated) {
-      toast.info("🚧 ฟีเจอร์นี้กำลังพัฒนา - เร็วๆ นี้!");
+    // ถ้าเพิ่ง login ไป ไม่ต้องแสดง toast
+    if (hasJustLoggedIn.current) {
+      return;
+    }
+
+    // แสดง toast เฉพาะเมื่อผู้ใช้ที่ login แล้วพยายามเข้า login page
+    // (คือ isAuthenticated เป็น true ตอน mount)
+    if (isAuthenticated && wasAuthenticatedOnMount.current) {
+      // ใช้ toast.id เพื่อป้องกันการแสดง toast ซ้ำ
+      toast.info("🚧 ฟีเจอร์นี้กำลังพัฒนา - เร็วๆ นี้!", {
+        id: "login-redirect-toast",
+      });
       router.push("/");
     }
   }, [isAuthenticated, router]);
@@ -29,6 +41,7 @@ export default function LoginPage() {
     const result = await login(email, password);
 
     if (result.success) {
+      hasJustLoggedIn.current = true; // ตั้ง flag ว่าเพิ่ง login
       toast.success("เข้าสู่ระบบสำเร็จ!");
       router.push("/");
     } else {

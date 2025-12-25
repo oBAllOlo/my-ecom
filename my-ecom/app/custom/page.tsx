@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 
 interface CustomPart {
@@ -42,7 +44,9 @@ const categoryIcons: Record<CategoryType, string> = {
 };
 
 export default function CustomKeyboardPage() {
+  const router = useRouter();
   const { addToCart } = useCart();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   // const { showToast } = useToast();
 
   const [parts, setParts] = useState<CustomPart[]>([]);
@@ -59,6 +63,17 @@ export default function CustomKeyboardPage() {
   });
   const [openCategory, setOpenCategory] = useState<CategoryType | null>("base");
   const [showPreview, setShowPreview] = useState(false); // Mobile tab state
+
+  // Check authentication when page loads
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      // ใช้ toast.id เพื่อป้องกันการแสดง toast ซ้ำ
+      toast.error("กรุณาเข้าสู่ระบบก่อนใช้งานฟีเจอร์นี้", {
+        id: "custom-auth-required",
+      });
+      router.push("/login");
+    }
+  }, [isAuthenticated, authLoading, router]);
 
   useEffect(() => {
     const fetchParts = async () => {
@@ -162,6 +177,12 @@ export default function CustomKeyboardPage() {
   };
 
   const handleSelectPart = (category: CategoryType, part: CustomPart) => {
+    if (!isAuthenticated) {
+      toast.error("กรุณาเข้าสู่ระบบก่อนเลือกชิ้นส่วน");
+      router.push("/login");
+      return;
+    }
+
     setSelectedParts((prev) => ({ ...prev, [category]: part }));
 
     if (category === "switch") {
@@ -184,6 +205,12 @@ export default function CustomKeyboardPage() {
     selectedParts.wire;
 
   const handleAddToCart = () => {
+    if (!isAuthenticated) {
+      toast.error("กรุณาเข้าสู่ระบบก่อนเพิ่มสินค้าลงตะกร้า");
+      router.push("/login");
+      return;
+    }
+
     if (!isComplete) {
       toast.error("กรุณาเลือกชิ้นส่วนให้ครบ");
       return;

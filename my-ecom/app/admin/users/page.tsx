@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
 interface User {
   _id: string;
@@ -59,9 +60,13 @@ export default function AdminUsers() {
             u._id === userId ? { ...u, role: newRole as "user" | "admin" } : u
           )
         );
+        toast.success(`เปลี่ยนบทบาทเป็น ${newRole === "admin" ? "ผู้ดูแลระบบ" : "ผู้ใช้ทั่วไป"} สำเร็จ`);
+      } else {
+        toast.error(data.error || "ไม่สามารถเปลี่ยนบทบาทได้");
       }
     } catch (error) {
       console.error("Error updating user role:", error);
+      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
     }
   };
 
@@ -73,9 +78,13 @@ export default function AdminUsers() {
       const data = await res.json();
       if (data.success) {
         setUsers(users.filter((u) => u._id !== userId));
+        toast.success("ลบผู้ใช้สำเร็จ");
+      } else {
+        toast.error(data.error || "ไม่สามารถลบผู้ใช้ได้");
       }
     } catch (error) {
       console.error("Error deleting user:", error);
+      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
     }
   };
 

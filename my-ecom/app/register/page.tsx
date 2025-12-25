@@ -65,7 +65,10 @@ export default function RegisterPage() {
   };
 
   const handleSocialClick = () => {
-    toast.info("🚧 ฟีเจอร์นี้กำลังพัฒนา - เร็วๆ นี้!");
+    // ใช้ toast.id เพื่อป้องกันการแสดง toast ซ้ำ
+    toast.info("🚧 ฟีเจอร์นี้กำลังพัฒนา - เร็วๆ นี้!", {
+      id: "register-social-feature",
+    });
   };
 
   return (

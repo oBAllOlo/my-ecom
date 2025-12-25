@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 import ProductCard from "@/components/ProductCard";
 
 interface Product {
@@ -124,6 +125,10 @@ export default function ProductDetailPage() {
 
     // ต้อง login ก่อนถึงจะเพิ่มสินค้าลงตะกร้าได้
     if (!user) {
+      // ใช้ toast.id เพื่อป้องกันการแสดง toast ซ้ำ
+      toast.error("กรุณาเข้าสู่ระบบก่อนเพิ่มสินค้าลงตะกร้า", {
+        id: "product-detail-add-to-cart-auth",
+      });
       router.push("/login");
       return;
     }
