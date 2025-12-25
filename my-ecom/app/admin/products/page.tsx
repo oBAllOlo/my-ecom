@@ -324,13 +324,13 @@ export default function AdminProducts() {
               <div className="p-4 border-t border-white/5 flex gap-3">
                 <button
                   onClick={() => setEditingProduct(product)}
-                  className="flex-1 py-3 bg-blue-500/10 border border-blue-500/30 rounded-xl text-blue-400 font-semibold cursor-pointer transition-all hover:bg-blue-500/20 hover:scale-[1.02]"
+                  className="flex-1 py-3 bg-blue-500/10 border-none rounded-xl text-blue-400 font-semibold cursor-pointer transition-all hover:bg-blue-500/20 hover:scale-[1.02]"
                 >
                   ✏️ แก้ไข
                 </button>
                 <button
                   onClick={() => handleDeleteClick(product)}
-                  className="flex-1 py-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 font-semibold cursor-pointer transition-all hover:bg-red-500/20 hover:scale-[1.02]"
+                  className="flex-1 py-3 bg-red-500/10 border-none rounded-xl text-red-400 font-semibold cursor-pointer transition-all hover:bg-red-500/20 hover:scale-[1.02]"
                 >
                   🗑️ ลบ
                 </button>

@@ -185,7 +185,7 @@ export default function AdminCategoriesPage() {
           <div className="flex flex-wrap gap-2 md:gap-4 w-full md:w-auto">
             <Link
               href="/admin"
-              className="flex-1 md:flex-initial text-center py-2 md:py-3 px-3 md:px-6 bg-white/5 border border-white/10 rounded-xl text-white no-underline font-medium text-sm md:text-base"
+              className="flex-1 md:flex-initial text-center py-2 md:py-3 px-3 md:px-6 bg-white/5 border-none rounded-xl text-white no-underline font-medium text-sm md:text-base"
             >
               ← กลับ
             </Link>

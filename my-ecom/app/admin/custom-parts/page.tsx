@@ -441,7 +441,7 @@ function PartCard({
               }
             }}
             min="0"
-            className="w-[60px] py-1 px-2 rounded border border-slate-700 bg-slate-900 text-slate-50 text-center outline-none focus:border-violet-500 transition-colors"
+            className="w-[60px] py-1 px-2 rounded border-none bg-slate-900 text-slate-50 text-center outline-none focus:ring-1 focus:ring-violet-500 transition-colors"
           />
         </div>
         <div className="flex gap-2">

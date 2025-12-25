@@ -177,7 +177,7 @@ export default function AdminUsers() {
                   value={u.role}
                   onChange={(e) => handleRoleChange(u._id, e.target.value)}
                   disabled={u._id === user._id}
-                  className="flex-1 py-3 px-4 bg-violet-500/10 border border-violet-500/30 rounded-xl text-slate-50 font-medium cursor-pointer transition-all hover:border-violet-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-3 px-4 bg-violet-500/10 border-none rounded-xl text-slate-50 font-medium cursor-pointer transition-all hover:bg-violet-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="user" className="bg-slate-800">
                     ผู้ใช้ทั่วไป
@@ -189,7 +189,7 @@ export default function AdminUsers() {
                 {u._id !== user._id && (
                   <button
                     onClick={() => handleDelete(u._id)}
-                    className="py-3 px-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 font-semibold cursor-pointer transition-all hover:bg-red-500/20 hover:border-red-500/50 hover:scale-105"
+                    className="py-3 px-4 bg-red-500/10 border-none rounded-xl text-red-400 font-semibold cursor-pointer transition-all hover:bg-red-500/20 hover:scale-105"
                   >
                     🗑️ ลบ
                   </button>

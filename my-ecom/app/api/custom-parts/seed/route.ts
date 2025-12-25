@@ -144,25 +144,9 @@ const seedData = [
     image: optimizeUrl(cloudinaryUrls.keycapBase[color] || ""),
   })),
 
-  // Keycap Add 1 - 14 colors + ไม่เพิ่ม
-  { category: "keycapAdd1", name: "ไม่เพิ่ม", price: 0, stock: 999, image: "" },
-  ...allColors.map((color) => ({
-    category: "keycapAdd1",
-    name: `Keycap Add 1 - ${color.charAt(0).toUpperCase() + color.slice(1)}`,
-    price: color === "black" || color === "white" ? 450 : 500,
-    stock: color === "black" || color === "white" ? 20 : 15,
-    image: optimizeUrl(cloudinaryUrls.keycapAdd1[color] || ""),
-  })),
+  
 
-  // Keycap Add 2 - 14 colors + ไม่เพิ่ม
-  { category: "keycapAdd2", name: "ไม่เพิ่ม", price: 0, stock: 999, image: "" },
-  ...allColors.map((color) => ({
-    category: "keycapAdd2",
-    name: `Keycap Add 2 - ${color.charAt(0).toUpperCase() + color.slice(1)}`,
-    price: color === "black" || color === "white" ? 350 : 400,
-    stock: color === "black" || color === "white" ? 20 : 15,
-    image: optimizeUrl(cloudinaryUrls.keycapAdd2[color] || ""),
-  })),
+  
 
   // Wire - 14 colors
   ...allColors.map((color) => ({
