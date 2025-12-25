@@ -16,6 +16,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPasswordHint, setShowPasswordHint] = useState(false);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -33,9 +34,35 @@ export default function RegisterPage() {
       return;
     }
 
+    // Validate password strength
+    if (password.length < 6) {
+      toast.error("รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร");
+      return;
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      toast.error("รหัสผ่านต้องมีตัวพิมพ์ใหญ่อย่างน้อย 1 ตัว");
+      return;
+    }
+
+    if (!/[a-z]/.test(password)) {
+      toast.error("รหัสผ่านต้องมีตัวพิมพ์เล็กอย่างน้อย 1 ตัว");
+      return;
+    }
+
+    if (!/[0-9]/.test(password)) {
+      toast.error("รหัสผ่านต้องมีตัวเลขอย่างน้อย 1 ตัว");
+      return;
+    }
+
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      toast.error("รหัสผ่านต้องมีอักขระพิเศษอย่างน้อย 1 ตัว เช่น !@#$%^&*");
+      return;
+    }
+
     // Validate name
     if (name.trim().length < 2) {
-      toast.error("รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร");
+      toast.error("ชื่อต้องมีความยาวอย่างน้อย 2 ตัวอักษร");
       return;
     }
 
@@ -107,17 +134,116 @@ export default function RegisterPage() {
             />
           </div>
 
-          <div className="form-group">
+          <div className="form-group" style={{ position: "relative" }}>
             <label className="form-label">รหัสผ่าน</label>
             <input
               type="password"
               className="form-input"
-              placeholder="อย่างน้อย 6 ตัวอักษร"
+              placeholder="สร้างรหัสผ่านที่ปลอดภัย"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onFocus={() => setShowPasswordHint(true)}
+              onBlur={() => setShowPasswordHint(false)}
               required
               minLength={6}
             />
+            {/* Password Requirements Popup */}
+            {showPasswordHint && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: "calc(100% + 1rem)",
+                  width: "280px",
+                  padding: "1rem",
+                  background:
+                    "linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%)",
+                  border: "1px solid rgba(139, 92, 246, 0.3)",
+                  borderRadius: "12px",
+                  boxShadow: "0 10px 40px rgba(0, 0, 0, 0.5)",
+                  zIndex: 100,
+                  fontSize: "0.8rem",
+                }}
+              >
+                <p
+                  style={{
+                    margin: "0 0 0.75rem 0",
+                    color: "#a78bfa",
+                    fontWeight: 600,
+                    fontSize: "0.85rem",
+                  }}
+                >
+                  📋 เงื่อนไขรหัสผ่าน:
+                </p>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.5rem",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      color: password.length >= 6 ? "#4ade80" : "#94a3b8",
+                    }}
+                  >
+                    <span>{password.length >= 6 ? "✅" : "⬜"}</span>
+                    <span>อย่างน้อย 6 ตัวอักษร</span>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      color: /[A-Z]/.test(password) ? "#4ade80" : "#94a3b8",
+                    }}
+                  >
+                    <span>{/[A-Z]/.test(password) ? "✅" : "⬜"}</span>
+                    <span>ตัวพิมพ์ใหญ่ (A-Z)</span>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      color: /[a-z]/.test(password) ? "#4ade80" : "#94a3b8",
+                    }}
+                  >
+                    <span>{/[a-z]/.test(password) ? "✅" : "⬜"}</span>
+                    <span>ตัวพิมพ์เล็ก (a-z)</span>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      color: /[0-9]/.test(password) ? "#4ade80" : "#94a3b8",
+                    }}
+                  >
+                    <span>{/[0-9]/.test(password) ? "✅" : "⬜"}</span>
+                    <span>ตัวเลข (0-9)</span>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      color: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+                        ? "#4ade80"
+                        : "#94a3b8",
+                    }}
+                  >
+                    <span>
+                      {/[!@#$%^&*(),.?":{}|<>]/.test(password) ? "✅" : "⬜"}
+                    </span>
+                    <span>อักขระพิเศษ (!@#$%^&*)</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="form-group">
