@@ -293,7 +293,7 @@ export default function OrdersPage() {
                   ).length
                 }
               </p>
-              <p className="text-amber-100 text-xs m-0">รอ...</p>
+              <p className="text-amber-100 text-xs m-0">รอดำเนินการ</p>
             </div>
           </div>
 

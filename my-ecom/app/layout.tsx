@@ -6,7 +6,6 @@ import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
 
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import { Toaster } from "sonner";
 
 const inter = Inter({
@@ -35,7 +34,6 @@ export default function RootLayout({
             <div className="page-container">
               <Header />
               <main className="main-content">{children}</main>
-              <Footer />
             </div>
           </CartProvider>
         </AuthProvider>
