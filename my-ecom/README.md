@@ -1,212 +1,372 @@
-# Custom Keyboard System | ระบบเว็บแอปพลิเคชันสำหรับการปรับแต่งและสั่งซื้อคีย์บอร์ดคอมพิวเตอร์
+# 🎹 Custom Keyboard System | ระบบเว็บแอปพลิเคชันสำหรับการปรับแต่งและสั่งซื้อคีย์บอร์ดคอมพิวเตอร์
 
-ระบบเว็บแอปพลิเคชันสำหรับการปรับแต่งและสั่งซื้อคีย์บอร์ดคอมพิวเตอร์ พร้อมฟีเจอร์ Custom Keyboard Builder
+<p align="center">
+  <strong>ระบบ E-commerce สำหรับการปรับแต่งและสั่งซื้อคีย์บอร์ดคอมพิวเตอร์ พร้อมฟีเจอร์ Custom Keyboard Builder</strong>
+</p>
+
+---
+
+## 📋 สารบัญ
+
+- [เทคโนโลยีที่ใช้](#-เทคโนโลยีที่ใช้)
+- [โครงสร้างโปรเจกต์](#-โครงสร้างโปรเจกต์)
+- [ฟีเจอร์](#-ฟีเจอร์)
+- [เริ่มต้นใช้งาน](#-เริ่มต้นใช้งาน)
+- [คำสั่งที่ใช้ได้](#-คำสั่งที่ใช้ได้)
+- [Build & Deployment](#-build--deployment)
+- [การตั้งค่า](#-การตั้งค่า)
+- [เรียนรู้เพิ่มเติม](#-เรียนรู้เพิ่มเติม)
+
+---
 
 ## 🚀 เทคโนโลยีที่ใช้
 
-### Frontend Framework & Core
+### 📦 Frontend Framework & Core
 
-- **Next.js 16.0.10** - React Framework สำหรับ Production
-  - App Router (App Directory)
-  - Server Components และ Client Components
-  - API Routes
-  - Image Optimization
-  - Standalone Output Mode
-- **React 19.2.1** - UI Library
-- **React DOM 19.2.1** - React Renderer
+| เทคโนโลยี     | เวอร์ชัน  | คำอธิบาย                              |
+| ------------- | --------- | ------------------------------------- |
+| **Next.js**   | `16.0.10` | React Framework สำหรับ Production     |
+| **React**     | `19.2.1`  | UI Library สำหรับสร้าง User Interface |
+| **React DOM** | `19.2.1`  | React Renderer สำหรับ DOM             |
 
-### Language & Type Safety
+**คุณสมบัติ Next.js ที่ใช้:**
 
-- **TypeScript 5** - Type-safe JavaScript
-- **ESLint 9** - Code Linting
-- **eslint-config-next 16.0.10** - การตั้งค่า ESLint สำหรับ Next.js
+- ✅ **App Router** (App Directory) - ระบบ routing ใหม่แบบ nested layouts
+- ✅ **Server Components & Client Components** - แยก logic ฝั่ง server และ client
+- ✅ **API Routes** - สร้าง API endpoints ภายในโปรเจกต์
+- ✅ **Image Optimization** - optimize รูปภาพอัตโนมัติ
+- ✅ **Standalone Output Mode** - สร้าง production build ที่มีขนาดเล็ก
 
-### Styling & UI
+---
 
-- **Tailwind CSS 3.4.19** - Utility-first CSS Framework
-- **@tailwindcss/postcss 4** - PostCSS Plugin สำหรับ Tailwind
-- **PostCSS 8.5.6** - เครื่องมือแปลง CSS
-- **Autoprefixer 10.4.23** - เพิ่ม CSS Vendor Prefixes
-- **Bootstrap 5.3.8** - UI Components เพิ่มเติม
+### 🔷 Language & Type Safety
 
-### Database & ORM
+| เทคโนโลยี              | เวอร์ชัน  | คำอธิบาย                          |
+| ---------------------- | --------- | --------------------------------- |
+| **TypeScript**         | `^5`      | ภาษา JavaScript ที่มี Type Safety |
+| **ESLint**             | `^9`      | เครื่องมือตรวจสอบคุณภาพโค้ด       |
+| **eslint-config-next** | `16.0.10` | การตั้งค่า ESLint สำหรับ Next.js  |
 
-- **MongoDB** - NoSQL Database
-- **Mongoose 9.0.2** - MongoDB Object Modeling
+**ประโยชน์ของ TypeScript:**
 
-### Authentication & Security
+- 🛡️ ตรวจจับ error ตั้งแต่ตอน compile
+- 📝 IntelliSense และ autocomplete ที่ดีขึ้น
+- 📚 เป็น documentation ในตัว
+- 🔄 refactor โค้ดได้ง่ายขึ้น
 
-- **bcryptjs 3.0.3** - Password Hashing
-- **@types/bcryptjs 2.4.6** - TypeScript Types
+---
 
-### Payment Gateway
+### 🎨 Styling & UI
 
-- **Omise 1.1.0** - Payment Processing
-  - ชำระด้วยบัตรเครดิต
-  - Internet Banking
+| เทคโนโลยี                | เวอร์ชัน   | คำอธิบาย                            |
+| ------------------------ | ---------- | ----------------------------------- |
+| **Tailwind CSS**         | `^3.4.19`  | Utility-first CSS Framework         |
+| **@tailwindcss/postcss** | `^4`       | PostCSS Plugin สำหรับ Tailwind      |
+| **PostCSS**              | `^8.5.6`   | เครื่องมือแปลง CSS                  |
+| **Autoprefixer**         | `^10.4.23` | เพิ่ม CSS Vendor Prefixes อัตโนมัติ |
+| **Bootstrap**            | `^5.3.8`   | UI Components เพิ่มเติม             |
 
-### File Upload & Media
+**คุณสมบัติการ Styling:**
 
-- **Cloudinary 2.8.0** - Cloud Image & Video Management
-  - อัปโหลดรูปภาพ
-  - Image Optimization
-  - CDN Delivery
+- 🎯 Utility classes สำหรับ rapid development
+- 📱 Responsive design ในตัว
+- 🌙 รองรับ Dark mode
+- ⚡ PurgeCSS สำหรับ production build ที่เล็ก
 
-### Email Service
+---
 
-- **Nodemailer 7.0.11** - Email Sending
-- **@types/nodemailer 7.0.4** - TypeScript Types
+### 🗄️ Database & ORM
 
-### UI Components & Notifications
+| เทคโนโลยี    | เวอร์ชัน | คำอธิบาย                             |
+| ------------ | -------- | ------------------------------------ |
+| **MongoDB**  | -        | NoSQL Database แบบ Document-based    |
+| **Mongoose** | `^9.0.2` | MongoDB Object Document Mapper (ODM) |
 
-- **Sonner 2.0.7** - Toast Notification Library
-- **Recharts 3.6.0** - Chart Library (สำหรับ Admin Dashboard)
+**โครงสร้างฐานข้อมูล:**
 
-### Development Tools
+```
+📁 Models
+├── 👤 User          - ข้อมูลผู้ใช้งาน (ชื่อ, อีเมล, password, ที่อยู่, role)
+├── 📦 Product       - ข้อมูลสินค้า (ชื่อ, ราคา, รูปภาพ, หมวดหมู่, stock)
+├── 📁 Category      - หมวดหมู่สินค้า
+├── 🛒 Order         - คำสั่งซื้อ (สินค้า, สถานะ, การชำระเงิน, การจัดส่ง)
+├── 🔧 CustomPart    - ชิ้นส่วนสำหรับ Custom Keyboard
+├── ⭐ Review        - รีวิวสินค้า
+├── 🔑 OTP           - รหัส OTP สำหรับยืนยันตัวตน
+└── ⚙️ Settings      - การตั้งค่าระบบ
+```
 
-- **dotenv 17.2.3** - จัดการ Environment Variables
-- **ts-node 10.9.2** - รัน TypeScript บน Node.js
-- **@types/node 20.19.27** - TypeScript Types สำหรับ Node.js
-- **@types/react 19** - TypeScript Types สำหรับ React
-- **@types/react-dom 19** - TypeScript Types สำหรับ React DOM
+---
+
+### 🔐 Authentication & Security
+
+| เทคโนโลยี           | เวอร์ชัน | คำอธิบาย                              |
+| ------------------- | -------- | ------------------------------------- |
+| **bcryptjs**        | `^3.0.3` | การเข้ารหัส Password แบบ one-way hash |
+| **@types/bcryptjs** | `^2.4.6` | TypeScript Types                      |
+
+**ระบบ Authentication:**
+
+- 🔒 Password hashing ด้วย bcrypt (salt rounds = 10)
+- 📧 Email verification ด้วย OTP
+- 🍪 Session management ด้วย cookies
+- 🛡️ Role-based access control (User/Admin)
+
+---
+
+### 💳 Payment Gateway
+
+| เทคโนโลยี | เวอร์ชัน | คำอธิบาย                        |
+| --------- | -------- | ------------------------------- |
+| **Omise** | `^1.1.0` | Payment Gateway สำหรับประเทศไทย |
+
+**ช่องทางการชำระเงินที่รองรับ:**
+
+- 💳 **Credit Card** - Visa, Mastercard, JCB
+- 🏦 **Internet Banking** - ธนาคารต่างๆ ในประเทศไทย
+- ✅ **Real-time** payment status updates
+
+---
+
+### ☁️ File Upload & Media
+
+| เทคโนโลยี      | เวอร์ชัน | คำอธิบาย                       |
+| -------------- | -------- | ------------------------------ |
+| **Cloudinary** | `^2.8.0` | Cloud Image & Video Management |
+
+**คุณสมบัติ:**
+
+- 📤 อัปโหลดรูปภาพสินค้า
+- 🖼️ Automatic image optimization (`f_auto`, `q_auto`)
+- 🌐 CDN Delivery ทั่วโลก
+- 📐 Dynamic resize และ crop
+
+---
+
+### 📧 Email Service
+
+| เทคโนโลยี             | เวอร์ชัน  | คำอธิบาย              |
+| --------------------- | --------- | --------------------- |
+| **Nodemailer**        | `^7.0.11` | Email Sending Library |
+| **@types/nodemailer** | `^7.0.4`  | TypeScript Types      |
+
+**ประเภทอีเมลที่ส่ง:**
+
+- ✉️ OTP สำหรับยืนยันอีเมล
+- 📦 แจ้งเตือนคำสั่งซื้อใหม่
+- 🚚 แจ้งเตือนสถานะการจัดส่ง
+- 📋 หมายเลขพัสดุ
+
+---
+
+### 🔔 UI Components & Notifications
+
+| เทคโนโลยี    | เวอร์ชัน | คำอธิบาย                             |
+| ------------ | -------- | ------------------------------------ |
+| **Sonner**   | `^2.0.7` | Toast Notification Library           |
+| **Recharts** | `^3.6.0` | Chart Library สำหรับ Admin Dashboard |
+
+---
+
+### 🛠️ Development Tools
+
+| เทคโนโลยี            | เวอร์ชัน    | คำอธิบาย                          |
+| -------------------- | ----------- | --------------------------------- |
+| **dotenv**           | `^17.2.3`   | จัดการ Environment Variables      |
+| **ts-node**          | `^10.9.2`   | รัน TypeScript บน Node.js โดยตรง  |
+| **@types/node**      | `^20.19.27` | TypeScript Types สำหรับ Node.js   |
+| **@types/react**     | `^19`       | TypeScript Types สำหรับ React     |
+| **@types/react-dom** | `^19`       | TypeScript Types สำหรับ React DOM |
+
+---
 
 ## 📁 โครงสร้างโปรเจกต์
 
 ```
 my-ecom/
-├── app/                    # Next.js App Router
-│   ├── admin/              # หน้า Admin Dashboard
-│   │   ├── categories/     # จัดการหมวดหมู่
-│   │   ├── custom-parts/   # จัดการชิ้นส่วนคีย์บอร์ด
-│   │   ├── orders/         # จัดการคำสั่งซื้อ
-│   │   ├── products/       # จัดการสินค้า
-│   │   └── users/          # จัดการผู้ใช้
-│   ├── api/                # API Routes
-│   │   ├── auth/           # API สำหรับ Authentication
-│   │   ├── categories/     # API สำหรับหมวดหมู่
-│   │   ├── custom-parts/   # API สำหรับชิ้นส่วนคีย์บอร์ด
-│   │   ├── orders/         # API สำหรับคำสั่งซื้อ
-│   │   ├── payment/        # API สำหรับการชำระเงิน (Omise)
-│   │   ├── products/       # API สำหรับสินค้า
-│   │   ├── reviews/        # API สำหรับรีวิว
-│   │   └── users/          # API สำหรับผู้ใช้
-│   ├── cart/               # หน้าตะกร้าสินค้า
-│   ├── checkout/           # หน้าชำระเงิน
-│   ├── custom/             # หน้าสร้างคีย์บอร์ด Custom
-│   ├── login/              # หน้าเข้าสู่ระบบ
-│   ├── orders/             # หน้าคำสั่งซื้อของผู้ใช้
-│   ├── products/           # หน้ารายการสินค้าและรายละเอียด
-│   ├── profile/            # หน้าโปรไฟล์ผู้ใช้
-│   ├── register/           # หน้าสมัครสมาชิก
-│   ├── tracking/           # หน้าติดตามคำสั่งซื้อ
-│   └── verify/             # หน้ายืนยันอีเมล
-├── components/             # React Components
-│   ├── CartItem.tsx
-│   ├── ConfirmModal.tsx
-│   ├── Footer.tsx
-│   ├── Header.tsx
-│   └── ProductCard.tsx
-├── context/               # React Context Providers
-│   ├── AuthContext.tsx    # Context สำหรับ Authentication
-│   └── CartContext.tsx    # Context สำหรับตะกร้าสินค้า
-├── lib/                   # Utility Libraries
-│   ├── cloudinary.ts      # การตั้งค่า Cloudinary
-│   ├── email.ts           # บริการส่งอีเมล
-│   ├── mongodb.ts         # การเชื่อมต่อ MongoDB
-│   ├── omise.ts           # การตั้งค่า Omise Payment
-│   ├── shippingConfig.ts  # การตั้งค่าการจัดส่ง
-│   └── types.ts           # TypeScript Types
-├── models/                # Mongoose Models
-│   ├── Category.ts
-│   ├── CustomPart.ts
-│   ├── Order.ts
-│   ├── OTP.ts
-│   ├── Product.ts
-│   ├── Review.ts
-│   ├── Settings.ts
-│   └── User.ts
-└── public/                # Static Assets
-    └── audio/             # เสียง Switch
+├── 📂 app/                      # Next.js App Router
+│   ├── 📂 admin/                # หน้า Admin Dashboard
+│   │   ├── categories/          # จัดการหมวดหมู่
+│   │   ├── custom-parts/        # จัดการชิ้นส่วนคีย์บอร์ด
+│   │   ├── orders/              # จัดการคำสั่งซื้อ
+│   │   ├── products/            # จัดการสินค้า
+│   │   └── users/               # จัดการผู้ใช้
+│   │
+│   ├── 📂 api/                  # API Routes
+│   │   ├── auth/                # API Authentication (login, register, logout)
+│   │   ├── categories/          # CRUD หมวดหมู่
+│   │   ├── custom-parts/        # CRUD ชิ้นส่วนคีย์บอร์ด + seed
+│   │   ├── orders/              # CRUD คำสั่งซื้อ
+│   │   ├── payment/             # Omise Payment Integration
+│   │   ├── products/            # CRUD สินค้า
+│   │   ├── reviews/             # CRUD รีวิว
+│   │   └── users/               # CRUD ผู้ใช้
+│   │
+│   ├── 📂 cart/                 # หน้าตะกร้าสินค้า
+│   ├── 📂 checkout/             # หน้าชำระเงิน
+│   ├── 📂 custom/               # หน้าสร้างคีย์บอร์ด Custom
+│   ├── 📂 login/                # หน้าเข้าสู่ระบบ
+│   ├── 📂 orders/               # หน้าประวัติคำสั่งซื้อ
+│   ├── 📂 products/             # หน้ารายการสินค้าและรายละเอียด
+│   ├── 📂 profile/              # หน้าโปรไฟล์ผู้ใช้
+│   ├── 📂 register/             # หน้าสมัครสมาชิก
+│   ├── 📂 tracking/             # หน้าติดตามคำสั่งซื้อ
+│   ├── 📂 verify/               # หน้ายืนยันอีเมล OTP
+│   │
+│   ├── globals.css              # Global CSS Styles
+│   ├── layout.tsx               # Root Layout
+│   ├── page.tsx                 # หน้าแรก (Home Page)
+│   └── favicon.ico              # ไอคอนเว็บไซต์
+│
+├── 📂 components/               # React Components ที่ใช้ซ้ำ
+│   ├── CartItem.tsx             # Component แสดงสินค้าในตะกร้า
+│   ├── ConfirmModal.tsx         # Modal ยืนยันการกระทำ
+│   ├── Header.tsx               # Navbar และเมนูหลัก
+│   └── ProductCard.tsx          # Card แสดงสินค้า
+│
+├── 📂 context/                  # React Context Providers
+│   ├── AuthContext.tsx          # จัดการ state การ login/logout
+│   └── CartContext.tsx          # จัดการ state ตะกร้าสินค้า
+│
+├── 📂 lib/                      # Utility Libraries
+│   ├── cloudinary.ts            # การตั้งค่าและ helpers Cloudinary
+│   ├── email.ts                 # บริการส่งอีเมล (OTP, แจ้งเตือน)
+│   ├── mockData.ts              # ข้อมูลตัวอย่างสำหรับ development
+│   ├── mongodb.ts               # การเชื่อมต่อ MongoDB
+│   ├── omise.ts                 # การตั้งค่า Omise Payment
+│   ├── shippingConfig.ts        # การตั้งค่าค่าจัดส่ง
+│   └── types.ts                 # TypeScript Type Definitions
+│
+├── 📂 models/                   # Mongoose Models
+│   ├── Category.ts              # Schema หมวดหมู่
+│   ├── CustomPart.ts            # Schema ชิ้นส่วนคีย์บอร์ด
+│   ├── Order.ts                 # Schema คำสั่งซื้อ
+│   ├── OTP.ts                   # Schema รหัส OTP
+│   ├── Product.ts               # Schema สินค้า
+│   ├── Review.ts                # Schema รีวิว
+│   ├── Settings.ts              # Schema การตั้งค่า
+│   ├── User.ts                  # Schema ผู้ใช้
+│   └── index.ts                 # Export รวม Models
+│
+├── 📂 public/                   # Static Assets
+│   ├── audio/                   # เสียง Switch สำหรับ Custom Builder
+│   └── ...                      # รูปภาพและไฟล์อื่นๆ
+│
+├── 📄 .env.local                # Environment Variables (ไม่อยู่ใน git)
+├── 📄 .gitignore                # ไฟล์ที่ไม่ต้อง track ใน git
+├── 📄 data_dictionary.md        # คำอธิบายโครงสร้างข้อมูล
+├── 📄 eslint.config.mjs         # การตั้งค่า ESLint
+├── 📄 next.config.ts            # การตั้งค่า Next.js
+├── 📄 package.json              # Dependencies และ scripts
+├── 📄 postcss.config.mjs        # การตั้งค่า PostCSS
+├── 📄 tailwind.config.js        # การตั้งค่า Tailwind CSS
+└── 📄 tsconfig.json             # การตั้งค่า TypeScript
 ```
+
+---
 
 ## ✨ ฟีเจอร์
 
-### ฟีเจอร์สำหรับผู้ใช้
+### 👤 ฟีเจอร์สำหรับผู้ใช้
 
-- 🔐 **ระบบ Authentication**
+#### 🔐 ระบบ Authentication
 
-  - สมัครสมาชิกพร้อมยืนยันอีเมล (OTP)
-  - เข้าสู่ระบบ/ออกจากระบบ
-  - เปลี่ยนรหัสผ่าน
-  - จัดการ Session
+| ฟีเจอร์         | คำอธิบาย                                 |
+| --------------- | ---------------------------------------- |
+| สมัครสมาชิก     | ลงทะเบียนพร้อมยืนยันอีเมลด้วย OTP 6 หลัก |
+| เข้าสู่ระบบ     | Login ด้วยอีเมลและรหัสผ่าน               |
+| ออกจากระบบ      | Logout และล้าง session                   |
+| เปลี่ยนรหัสผ่าน | Reset password                           |
+| จัดการ Session  | Cookie-based session management          |
 
-- 🛍️ **ฟีเจอร์ E-commerce**
+#### 🛍️ ฟีเจอร์ E-commerce
 
-  - ดูสินค้าและค้นหา
-  - กรองตามหมวดหมู่
-  - ดูรายละเอียดสินค้า
-  - ตะกร้าสินค้า
-  - กระบวนการชำระเงิน
-  - จัดการคำสั่งซื้อ
-  - ติดตามคำสั่งซื้อ
+| ฟีเจอร์           | คำอธิบาย                           |
+| ----------------- | ---------------------------------- |
+| ดูสินค้า          | แสดงรายการสินค้าพร้อมรูปภาพและราคา |
+| ค้นหาสินค้า       | ค้นหาด้วยชื่อหรือคำอธิบาย          |
+| กรองตามหมวดหมู่   | เลือกดูสินค้าตามประเภท             |
+| รายละเอียดสินค้า  | ดูข้อมูลครบถ้วนพร้อมรีวิว          |
+| ตะกร้าสินค้า      | เพิ่ม/ลบ/แก้ไขจำนวนสินค้า          |
+| Checkout          | กระบวนการชำระเงินครบวงจร           |
+| ประวัติคำสั่งซื้อ | ดูคำสั่งซื้อทั้งหมด                |
+| ติดตามคำสั่งซื้อ  | ติดตามสถานะและหมายเลขพัสดุ         |
 
-- 🛠️ **Custom Keyboard Builder**
+#### 🛠️ Custom Keyboard Builder
 
-  - สร้างคีย์บอร์ด Custom แบบ Interactive
-  - เลือกชิ้นส่วน (Base, Switch, Keycaps, Wire)
-  - คำนวณราคาแบบ Real-time
-  - ฟังเสียง Switch
-  - ดูตัวอย่างภาพ
+| ฟีเจอร์             | คำอธิบาย                      |
+| ------------------- | ----------------------------- |
+| เลือกชิ้นส่วน       | Base, Switch, Keycaps, Wire   |
+| ฟังเสียง Switch     | ทดสอบเสียงก่อนตัดสินใจ        |
+| ดูตัวอย่างภาพ       | แสดงภาพชิ้นส่วนที่เลือก       |
+| คำนวณราคา Real-time | แสดงราคารวมทันที              |
+| เพิ่มใส่ตะกร้า      | บันทึก Custom Build ใส่ตะกร้า |
 
-- 💳 **การชำระเงิน**
+#### 💳 การชำระเงิน
 
-  - ชำระด้วยบัตรเครดิต (Omise)
-  - Internet Banking
-  - ติดตามสถานะการชำระเงิน
+| ช่องทาง          | คำอธิบาย               |
+| ---------------- | ---------------------- |
+| Credit Card      | Visa, Mastercard, JCB  |
+| Internet Banking | ธนาคารในประเทศไทย      |
+| Payment Status   | ติดตามสถานะการชำระเงิน |
 
-- 👤 **โปรไฟล์ผู้ใช้**
-  - จัดการโปรไฟล์
-  - จัดการที่อยู่
-  - ประวัติคำสั่งซื้อ
-  - เปลี่ยนรหัสผ่าน
+#### 👤 โปรไฟล์ผู้ใช้
 
-### ฟีเจอร์สำหรับ Admin
+| ฟีเจอร์           | คำอธิบาย                   |
+| ----------------- | -------------------------- |
+| จัดการโปรไฟล์     | แก้ไขชื่อ, อีเมล, เบอร์โทร |
+| จัดการที่อยู่     | เพิ่ม/แก้ไขที่อยู่จัดส่ง   |
+| ประวัติคำสั่งซื้อ | ดูคำสั่งซื้อทั้งหมด        |
+| เปลี่ยนรหัสผ่าน   | เปลี่ยน password ใหม่      |
 
-- 📊 **Dashboard**
+---
 
-  - สถิติการขาย
-  - จัดการคำสั่งซื้อ
-  - จัดการสินค้า
-  - จัดการหมวดหมู่
-  - จัดการผู้ใช้
-  - จัดการชิ้นส่วนคีย์บอร์ด
+### 🔧 ฟีเจอร์สำหรับ Admin
 
-- 📦 **การจัดการคำสั่งซื้อ**
-  - อัปเดตสถานะคำสั่งซื้อ
-  - จัดการการจัดส่ง
-  - จัดการหมายเลขพัสดุ
-  - ส่งอีเมลแจ้งเตือน
+#### 📊 Dashboard
+
+| ฟีเจอร์        | คำอธิบาย                             |
+| -------------- | ------------------------------------ |
+| สถิติการขาย    | กราฟแสดงยอดขาย (Recharts)            |
+| สรุปคำสั่งซื้อ | จำนวน pending, processing, completed |
+| จัดการสินค้า   | CRUD สินค้าพร้อมอัปโหลดรูป           |
+| จัดการหมวดหมู่ | CRUD หมวดหมู่สินค้า                  |
+| จัดการผู้ใช้   | ดูและจัดการบัญชีผู้ใช้               |
+| จัดการชิ้นส่วน | CRUD ชิ้นส่วน Custom Keyboard        |
+
+#### 📦 การจัดการคำสั่งซื้อ
+
+| ฟีเจอร์           | คำอธิบาย                                   |
+| ----------------- | ------------------------------------------ |
+| อัปเดตสถานะ       | Pending → Processing → Shipped → Delivered |
+| หมายเลขพัสดุ      | ใส่ tracking number                        |
+| ส่งอีเมลแจ้งเตือน | แจ้งลูกค้าอัตโนมัติ                        |
+| ดูรายละเอียด      | ข้อมูลครบถ้วนของออเดอร์                    |
+
+---
 
 ## 🛠️ เริ่มต้นใช้งาน
 
-### สิ่งที่ต้องมี
+### 📋 สิ่งที่ต้องมี
 
-- Node.js 20.x หรือสูงกว่า
-- MongoDB Database
-- บัญชี Cloudinary (สำหรับอัปโหลดรูปภาพ)
-- บัญชี Omise (สำหรับการชำระเงิน)
-- บริการ Email (SMTP) สำหรับ OTP
+| รายการ         | รายละเอียด                  |
+| -------------- | --------------------------- |
+| **Node.js**    | เวอร์ชัน 20.x หรือสูงกว่า   |
+| **MongoDB**    | Local หรือ MongoDB Atlas    |
+| **Cloudinary** | สำหรับจัดเก็บรูปภาพ         |
+| **Omise**      | สำหรับระบบชำระเงิน          |
+| **SMTP Email** | สำหรับส่ง OTP (Gmail, etc.) |
 
-### การติดตั้ง
+### 📥 การติดตั้ง
 
-1. **Clone repository**
+#### 1. Clone repository
 
 ```bash
 git clone <repository-url>
 cd my-ecom/my-ecom
 ```
 
-2. **ติดตั้ง dependencies**
+#### 2. ติดตั้ง dependencies
 
 ```bash
 npm install
@@ -216,130 +376,195 @@ yarn install
 pnpm install
 ```
 
-3. **ตั้งค่า environment variables**
+#### 3. ตั้งค่า environment variables
 
 สร้างไฟล์ `.env.local` ในโฟลเดอร์ root:
 
 ```env
-# MongoDB
+# ==========================================
+# Database
+# ==========================================
 MONGODB_URI=mongodb://localhost:27017/keyboardth
-# หรือ
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/keyboardth
+# หรือใช้ MongoDB Atlas:
+# MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/keyboardth
 
-# Cloudinary
+# ==========================================
+# Cloudinary (Image Upload)
+# ==========================================
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 
-# Omise Payment
-OMISE_PUBLIC_KEY=your_omise_public_key
-OMISE_SECRET_KEY=your_omise_secret_key
+# ==========================================
+# Omise Payment Gateway
+# ==========================================
+OMISE_PUBLIC_KEY=pkey_test_xxxxxxxxxxxxx
+OMISE_SECRET_KEY=skey_test_xxxxxxxxxxxxx
 
+# ==========================================
 # Email Service (Nodemailer)
+# ==========================================
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your_email@gmail.com
 SMTP_PASS=your_app_password
 SMTP_FROM=noreply@keyboardth.com
 
+# ==========================================
 # App Configuration
+# ==========================================
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-4. **รัน development server**
+#### 4. รัน development server
 
 ```bash
 npm run dev
-# หรือ
-yarn dev
-# หรือ
-pnpm dev
 ```
 
-5. **เปิดเบราว์เซอร์**
-   ไปที่ [http://localhost:3000](http://localhost:3000)
+#### 5. เปิดเบราว์เซอร์
 
-### Seed Database (ไม่บังคับ)
+ไปที่ [http://localhost:3000](http://localhost:3000)
+
+---
+
+### 🌱 Seed Database (ไม่บังคับ)
 
 เพื่อเพิ่มข้อมูลตัวอย่างในฐานข้อมูล:
 
 ```bash
-# ส่ง POST request ไปที่ /api/seed
-# สามารถใช้ curl, Postman, หรือ API client อื่นๆ
+# Seed ชิ้นส่วน Custom Parts
+curl -X POST http://localhost:3000/api/custom-parts/seed
+
+# Seed ข้อมูลทั้งหมด
 curl -X POST http://localhost:3000/api/seed
 ```
 
-จะสร้างข้อมูล:
+**ข้อมูลที่จะถูก seed:**
 
-- สินค้าตัวอย่าง
-- หมวดหมู่ตัวอย่าง
-- ผู้ใช้ Admin (admin@keyboardth.com / admin123)
-- ผู้ใช้ทดสอบ (user@keyboardth.com / user123)
+- ✅ สินค้าตัวอย่าง
+- ✅ หมวดหมู่ตัวอย่าง
+- ✅ ชิ้นส่วน Custom Keyboard
+- ✅ ผู้ใช้ Admin: `admin@keyboardth.com` / `admin123`
+- ✅ ผู้ใช้ทดสอบ: `user@keyboardth.com` / `user123`
+
+---
 
 ## 📜 คำสั่งที่ใช้ได้
 
-- `npm run dev` - เริ่ม development server
-- `npm run build` - Build สำหรับ production
-- `npm run start` - เริ่ม production server
-- `npm run lint` - รัน ESLint
+| คำสั่ง          | คำอธิบาย                                  |
+| --------------- | ----------------------------------------- |
+| `npm run dev`   | เริ่ม development server พร้อม hot reload |
+| `npm run build` | Build สำหรับ production                   |
+| `npm run start` | เริ่ม production server                   |
+| `npm run lint`  | รัน ESLint ตรวจสอบโค้ด                    |
+
+---
 
 ## 🏗️ Build & Deployment
 
-### Build สำหรับ Production
+### 🔨 Build สำหรับ Production
 
 ```bash
 npm run build
 ```
 
-ผลลัพธ์การ build จะอยู่ในโฟลเดอร์ `.next` พร้อม standalone mode เพื่อการ deploy ที่ดีที่สุด
+ผลลัพธ์การ build จะอยู่ในโฟลเดอร์ `.next` พร้อม **standalone mode** เพื่อการ deploy ที่มีประสิทธิภาพ
 
-### Deploy บน Vercel
+### 🚀 Deploy บน Vercel
 
-1. Push โค้ดไปที่ GitHub
-2. Import repository ใน Vercel
-3. เพิ่ม environment variables ใน Vercel dashboard
-4. Deploy!
+1. Push โค้ดไปที่ GitHub/GitLab
+2. Import repository ใน [Vercel](https://vercel.com/new)
+3. เพิ่ม environment variables ใน Vercel Dashboard
+4. Deploy! ✨
 
-วิธีที่ง่ายที่สุดคือใช้ [Vercel Platform](https://vercel.com/new) จากผู้สร้าง Next.js
+> 💡 **แนะนำ:** Vercel เป็น platform ที่สร้างมาสำหรับ Next.js โดยเฉพาะ
+
+### 🐳 Deploy ด้วย Docker (ตัวเลือก)
+
+```dockerfile
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+EXPOSE 3000
+CMD ["node", "server.js"]
+```
+
+---
 
 ## 🔧 การตั้งค่า
 
 ### Next.js Configuration
 
-โปรเจกต์ใช้ standalone output mode เพื่อลดขนาด bundle และใช้ memory น้อยลง:
-
 ```typescript
 // next.config.ts
-output: "standalone";
+const nextConfig = {
+  output: "standalone", // ลดขนาด bundle, ใช้ memory น้อยลง
+  images: {
+    remotePatterns: [
+      { hostname: "images.unsplash.com" },
+      { hostname: "res.cloudinary.com" },
+    ],
+  },
+};
 ```
 
-### Image Optimization
+### Tailwind CSS Configuration
 
-Remote image patterns ถูกตั้งค่าสำหรับ:
+```javascript
+// tailwind.config.js
+module.exports = {
+  content: ["./app/**/*.{js,ts,jsx,tsx}", "./components/**/*.{js,ts,jsx,tsx}"],
+  theme: {
+    extend: {
+      // Custom colors, fonts, etc.
+    },
+  },
+};
+```
 
-- Unsplash (images.unsplash.com)
-- Cloudinary (res.cloudinary.com)
-
-### Memory Optimization
-
-Webpack memory optimizations ถูกเปิดใช้งานเพื่อประสิทธิภาพการ build ที่ดีขึ้น
+---
 
 ## 📚 เรียนรู้เพิ่มเติม
 
-- [Next.js Documentation](https://nextjs.org/docs) - เรียนรู้เกี่ยวกับ Next.js features และ API
-- [React Documentation](https://react.dev) - เรียนรู้ React
-- [Mongoose Documentation](https://mongoosejs.com) - เรียนรู้ Mongoose
-- [Tailwind CSS Documentation](https://tailwindcss.com) - เรียนรู้ Tailwind CSS
-- [Omise Documentation](https://www.omise.co/docs) - เรียนรู้ Omise Payment Integration
+| Resource                      | ลิงก์                                                                |
+| ----------------------------- | -------------------------------------------------------------------- |
+| 📖 Next.js Documentation      | [nextjs.org/docs](https://nextjs.org/docs)                           |
+| ⚛️ React Documentation        | [react.dev](https://react.dev)                                       |
+| 🍃 Mongoose Documentation     | [mongoosejs.com](https://mongoosejs.com)                             |
+| 🎨 Tailwind CSS Documentation | [tailwindcss.com](https://tailwindcss.com)                           |
+| 💳 Omise Documentation        | [omise.co/docs](https://www.omise.co/docs)                           |
+| ☁️ Cloudinary Documentation   | [cloudinary.com/documentation](https://cloudinary.com/documentation) |
+| 📧 Nodemailer Documentation   | [nodemailer.com](https://nodemailer.com)                             |
+
+---
 
 ## 📝 สิทธิ์การใช้งาน
 
 โปรเจกต์นี้เป็นโปรเจกต์ส่วนตัวและเป็นกรรมสิทธิ์
 
+---
+
 ## 👥 ผู้พัฒนา
 
-- Development Team
+- 🧑‍💻 Development Team
 
 ---
 
-**Custom Keyboard System** - ระบบเว็บแอปพลิเคชันสำหรับการปรับแต่งและสั่งซื้อคีย์บอร์ดคอมพิวเตอร์ ⌨️
+<p align="center">
+  <strong>⌨️ Custom Keyboard System</strong><br>
+  <em>ระบบเว็บแอปพลิเคชันสำหรับการปรับแต่งและสั่งซื้อคีย์บอร์ดคอมพิวเตอร์</em>
+</p>
+
+<p align="center">
+  <sub>อัปเดตล่าสุด: 26 ธันวาคม 2568</sub>
+</p>
