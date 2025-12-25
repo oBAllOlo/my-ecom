@@ -532,7 +532,7 @@ function TrackingContent() {
                 </span>
               </div>
               {order.items.map((item, idx) => {
-                const isCustomProduct = item.productId?.startsWith("custom-");
+                const isCustomProduct = item.productId?.startsWith("custom-") || !!item.customParts;
                 return (
                   <div
                     key={idx}
@@ -747,7 +747,7 @@ function TrackingContent() {
                                       }}
                                     />
                                   )}
-                                  <span style={{ color: "#94a3b8" }}>🎨</span>
+                                  <span style={{ color: "#94a3b8" }}>🔠</span>
                                   <span style={{ color: "white" }}>
                                     {item.customParts.keycapAdd1.name}
                                   </span>
@@ -774,7 +774,7 @@ function TrackingContent() {
                                       }}
                                     />
                                   )}
-                                  <span style={{ color: "#94a3b8" }}>🎨</span>
+                                  <span style={{ color: "#94a3b8" }}>🔣</span>
                                   <span style={{ color: "white" }}>
                                     {item.customParts.keycapAdd2.name}
                                   </span>

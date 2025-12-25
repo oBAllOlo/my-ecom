@@ -360,12 +360,16 @@ export default function ProfilePage() {
                   <input
                     type="text"
                     value={formData.address.phone}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        address: { ...formData.address, phone: e.target.value },
-                      })
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, "");
+                      if (value.length <= 10) {
+                        setFormData({
+                          ...formData,
+                          address: { ...formData.address, phone: value },
+                        });
+                      }
+                    }}
+                    maxLength={10}
                     style={{
                       background: "rgba(15, 23, 42, 0.5)",
                       border: "1px solid rgba(255, 255, 255, 0.1)",

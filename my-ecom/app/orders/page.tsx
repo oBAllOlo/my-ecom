@@ -112,14 +112,14 @@ export default function OrdersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
 
-  // Helper function to check if order contains custom products
+  // Check if order contains custom products
   const isCustomOrder = (order: Order) => {
     return order.items.some((item) => {
       const productId =
         typeof item.productId === "string"
           ? item.productId
           : item.productId?._id;
-      return productId?.startsWith("custom-");
+      return productId?.startsWith("custom-") || !!item.customParts;
     });
   };
 
@@ -800,7 +800,7 @@ export default function OrdersPage() {
                       typeof item.productId === "string"
                         ? item.productId
                         : item.productId?._id;
-                    const isCustomProduct = productId?.startsWith("custom-");
+                    const isCustomProduct = productId?.startsWith("custom-") || !!item.customParts;
 
                     return (
                       <div key={idx} className="p-4 bg-white/5 rounded-xl">
@@ -914,7 +914,7 @@ export default function OrdersPage() {
                                           />
                                         )}
                                         <span className="text-slate-300">
-                                          🎨 Add-on 1:
+                                          🔠 Add-on 1:
                                         </span>
                                         <span className="text-white">
                                           {item.customParts.keycapAdd1.name}
@@ -933,7 +933,7 @@ export default function OrdersPage() {
                                           />
                                         )}
                                         <span className="text-slate-300">
-                                          🎨 Add-on 2:
+                                          🔣 Add-on 2:
                                         </span>
                                         <span className="text-white">
                                           {item.customParts.keycapAdd2.name}

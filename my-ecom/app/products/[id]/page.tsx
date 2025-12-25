@@ -483,7 +483,7 @@ export default function ProductDetailPage() {
           {/* Price */}
           <div className="product-detail-price">
             <span className="detail-price">{formatPrice(product.price)}</span>
-            {product.originalPrice && (
+            {product.originalPrice && product.originalPrice > product.price && (
               <span className="detail-original-price">
                 {formatPrice(product.originalPrice)}
               </span>

@@ -904,7 +904,7 @@ export default function AdminOrders() {
                                           />
                                         )}
                                         <span className="text-slate-300">
-                                          🎨 Add-on 1:
+                                          🔠 Add-on 1:
                                         </span>
                                         <span className="text-white">
                                           {item.customParts.keycapAdd1.name}
@@ -923,7 +923,7 @@ export default function AdminOrders() {
                                           />
                                         )}
                                         <span className="text-slate-300">
-                                          🎨 Add-on 2:
+                                          🔣 Add-on 2:
                                         </span>
                                         <span className="text-white">
                                           {item.customParts.keycapAdd2.name}

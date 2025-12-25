@@ -38,8 +38,8 @@ const categoryIcons: Record<CategoryType, string> = {
   base: "🖥️",
   switch: "🔘",
   keycapBase: "⌨️",
-  keycapAdd1: "🎨",
-  keycapAdd2: "✨",
+  keycapAdd1: "🔠",
+  keycapAdd2: "🔣",
   wire: "🔌",
 };
 
@@ -62,7 +62,7 @@ export default function CustomKeyboardPage() {
     wire: null,
   });
   const [openCategory, setOpenCategory] = useState<CategoryType | null>("base");
-  const [showPreview, setShowPreview] = useState(false); // Mobile tab state
+
 
   // Check authentication when page loads
   useEffect(() => {
@@ -663,39 +663,13 @@ export default function CustomKeyboardPage() {
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row lg:h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Mobile Tab Navigation */}
-      <div className="lg:hidden flex border-b border-white/10 bg-slate-900/80">
-        <button
-          onClick={() => setShowPreview(false)}
-          className={`flex-1 py-3 text-sm font-semibold transition-all ${
-            !showPreview
-              ? "bg-violet-500/20 text-violet-400 border-b-2 border-violet-500"
-              : "text-slate-400"
-          }`}
-        >
-          🛠️ เลือกชิ้นส่วน
-        </button>
-        <button
-          onClick={() => setShowPreview(true)}
-          className={`flex-1 py-3 text-sm font-semibold transition-all ${
-            showPreview
-              ? "bg-violet-500/20 text-violet-400 border-b-2 border-violet-500"
-              : "text-slate-400"
-          }`}
-        >
-          👁️ ดูตัวอย่าง
-        </button>
-      </div>
+
 
       {/* Mobile View - Conditional rendering */}
       <div className="lg:hidden flex-1 flex flex-col overflow-hidden">
-        {showPreview ? (
-          <PreviewArea />
-        ) : (
-          <div className="flex-1 overflow-hidden bg-slate-900/80">
-            <PartsSelector />
-          </div>
-        )}
+        <div className="flex-1 overflow-hidden bg-slate-900/80">
+          <PartsSelector />
+        </div>
       </div>
 
       {/* Desktop View - Side by side */}

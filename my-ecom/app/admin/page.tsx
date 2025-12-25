@@ -1267,7 +1267,8 @@ export default function AdminDashboard() {
                 {recentOrders.map((order) => {
                   const statusBadge = getStatusBadge(order.status);
                   return (
-                    <div
+                    <Link
+                      href={`/admin/orders?id=${order._id}`}
                       key={order._id}
                       style={{
                         background: "rgba(15, 23, 42, 0.5)",
@@ -1277,7 +1278,11 @@ export default function AdminDashboard() {
                         justifyContent: "space-between",
                         alignItems: "center",
                         gap: "0.75rem",
+                        textDecoration: "none",
+                        transition: "all 0.2s",
+                        border: "1px solid transparent",
                       }}
+                      className="hover:border-violet-500/30 hover:bg-slate-800/80"
                     >
                       {/* Product Image */}
                       <div
@@ -1402,7 +1407,7 @@ export default function AdminDashboard() {
                           {statusBadge.label}
                         </span>
                       </div>
-                    </div>
+                    </Link>
                   );
                 })}
               </div>
@@ -1472,7 +1477,8 @@ export default function AdminDashboard() {
                 }}
               >
                 {lowStockProducts.map((product) => (
-                  <div
+                  <Link
+                    href={`/admin/products`} // Ideally specific product edit link if available
                     key={product._id}
                     style={{
                       background: "rgba(15, 23, 42, 0.5)",
@@ -1481,7 +1487,11 @@ export default function AdminDashboard() {
                       display: "flex",
                       alignItems: "center",
                       gap: "1rem",
+                      textDecoration: "none",
+                      transition: "all 0.2s",
+                      border: "1px solid transparent",
                     }}
+                    className="hover:border-violet-500/30 hover:bg-slate-800/80"
                   >
                     <div
                       style={{
@@ -1490,6 +1500,7 @@ export default function AdminDashboard() {
                         borderRadius: "8px",
                         overflow: "hidden",
                         background: "#1e293b",
+                        flexShrink: 0,
                       }}
                     >
                       <img
@@ -1508,9 +1519,8 @@ export default function AdminDashboard() {
                           color: "white",
                           fontWeight: 500,
                           fontSize: "0.875rem",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
+                          // Removed whiteSpace: nowrap to allow wrapping on mobile
+                          lineHeight: "1.4",
                         }}
                       >
                         {product.name}
@@ -1530,11 +1540,12 @@ export default function AdminDashboard() {
                         color: product.stock <= 3 ? "#ef4444" : "#f59e0b",
                         fontSize: "0.75rem",
                         fontWeight: 700,
+                        whiteSpace: "nowrap",
                       }}
                     >
                       เหลือ {product.stock}
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}

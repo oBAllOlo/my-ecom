@@ -30,7 +30,7 @@ declare global {
   }
 }
 
-type PaymentMethodType = "card" | "promptpay" | "banking";
+type PaymentMethodType = "card";
 
 interface CardFormData {
   number: string;
@@ -69,7 +69,7 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
-  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+
   const [omiseLoaded, setOmiseLoaded] = useState(false);
 
   // Thai address data
@@ -364,72 +364,9 @@ export default function CheckoutPage() {
     });
   };
 
-  // Handle PromptPay Payment
-  const handlePromptPayPayment = async (newOrderId: string) => {
-    const res = await fetch("/api/payment/create-source", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "promptpay",
-        amount: total,
-        orderId: newOrderId,
-      }),
-    });
 
-    const data = await res.json();
-    console.log("PromptPay response:", JSON.stringify(data, null, 2));
 
-    if (data.success) {
-      // Try QR code first
-      const qrUrl =
-        data.data.source?.scannable_code?.image?.download_uri ||
-        data.data.source?.scannable_code?.image;
 
-      if (qrUrl) {
-        setQrCodeUrl(typeof qrUrl === "string" ? qrUrl : qrUrl.download_uri);
-        setOrderId(newOrderId);
-        return true;
-      }
-
-      // If no QR code, redirect to authorize URL (Omise payment page)
-      if (data.data.authorizeUri) {
-        console.log("Redirecting to:", data.data.authorizeUri);
-        toast.info("กำลังเปลี่ยนไปหน้าชำระเงิน...");
-        // Use setTimeout to ensure toast shows before redirect
-        setTimeout(() => {
-          window.location.href = data.data.authorizeUri;
-        }, 500);
-        return true;
-      }
-
-      setOrderId(newOrderId);
-      toast.info("กรุณาตรวจสอบใน Omise Dashboard");
-      return true;
-    }
-    throw new Error(data.error || "PromptPay failed");
-  };
-
-  // Handle Internet Banking Payment
-  const handleBankingPayment = async (newOrderId: string) => {
-    const bankType = `internet_banking_${selectedBank}`;
-
-    const res = await fetch("/api/payment/create-source", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: bankType,
-        amount: total,
-        orderId: newOrderId,
-      }),
-    });
-
-    const data = await res.json();
-    if (data.success && data.data.authorizeUri) {
-      window.location.href = data.data.authorizeUri;
-      return true;
-    }
-    throw new Error(data.error || "Banking redirect failed");
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -477,16 +414,9 @@ export default function CheckoutPage() {
           toast.success("สั่งซื้อสำเร็จ!");
           break;
 
-        case "promptpay":
-          await handlePromptPayPayment(newOrderId);
-          // QR Code will be shown, user scans and pays
-          toast.info("กรุณาสแกน QR Code เพื่อชำระเงิน");
-          break;
 
-        case "banking":
-          await handleBankingPayment(newOrderId);
-          // Will redirect to bank
-          break;
+
+
       }
     } catch (error) {
       console.error("Payment error:", error);
@@ -498,61 +428,7 @@ export default function CheckoutPage() {
     }
   };
 
-  // Show QR Code for PromptPay
-  if (qrCodeUrl && orderId) {
-    return (
-      <div className="checkout-page">
-        <div
-          className="cart-empty"
-          style={{ background: "rgba(59, 130, 246, 0.1)" }}
-        >
-          <div className="cart-empty-icon">📱</div>
-          <h3 className="cart-empty-title" style={{ color: "#3B82F6" }}>
-            สแกน QR Code เพื่อชำระเงิน
-          </h3>
-          <p className="cart-empty-text">ยอดชำระ: {formatPrice(total)}</p>
-          <div
-            style={{
-              background: "white",
-              padding: "1rem",
-              borderRadius: "12px",
-              display: "inline-block",
-              margin: "1rem 0",
-            }}
-          >
-            <img
-              src={qrCodeUrl}
-              alt="PromptPay QR Code"
-              width={200}
-              height={200}
-            />
-          </div>
-          <p style={{ color: "var(--text-muted)", fontSize: "0.875rem" }}>
-            หมายเลขคำสั่งซื้อ: #{orderId.slice(-8)}
-          </p>
-          <p
-            style={{
-              color: "var(--text-muted)",
-              fontSize: "0.875rem",
-              marginBottom: "1rem",
-            }}
-          >
-            เมื่อชำระเงินแล้ว ระบบจะอัปเดตสถานะอัตโนมัติ
-          </p>
-          <button
-            className="btn btn-primary"
-            onClick={() => {
-              clearCart();
-              setOrderComplete(true);
-              setQrCodeUrl(null);
-            }}
-          >
-            ✓ ชำระเงินแล้ว
-          </button>
-        </div>
-      </div>
-    );
-  }
+
 
   if (items.length === 0 && !orderComplete) {
     return (
@@ -591,12 +467,7 @@ export default function CheckoutPage() {
     );
   }
 
-  const banks = [
-    { id: "scb", name: "ไทยพาณิชย์", color: "#4E2E8C" },
-    { id: "kbank", name: "กสิกรไทย", color: "#138F2D" },
-    { id: "bbl", name: "กรุงเทพ", color: "#1E4598" },
-    { id: "ktb", name: "กรุงไทย", color: "#1BA5E0" },
-  ];
+
 
   return (
     <>
@@ -827,21 +698,7 @@ export default function CheckoutPage() {
                   <span className="payment-label">บัตรเครดิต/เดบิต</span>
                 </label>
 
-                <label
-                  className={`payment-option ${
-                    paymentMethod === "banking" ? "selected" : ""
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="banking"
-                    checked={paymentMethod === "banking"}
-                    onChange={() => setPaymentMethod("banking")}
-                  />
-                  <span className="payment-icon">🏦</span>
-                  <span className="payment-label">Internet Banking</span>
-                </label>
+
               </div>
             </div>
 
@@ -1017,66 +874,7 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            {/* Bank Selection for Internet Banking */}
-            {paymentMethod === "banking" && (
-              <div className="form-section">
-                <h2 className="form-section-title">🏦 เลือกธนาคาร</h2>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(2, 1fr)",
-                    gap: "0.75rem",
-                  }}
-                >
-                  {banks.map((bank) => (
-                    <label
-                      key={bank.id}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.75rem",
-                        padding: "1rem",
-                        borderRadius: "12px",
-                        border:
-                          selectedBank === bank.id
-                            ? `2px solid ${bank.color}`
-                            : "1px solid rgba(255,255,255,0.1)",
-                        background:
-                          selectedBank === bank.id
-                            ? `${bank.color}15`
-                            : "rgba(255,255,255,0.02)",
-                        cursor: "pointer",
-                        transition: "all 0.2s",
-                      }}
-                    >
-                      <input
-                        type="radio"
-                        name="bank"
-                        value={bank.id}
-                        checked={selectedBank === bank.id}
-                        onChange={() => setSelectedBank(bank.id)}
-                        style={{ display: "none" }}
-                      />
-                      <div
-                        style={{
-                          width: "12px",
-                          height: "12px",
-                          borderRadius: "50%",
-                          border: `2px solid ${bank.color}`,
-                          background:
-                            selectedBank === bank.id
-                              ? bank.color
-                              : "transparent",
-                        }}
-                      />
-                      <span style={{ color: "white", fontWeight: 500 }}>
-                        {bank.name}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
+
           </form>
 
           {/* Order Summary */}
@@ -1124,6 +922,56 @@ export default function CheckoutPage() {
                   <div className="order-item-info">
                     <p className="order-item-name">{item.product.name}</p>
                     <p className="order-item-qty">จำนวน: {item.quantity}</p>
+
+                    {/* Custom Parts Breakdown */}
+                    {item.product.customParts && (
+                      <div
+                        style={{
+                          marginTop: "0.5rem",
+                          fontSize: "0.75rem",
+                          background: "rgba(139, 92, 246, 0.1)",
+                          borderRadius: "6px",
+                          padding: "0.5rem",
+                        }}
+                      >
+                        <p
+                          style={{
+                            margin: "0 0 0.25rem",
+                            color: "#a78bfa",
+                            fontWeight: 600,
+                          }}
+                        >
+                          🛠️ ชิ้นส่วนที่เลือก:
+                        </p>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "0.25rem",
+                            color: "#cbd5e1",
+                          }}
+                        >
+                          {item.product.customParts.base && (
+                            <span>🖥️ {item.product.customParts.base.name}</span>
+                          )}
+                          {item.product.customParts.switch && (
+                            <span>🔘 {item.product.customParts.switch.name}</span>
+                          )}
+                          {item.product.customParts.keycapBase && (
+                            <span>⌨️ {item.product.customParts.keycapBase.name}</span>
+                          )}
+                          {item.product.customParts.keycapAdd1 && (
+                            <span>🔠 {item.product.customParts.keycapAdd1.name}</span>
+                          )}
+                          {item.product.customParts.keycapAdd2 && (
+                            <span>🔣 {item.product.customParts.keycapAdd2.name}</span>
+                          )}
+                          {item.product.customParts.wire && (
+                            <span>🔌 {item.product.customParts.wire.name}</span>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <span className="order-item-price">
                     {formatPrice(item.product.price * item.quantity)}

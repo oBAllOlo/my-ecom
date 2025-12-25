@@ -86,7 +86,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           {/* Price */}
           <div className="product-price-container">
             <span className="product-price">{formatPrice(product.price)}</span>
-            {product.originalPrice && (
+            {product.originalPrice && product.originalPrice > product.price && (
               <span className="product-original-price">
                 {formatPrice(product.originalPrice)}
               </span>
