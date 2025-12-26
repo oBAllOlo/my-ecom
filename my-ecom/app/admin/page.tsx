@@ -404,9 +404,9 @@ export default function AdminDashboard() {
           ).length,
         };
         setStatusData([
-          { name: "รอชำระ", value: statusCounts.pending, color: "#f59e0b" },
+          { name: "รอชำระเงิน", value: statusCounts.pending, color: "#f59e0b" },
           {
-            name: "กำลังจัด",
+            name: "กำลังจัดส่ง",
             value: statusCounts.processing,
             color: "#3b82f6",
           },

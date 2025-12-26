@@ -226,6 +226,20 @@ export default function CheckoutPage() {
                 ...prev,
                 provinceId: matchedProvince.id,
               }));
+
+              // Also find district ID to load sub-districts
+              // Need to wait for districts to be loaded first
+              setTimeout(() => {
+                const matchedDistrict = districts.find(
+                  (d) => d.name_th === addr.district && d.province_id === matchedProvince.id
+                );
+                if (matchedDistrict) {
+                  setShippingForm((prev) => ({
+                    ...prev,
+                    districtId: matchedDistrict.id,
+                  }));
+                }
+              }, 100);
             }
           }
         } catch (error) {
@@ -1003,7 +1017,7 @@ export default function CheckoutPage() {
               onClick={handleSubmit}
               disabled={isSubmitting || !omiseLoaded}
             >
-              {isSubmitting ? "⏳ กำลังดำเนินการ..." : "✓ ยืนยันการชำระเงิน"}
+              {isSubmitting ? "⏳ กำลังดำเนินการ..." : !omiseLoaded ? "⏳ กำลังโหลดระบบชำระเงิน..." : "✓ ยืนยันการชำระเงิน"}
             </button>
 
             <div className="cart-summary-note">
