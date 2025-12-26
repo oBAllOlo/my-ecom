@@ -44,6 +44,7 @@ interface Order {
     phone: string;
     street: string;
     district: string;
+    subDistrict?: string;
     province: string;
     postalCode: string;
   };
@@ -994,7 +995,14 @@ export default function OrdersPage() {
                   <p>{selectedOrder.shippingAddress.phone}</p>
                   <p>{selectedOrder.shippingAddress.street}</p>
                   <p>
-                    {selectedOrder.shippingAddress.district},{" "}
+                    เขต/อำเภอ: {selectedOrder.shippingAddress.district}
+                  </p>
+                  {selectedOrder.shippingAddress.subDistrict && (
+                    <p>
+                      แขวง/ตำบล: {selectedOrder.shippingAddress.subDistrict}
+                    </p>
+                  )}
+                  <p>
                     {selectedOrder.shippingAddress.province}{" "}
                     {selectedOrder.shippingAddress.postalCode}
                   </p>

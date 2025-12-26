@@ -324,6 +324,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="row g-3">
+              {/* 1. ชื่อผู้รับ */}
               <div className="col-12">
                 <div className="mb-3">
                   <label className="block text-slate-400 text-sm mb-2 font-medium">
@@ -352,7 +353,8 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <div className="col-12 col-md-6">
+              {/* 2. เบอร์โทรศัพท์ */}
+              <div className="col-12">
                 <div className="mb-3">
                   <label className="block text-slate-400 text-sm mb-2 font-medium">
                     เบอร์โทรศัพท์
@@ -381,60 +383,7 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <div className="col-12 col-md-6">
-                <div className="mb-3">
-                  <label className="block text-slate-400 text-sm mb-2 font-medium">
-                    เขต/อำเภอ
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.address.district}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        address: {
-                          ...formData.address,
-                          district: e.target.value,
-                        },
-                      })
-                    }
-                    style={{
-                      background: "rgba(15, 23, 42, 0.5)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
-                      color: "white"
-                    }}
-                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-violet-500/50 transition-all placeholder-slate-500"
-                  />
-                </div>
-              </div>
-
-              <div className="col-12 col-md-6">
-                <div className="mb-3">
-                  <label className="block text-slate-400 text-sm mb-2 font-medium">
-                    แขวง/ตำบล
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.address.subDistrict}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        address: {
-                          ...formData.address,
-                          subDistrict: e.target.value,
-                        },
-                      })
-                    }
-                    style={{
-                      background: "rgba(15, 23, 42, 0.5)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
-                      color: "white"
-                    }}
-                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-violet-500/50 transition-all placeholder-slate-500"
-                  />
-                </div>
-              </div>
-
+              {/* 3. ที่อยู่ (บ้านเลขที่, ซอย, ถนน) */}
               <div className="col-12">
                 <div className="mb-3">
                   <label className="block text-slate-400 text-sm mb-2 font-medium">
@@ -463,6 +412,63 @@ export default function ProfilePage() {
                 </div>
               </div>
 
+              {/* 4. เขต/อำเภอ */}
+              <div className="col-12 col-md-6">
+                <div className="mb-3">
+                  <label className="block text-slate-400 text-sm mb-2 font-medium">
+                    เขต/อำเภอ
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.address.district}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        address: {
+                          ...formData.address,
+                          district: e.target.value,
+                        },
+                      })
+                    }
+                    style={{
+                      background: "rgba(15, 23, 42, 0.5)",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      color: "white"
+                    }}
+                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-violet-500/50 transition-all placeholder-slate-500"
+                  />
+                </div>
+              </div>
+
+              {/* 5. แขวง/ตำบล */}
+              <div className="col-12 col-md-6">
+                <div className="mb-3">
+                  <label className="block text-slate-400 text-sm mb-2 font-medium">
+                    แขวง/ตำบล
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.address.subDistrict}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        address: {
+                          ...formData.address,
+                          subDistrict: e.target.value,
+                        },
+                      })
+                    }
+                    style={{
+                      background: "rgba(15, 23, 42, 0.5)",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      color: "white"
+                    }}
+                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-violet-500/50 transition-all placeholder-slate-500"
+                  />
+                </div>
+              </div>
+
+              {/* 6. จังหวัด */}
               <div className="col-12 col-md-6">
                 <div className="mb-3">
                   <label className="block text-slate-400 text-sm mb-2 font-medium">
@@ -490,6 +496,7 @@ export default function ProfilePage() {
                 </div>
               </div>
 
+              {/* 7. รหัสไปรษณีย์ */}
               <div className="col-12 col-md-6">
                 <div className="mb-3">
                   <label className="block text-slate-400 text-sm mb-2 font-medium">
