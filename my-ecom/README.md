@@ -193,14 +193,18 @@ my-ecom/
 │   │   └── users/               # จัดการผู้ใช้
 │   │
 │   ├── 📂 api/                  # API Routes
-│   │   ├── auth/                # API Authentication (login, register, logout)
+│   │   ├── auth/                # API Authentication (login, register, logout, verify)
 │   │   ├── categories/          # CRUD หมวดหมู่
+│   │   ├── cron/                # Scheduled Tasks (auto cleanup)
 │   │   ├── custom-parts/        # CRUD ชิ้นส่วนคีย์บอร์ด + seed
-│   │   ├── orders/              # CRUD คำสั่งซื้อ
-│   │   ├── payment/             # Omise Payment Integration
+│   │   ├── orders/              # CRUD คำสั่งซื้อ + tracking
+│   │   ├── payment/             # Omise Payment Integration + webhooks
 │   │   ├── products/            # CRUD สินค้า
 │   │   ├── reviews/             # CRUD รีวิว
-│   │   └── users/               # CRUD ผู้ใช้
+│   │   ├── seed/                # Database Seeding
+│   │   ├── settings/            # ตั้งค่าระบบ (shipping, etc.)
+│   │   ├── upload/              # อัปโหลดรูปภาพ (Cloudinary)
+│   │   └── users/               # CRUD ผู้ใช้ + profile
 │   │
 │   ├── 📂 cart/                 # หน้าตะกร้าสินค้า
 │   ├── 📂 checkout/             # หน้าชำระเงิน
@@ -254,11 +258,13 @@ my-ecom/
 │
 ├── 📄 .env.local                # Environment Variables (ไม่อยู่ใน git)
 ├── 📄 .gitignore                # ไฟล์ที่ไม่ต้อง track ใน git
+├── 📄 cloudinary-urls.json      # รายการ URL รูปภาพบน Cloudinary
 ├── 📄 data_dictionary.md        # คำอธิบายโครงสร้างข้อมูล
 ├── 📄 eslint.config.mjs         # การตั้งค่า ESLint
 ├── 📄 next.config.ts            # การตั้งค่า Next.js
 ├── 📄 package.json              # Dependencies และ scripts
 ├── 📄 postcss.config.mjs        # การตั้งค่า PostCSS
+├── 📄 seed-urls.json            # URL รูปภาพสำหรับ Database Seeding
 ├── 📄 tailwind.config.js        # การตั้งค่า Tailwind CSS
 └── 📄 tsconfig.json             # การตั้งค่า TypeScript
 ```
