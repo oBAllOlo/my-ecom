@@ -195,7 +195,7 @@ export default function AdminCustomPartsPage() {
         <button
           className={`py-2 px-4 rounded-full border transition-all ${
             selectedCategory === "all"
-              ? "bg-violet-600 text-white border-violet-600"
+              ? "bg-primary-700 text-white border-primary-700"
               : "bg-slate-800 text-slate-400 border-transparent hover:bg-slate-700 hover:text-white hover:border-slate-600"
           }`}
           onClick={() => setSelectedCategory("all")}
@@ -207,7 +207,7 @@ export default function AdminCustomPartsPage() {
             key={key}
             className={`py-2 px-4 rounded-full border transition-all ${
               selectedCategory === key
-                ? "bg-violet-600 text-white border-violet-600"
+                ? "bg-primary-700 text-white border-primary-700"
                 : "bg-slate-800 text-slate-400 border-transparent hover:bg-slate-700 hover:text-white hover:border-slate-600"
             }`}
             onClick={() => setSelectedCategory(key)}
@@ -322,7 +322,7 @@ export default function AdminCustomPartsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 px-6 rounded-lg font-semibold bg-gradient-to-r from-blue-500 to-violet-500 text-white border-none cursor-pointer hover:shadow-lg transition-all"
+                  className="flex-1 py-3 px-6 rounded-lg font-semibold bg-gradient-to-r from-blue-500 to-primary-500 text-white border-none cursor-pointer hover:shadow-lg transition-all"
                 >
                   {editingPart ? "อัปเดต" : "เพิ่ม"}
                 </button>
@@ -441,7 +441,7 @@ function PartCard({
               }
             }}
             min="0"
-            className="w-[60px] py-1 px-2 rounded border-none bg-slate-900 text-slate-50 text-center outline-none focus:ring-1 focus:ring-violet-500 transition-colors"
+            className="w-[60px] py-1 px-2 rounded border-none bg-slate-900 text-slate-50 text-center outline-none focus:ring-1 focus:ring-primary-500 transition-colors"
           />
         </div>
         <div className="flex gap-2">

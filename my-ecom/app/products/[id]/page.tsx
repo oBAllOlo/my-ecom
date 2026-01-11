@@ -344,7 +344,7 @@ export default function ProductDetailPage() {
                     cursor: "pointer",
                     border:
                       selectedImage === img
-                        ? "3px solid #8b5cf6"
+                        ? "3px solid #1C4D8D"
                         : "2px solid rgba(255,255,255,0.1)",
                     transition: "all 0.2s ease",
                   }}
@@ -434,7 +434,7 @@ export default function ProductDetailPage() {
                       cursor: "pointer",
                       border:
                         selectedImage === img
-                          ? "2px solid #8b5cf6"
+                          ? "2px solid #1C4D8D"
                           : "2px solid rgba(255,255,255,0.3)",
                     }}
                   >
@@ -595,7 +595,7 @@ export default function ProductDetailPage() {
               onClick={() => setShowReviewForm(true)}
               style={{
                 padding: "0.75rem 1.5rem",
-                background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
+                background: "linear-gradient(135deg, #1C4D8D 0%, #4988C4 100%)",
                 border: "none",
                 borderRadius: "12px",
                 color: "white",
@@ -765,7 +765,7 @@ export default function ProductDetailPage() {
                     flex: 1,
                     padding: "0.875rem",
                     background:
-                      "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
+                      "linear-gradient(135deg, #1C4D8D 0%, #4988C4 100%)",
                     border: "none",
                     borderRadius: "12px",
                     color: "white",
@@ -818,7 +818,7 @@ export default function ProductDetailPage() {
                   marginTop: "1rem",
                   padding: "0.75rem 1.5rem",
                   background:
-                    "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
+                    "linear-gradient(135deg, #1C4D8D 0%, #4988C4 100%)",
                   border: "none",
                   borderRadius: "12px",
                   color: "white",
@@ -837,7 +837,7 @@ export default function ProductDetailPage() {
                   fontSize: "0.875rem",
                 }}
               >
-                <Link href="/login" style={{ color: "#8b5cf6" }}>
+                <Link href="/login" style={{ color: "#4988C4" }}>
                   เข้าสู่ระบบ
                 </Link>{" "}
                 เพื่อเขียนรีวิว
@@ -881,7 +881,7 @@ export default function ProductDetailPage() {
                           height: "40px",
                           borderRadius: "50%",
                           background:
-                            "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
+                            "linear-gradient(135deg, #1C4D8D 0%, #4988C4 100%)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",

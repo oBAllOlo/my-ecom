@@ -284,9 +284,9 @@ export default function CustomKeyboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-violet-900/20 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-primary-900/20 to-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-violet-500/30 border-t-violet-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-primary-500/30 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-400 text-lg">กำลังโหลดชิ้นส่วน...</p>
         </div>
       </div>
@@ -332,7 +332,7 @@ export default function CustomKeyboardPage() {
                   isLocked
                     ? "cursor-not-allowed"
                     : isOpen
-                    ? "bg-violet-500/20 border-l-2 border-violet-500"
+                    ? "bg-primary-500/20 border-l-2 border-primary-500"
                     : "hover:bg-white/5 border-l-2 border-transparent"
                 }`}
               >
@@ -374,7 +374,7 @@ export default function CustomKeyboardPage() {
                       disabled={part.stock === 0}
                       className={`w-full px-4 py-3 text-left transition-all flex items-center gap-3 ${
                         selected?._id === part._id
-                          ? "bg-gradient-to-r from-violet-600/40 to-fuchsia-600/40 border-l-2 border-violet-400"
+                          ? "bg-gradient-to-r from-primary-600/40 to-fuchsia-600/40 border-l-2 border-primary-400"
                           : part.stock === 0
                           ? "opacity-40 cursor-not-allowed"
                           : "hover:bg-white/5 border-l-2 border-transparent"
@@ -407,7 +407,7 @@ export default function CustomKeyboardPage() {
                         </p>
                       </div>
                       {selected?._id === part._id && (
-                        <span className="text-violet-400 text-lg">✓</span>
+                        <span className="text-primary-400 text-lg">✓</span>
                       )}
                     </button>
                   ))}
@@ -528,7 +528,7 @@ export default function CustomKeyboardPage() {
         <div className="px-3 py-2">
           <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-500"
+              className="h-full bg-gradient-to-r from-primary-500 to-fuchsia-500 transition-all duration-500"
               style={{ width: `${(selectedCount / 6) * 100}%` }}
             />
           </div>
@@ -541,7 +541,7 @@ export default function CustomKeyboardPage() {
             disabled={!isComplete}
             className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
               isComplete
-                ? "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white hover:shadow-lg hover:shadow-violet-500/30"
+                ? "bg-gradient-to-r from-primary-500 to-fuchsia-500 text-white hover:shadow-lg hover:shadow-primary-500/30"
                 : "bg-slate-700 text-slate-500 cursor-not-allowed"
             }`}
           >

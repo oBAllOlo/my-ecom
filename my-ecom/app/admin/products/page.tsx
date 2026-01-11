@@ -129,7 +129,7 @@ export default function AdminProducts() {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-12 h-12 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-400">กำลังโหลดข้อมูล...</p>
         </div>
       </div>
@@ -148,7 +148,7 @@ export default function AdminProducts() {
           <div className="flex flex-wrap items-center gap-4 md:gap-6">
             <Link
               href="/admin"
-              className="text-violet-400 no-underline font-medium py-2 px-3 md:px-4 bg-violet-500/10 rounded-lg hover:bg-violet-500/20 transition-all text-sm md:text-base"
+              className="text-primary-300 no-underline font-medium py-2 px-3 md:px-4 bg-primary-500/10 rounded-lg hover:bg-primary-500/20 transition-all text-sm md:text-base"
             >
               ← กลับ
             </Link>
@@ -201,7 +201,7 @@ export default function AdminProducts() {
                     border: "none",
                     color: "rgb(148, 163, 184)",
                   }}
-                  className="w-full py-2.5 pl-10 pr-4 rounded-xl text-sm outline-none focus:ring-1 focus:ring-violet-500/50 transition-all placeholder-slate-500"
+                  className="w-full py-2.5 pl-10 pr-4 rounded-xl text-sm outline-none focus:ring-1 focus:ring-primary-500/50 transition-all placeholder-slate-500"
                 />
               </div>
             </div>
@@ -215,7 +215,7 @@ export default function AdminProducts() {
                 border: "none",
                 color: "rgb(148, 163, 184)",
               }}
-              className="py-2.5 px-4 rounded-xl text-sm outline-none focus:ring-1 focus:ring-violet-500/50 transition-all min-w-[150px] cursor-pointer"
+              className="py-2.5 px-4 rounded-xl text-sm outline-none focus:ring-1 focus:ring-primary-500/50 transition-all min-w-[150px] cursor-pointer"
             >
               <option value="">ทุกหมวดหมู่</option>
               {categories.map((cat) => (
@@ -234,7 +234,7 @@ export default function AdminProducts() {
                 border: "none",
                 color: "rgb(148, 163, 184)",
               }}
-              className="py-2.5 px-4 rounded-xl text-sm outline-none focus:ring-1 focus:ring-violet-500/50 transition-all min-w-[150px] cursor-pointer"
+              className="py-2.5 px-4 rounded-xl text-sm outline-none focus:ring-1 focus:ring-primary-500/50 transition-all min-w-[150px] cursor-pointer"
             >
               <option value="">ทุกแบรนด์</option>
               {brands.map((brand) => (
@@ -271,7 +271,7 @@ export default function AdminProducts() {
                 {filteredProducts.map((product, index) => (
             <div
               key={product._id}
-              className="rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-violet-500/20 animate-fadeInUp"
+              className="rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary-500/20 animate-fadeInUp"
               style={{ 
                 animationDelay: `${index * 0.05}s`,
                 background: "rgba(30, 41, 59, 0.5)",
@@ -298,7 +298,7 @@ export default function AdminProducts() {
                 </div>
               </div>
               <div className="p-5">
-                <span className="text-xs text-violet-400 font-semibold uppercase tracking-wide">
+                <span className="text-xs text-primary-300 font-semibold uppercase tracking-wide">
                   {product.brand}
                 </span>
                 <h3 className="text-lg font-bold text-slate-50 mt-1 mb-3 leading-tight">
@@ -568,7 +568,7 @@ function ProductModal({
       onClick={onClose}
     >
       <div
-        className="bg-gradient-to-br from-slate-800 to-slate-900 border border-violet-500/30 rounded-3xl max-w-xl w-full max-h-[85vh] overflow-y-auto shadow-2xl"
+        className="bg-gradient-to-br from-slate-800 to-slate-900 border border-primary-500/30 rounded-3xl max-w-xl w-full max-h-[85vh] overflow-y-auto shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center p-6 border-b border-white/10">
@@ -595,7 +595,7 @@ function ProductModal({
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                className="w-full py-3 px-4 bg-violet-500/10 border border-violet-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-violet-500/60 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.2)] transition-all"
+                className="w-full py-3 px-4 bg-primary-500/10 border border-primary-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-primary-500/60 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.2)] transition-all"
               />
             </div>
             <div>
@@ -609,7 +609,7 @@ function ProductModal({
                 onChange={(e) =>
                   setFormData({ ...formData, brand: e.target.value })
                 }
-                className="w-full py-3 px-4 bg-violet-500/10 border border-violet-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-violet-500/60 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.2)] transition-all"
+                className="w-full py-3 px-4 bg-primary-500/10 border border-primary-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-primary-500/60 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.2)] transition-all"
               />
             </div>
           </div>
@@ -624,7 +624,7 @@ function ProductModal({
                 setFormData({ ...formData, description: e.target.value })
               }
               rows={3}
-              className="w-full py-3 px-4 bg-violet-500/10 border border-violet-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-violet-500/60 transition-all resize-none"
+              className="w-full py-3 px-4 bg-primary-500/10 border border-primary-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-primary-500/60 transition-all resize-none"
             />
           </div>
 
@@ -644,7 +644,7 @@ function ProductModal({
                     price: e.target.value ? Number(e.target.value) : 0,
                   })
                 }
-                className="w-full py-3 px-4 bg-violet-500/10 border border-violet-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-violet-500/60 transition-all"
+                className="w-full py-3 px-4 bg-primary-500/10 border border-primary-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-primary-500/60 transition-all"
               />
             </div>
             <div>
@@ -661,7 +661,7 @@ function ProductModal({
                     originalPrice: e.target.value ? Number(e.target.value) : 0,
                   })
                 }
-                className="w-full py-3 px-4 bg-violet-500/10 border border-violet-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-violet-500/60 transition-all"
+                className="w-full py-3 px-4 bg-primary-500/10 border border-primary-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-primary-500/60 transition-all"
               />
             </div>
             <div>
@@ -679,7 +679,7 @@ function ProductModal({
                     stock: e.target.value ? Number(e.target.value) : 0,
                   })
                 }
-                className="w-full py-3 px-4 bg-violet-500/10 border border-violet-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-violet-500/60 transition-all"
+                className="w-full py-3 px-4 bg-primary-500/10 border border-primary-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-primary-500/60 transition-all"
               />
             </div>
           </div>
@@ -694,7 +694,7 @@ function ProductModal({
               onChange={(e) =>
                 setFormData({ ...formData, category: e.target.value })
               }
-              className="w-full py-3 px-4 bg-violet-500/10 border border-violet-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-violet-500/60 transition-all"
+              className="w-full py-3 px-4 bg-primary-500/10 border border-primary-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-primary-500/60 transition-all"
             >
               <option value="" className="bg-slate-800">
                 เลือกหมวดหมู่
@@ -715,8 +715,8 @@ function ProductModal({
             <div
               className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all min-h-[150px] flex items-center justify-center ${
                 dragActive
-                  ? "border-violet-500 bg-violet-500/10"
-                  : "border-violet-500/40 bg-violet-500/5 hover:border-violet-500 hover:bg-violet-500/10"
+                  ? "border-primary-500 bg-primary-500/10"
+                  : "border-primary-500/40 bg-primary-500/5 hover:border-primary-500 hover:bg-primary-500/10"
               } ${uploading ? "pointer-events-none opacity-70" : ""}`}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
@@ -734,8 +734,8 @@ function ProductModal({
               />
               {uploading ? (
                 <div className="flex flex-col items-center gap-4">
-                  <div className="w-10 h-10 border-3 border-violet-500/20 border-t-violet-500 rounded-full animate-spin"></div>
-                  <p className="text-violet-400 m-0">กำลังอัพโหลด...</p>
+                  <div className="w-10 h-10 border-3 border-primary-500/20 border-t-primary-500 rounded-full animate-spin"></div>
+                  <p className="text-primary-300 m-0">กำลังอัพโหลด...</p>
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-2">
@@ -758,7 +758,7 @@ function ProductModal({
                     key={index}
                     className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer ${
                       formData.image === img
-                        ? "ring-3 ring-violet-500"
+                        ? "ring-3 ring-primary-500"
                         : "border border-white/10"
                     }`}
                     onClick={() => setPreviewImage(img)}
@@ -769,7 +769,7 @@ function ProductModal({
                       className="w-full h-full object-cover"
                     />
                     {formData.image === img && (
-                      <div className="absolute top-1 left-1 bg-violet-500 text-white text-[10px] py-0.5 px-1.5 rounded font-semibold">
+                      <div className="absolute top-1 left-1 bg-primary-500 text-white text-[10px] py-0.5 px-1.5 rounded font-semibold">
                         หลัก
                       </div>
                     )}
@@ -784,7 +784,7 @@ function ProductModal({
                             e.stopPropagation();
                             setAsMainImage(img);
                           }}
-                          className="flex-1 py-1 bg-violet-500/90 border-none text-white text-[10px] cursor-pointer"
+                          className="flex-1 py-1 bg-primary-500/90 border-none text-white text-[10px] cursor-pointer"
                         >
                           ตั้งเป็นหลัก
                         </button>

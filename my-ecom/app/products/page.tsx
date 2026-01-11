@@ -165,16 +165,16 @@ function ProductsContent() {
     },
     header: {
       background:
-        "linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)",
+        "linear-gradient(135deg, rgba(28, 77, 141, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)",
       borderRadius: "1rem",
       padding: "1.5rem 2rem",
       marginBottom: "1.5rem",
-      border: "1px solid rgba(139, 92, 246, 0.2)",
+      border: "1px solid rgba(28, 77, 141, 0.2)",
     },
     title: {
       fontSize: "2rem",
       fontWeight: "800",
-      background: "linear-gradient(135deg, #a78bfa 0%, #60a5fa 100%)",
+      background: "linear-gradient(135deg, #4988C4 0%, #60a5fa 100%)",
       WebkitBackgroundClip: "text",
       WebkitTextFillColor: "transparent",
       marginBottom: "0.25rem",
@@ -186,14 +186,14 @@ function ProductsContent() {
     sortSelect: {
       background: "rgba(30, 41, 59, 0.8)",
       color: "#fff",
-      border: "1px solid rgba(139, 92, 246, 0.3)",
+      border: "1px solid rgba(28, 77, 141, 0.3)",
       borderRadius: "0.5rem",
       padding: "0.5rem 1rem",
       minWidth: "170px",
       backdropFilter: "blur(10px)",
     },
     filterBtn: {
-      background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
+      background: "linear-gradient(135deg, #1C4D8D 0%, #4988C4 100%)",
       border: "none",
       borderRadius: "0.75rem",
       padding: "0.75rem 1.5rem",
@@ -204,26 +204,26 @@ function ProductsContent() {
       gap: "0.5rem",
       width: "100%",
       justifyContent: "center",
-      boxShadow: "0 4px 15px rgba(139, 92, 246, 0.3)",
+      boxShadow: "0 4px 15px rgba(28, 77, 141, 0.3)",
     },
     sidebar: {
       background:
         "linear-gradient(180deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%)",
       borderRadius: "1rem",
       padding: "1.5rem",
-      border: "1px solid rgba(139, 92, 246, 0.15)",
+      border: "1px solid rgba(28, 77, 141, 0.15)",
       backdropFilter: "blur(10px)",
       boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
     },
     filterTitle: {
-      color: "#a78bfa",
+      color: "#4988C4",
       fontSize: "0.9rem",
       fontWeight: "700",
       textTransform: "uppercase" as const,
       letterSpacing: "0.05em",
       marginBottom: "1rem",
       paddingBottom: "0.5rem",
-      borderBottom: "1px solid rgba(139, 92, 246, 0.2)",
+      borderBottom: "1px solid rgba(28, 77, 141, 0.2)",
     },
     filterOption: {
       display: "flex",
@@ -239,17 +239,17 @@ function ProductsContent() {
     priceInput: {
       background: "rgba(15, 23, 42, 0.8)",
       color: "#fff",
-      border: "1px solid rgba(139, 92, 246, 0.2)",
+      border: "1px solid rgba(28, 77, 141, 0.2)",
       borderRadius: "0.5rem",
       padding: "0.5rem 0.75rem",
       width: "100%",
     },
     clearBtn: {
       background: "transparent",
-      border: "1px solid rgba(139, 92, 246, 0.3)",
+      border: "1px solid rgba(28, 77, 141, 0.3)",
       borderRadius: "0.5rem",
       padding: "0.75rem",
-      color: "#a78bfa",
+      color: "#4988C4",
       fontWeight: "500",
       width: "100%",
       marginTop: "1rem",
@@ -266,8 +266,8 @@ function ProductsContent() {
     spinner: {
       width: "3rem",
       height: "3rem",
-      border: "3px solid rgba(139, 92, 246, 0.2)",
-      borderTop: "3px solid #8b5cf6",
+      border: "3px solid rgba(28, 77, 141, 0.2)",
+      borderTop: "3px solid #1C4D8D",
       borderRadius: "50%",
       animation: "spin 1s linear infinite",
     },
@@ -276,7 +276,7 @@ function ProductsContent() {
       padding: "4rem 2rem",
       background: "rgba(30, 41, 59, 0.5)",
       borderRadius: "1rem",
-      border: "1px dashed rgba(139, 92, 246, 0.3)",
+      border: "1px dashed rgba(28, 77, 141, 0.3)",
     },
   };
 
@@ -340,7 +340,7 @@ function ProductsContent() {
                       ...styles.filterOption,
                       background:
                         selectedCategory === ""
-                          ? "rgba(139, 92, 246, 0.15)"
+                          ? "rgba(28, 77, 141, 0.15)"
                           : "transparent",
                     }}
                   >
@@ -349,7 +349,7 @@ function ProductsContent() {
                       name="category"
                       checked={selectedCategory === ""}
                       onChange={() => handleCategoryChange("")}
-                      style={{ accentColor: "#8b5cf6" }}
+                      style={{ accentColor: "#1C4D8D" }}
                     />
                     <span>ทั้งหมด</span>
                   </label>
@@ -360,7 +360,7 @@ function ProductsContent() {
                         ...styles.filterOption,
                         background:
                           selectedCategory === category.name
-                            ? "rgba(139, 92, 246, 0.15)"
+                            ? "rgba(28, 77, 141, 0.15)"
                             : "transparent",
                       }}
                     >
@@ -369,7 +369,7 @@ function ProductsContent() {
                         name="category"
                         checked={selectedCategory === category.name}
                         onChange={() => handleCategoryChange(category.name)}
-                        style={{ accentColor: "#8b5cf6" }}
+                        style={{ accentColor: "#1C4D8D" }}
                       />
                       <span>
                         {category.name}
@@ -390,7 +390,7 @@ function ProductsContent() {
                         style={{
                           ...styles.filterOption,
                           background: selectedBrands.includes(brand)
-                            ? "rgba(139, 92, 246, 0.15)"
+                            ? "rgba(28, 77, 141, 0.15)"
                             : "transparent",
                         }}
                       >
@@ -398,7 +398,7 @@ function ProductsContent() {
                           type="checkbox"
                           checked={selectedBrands.includes(brand)}
                           onChange={() => handleBrandChange(brand)}
-                          style={{ accentColor: "#8b5cf6" }}
+                          style={{ accentColor: "#1C4D8D" }}
                         />
                         <span>{brand}</span>
                       </label>
@@ -444,7 +444,7 @@ function ProductsContent() {
                 style={styles.clearBtn}
                 onClick={clearFilters}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(139, 92, 246, 0.2)";
+                  e.currentTarget.style.background = "rgba(28, 77, 141, 0.2)";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = "transparent";
@@ -483,7 +483,7 @@ function ProductsContent() {
                   onClick={clearFilters}
                   style={{
                     background:
-                      "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
+                      "linear-gradient(135deg, #1C4D8D 0%, #4988C4 100%)",
                     border: "none",
                     borderRadius: "0.5rem",
                     padding: "0.75rem 2rem",
@@ -528,8 +528,8 @@ export default function ProductsPage() {
             style={{
               width: "3rem",
               height: "3rem",
-              border: "3px solid rgba(139, 92, 246, 0.2)",
-              borderTop: "3px solid #8b5cf6",
+              border: "3px solid rgba(28, 77, 141, 0.2)",
+              borderTop: "3px solid #1C4D8D",
               borderRadius: "50%",
               animation: "spin 1s linear infinite",
             }}

@@ -77,7 +77,7 @@ export async function sendShippingEmail(params: ShippingEmailParams): Promise<bo
       to,
       subject: `🚚 พัสดุของคุณถูกจัดส่งแล้ว! - คำสั่งซื้อ #${orderId.slice(-8).toUpperCase()}`,
       html: `
-        <div style="font-family: 'Segoe UI', sans-serif; max-width: 520px; margin: 0 auto; padding: 32px; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); border-radius: 16px;">
+        <div style="font-family: 'Segoe UI', sans-serif; max-width: 520px; margin: 0 auto; padding: 32px; background: linear-gradient(135deg, #1C4D8D 0%, #0F2854 100%); border-radius: 16px;">
           <div style="background: white; border-radius: 12px; padding: 32px;">
             <div style="text-align: center; margin-bottom: 24px;">
               <span style="font-size: 48px;">🚚</span>
@@ -87,7 +87,7 @@ export async function sendShippingEmail(params: ShippingEmailParams): Promise<bo
             
             <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
               <p style="margin: 0 0 8px; color: #666; font-size: 14px;">หมายเลขพัสดุ</p>
-              <p style="margin: 0; font-size: 24px; font-weight: bold; color: #8b5cf6; letter-spacing: 2px;">${trackingNumber}</p>
+              <p style="margin: 0; font-size: 24px; font-weight: bold; color: #1C4D8D; letter-spacing: 2px;">${trackingNumber}</p>
             </div>
             
             <div style="background: #f0f9ff; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
@@ -96,7 +96,7 @@ export async function sendShippingEmail(params: ShippingEmailParams): Promise<bo
             </div>
             
             ${trackingUrl ? `
-            <a href="${trackingUrl}" target="_blank" style="display: block; text-align: center; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white; padding: 14px 24px; border-radius: 10px; text-decoration: none; font-weight: 600; margin-bottom: 20px;">
+            <a href="${trackingUrl}" target="_blank" style="display: block; text-align: center; background: linear-gradient(135deg, #1C4D8D 0%, #0F2854 100%); color: white; padding: 14px 24px; border-radius: 10px; text-decoration: none; font-weight: 600; margin-bottom: 20px;">
               📍 ติดตามพัสดุ
             </a>
             ` : ""}

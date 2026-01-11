@@ -100,7 +100,7 @@ export default function AdminUsers() {
     return (
       <div className="admin-loading flex items-center justify-center min-h-screen bg-slate-900">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-12 h-12 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-400">กำลังโหลดข้อมูล...</p>
         </div>
       </div>
@@ -118,7 +118,7 @@ export default function AdminUsers() {
         <div className="flex flex-wrap items-center gap-4 md:gap-6">
           <Link
             href="/admin"
-            className="text-violet-400 no-underline font-medium py-2 px-3 md:px-4 bg-violet-500/10 rounded-lg hover:bg-violet-500/20 transition-all text-sm md:text-base"
+            className="text-primary-300 no-underline font-medium py-2 px-3 md:px-4 bg-primary-500/10 rounded-lg hover:bg-primary-500/20 transition-all text-sm md:text-base"
           >
             ← กลับ
           </Link>
@@ -142,15 +142,15 @@ export default function AdminUsers() {
           {users.map((u, index) => (
             <div
               key={u._id}
-              className="rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-violet-500/20 animate-fadeInUp"
+              className="rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary-500/20 animate-fadeInUp"
               style={{ 
                 animationDelay: `${index * 0.1}s`,
                 background: "rgba(30, 41, 59, 0.5)",
                 border: "1px solid rgba(255, 255, 255, 0.1)"
               }}
             >
-              <div className="bg-gradient-to-br from-violet-500/30 to-indigo-500/20 p-8 flex flex-col items-center gap-4">
-                <div className="w-20 h-20 bg-gradient-to-br from-violet-500 to-indigo-500 rounded-full flex items-center justify-center text-4xl font-extrabold text-white shadow-lg shadow-violet-500/40">
+              <div className="bg-gradient-to-br from-primary-500/30 to-primary-500/20 p-8 flex flex-col items-center gap-4">
+                <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-500 rounded-full flex items-center justify-center text-4xl font-extrabold text-white shadow-lg shadow-primary-500/40">
                   {u.name.charAt(0).toUpperCase()}
                 </div>
                 <div
@@ -177,7 +177,7 @@ export default function AdminUsers() {
                   value={u.role}
                   onChange={(e) => handleRoleChange(u._id, e.target.value)}
                   disabled={u._id === user._id}
-                  className="flex-1 py-3 px-4 bg-violet-500/10 border-none rounded-xl text-slate-50 font-medium cursor-pointer transition-all hover:bg-violet-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-3 px-4 bg-primary-500/10 border-none rounded-xl text-slate-50 font-medium cursor-pointer transition-all hover:bg-primary-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="user" className="bg-slate-800">
                     ผู้ใช้ทั่วไป

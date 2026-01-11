@@ -153,7 +153,7 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-12 h-12 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-400">กำลังโหลดข้อมูล...</p>
         </div>
       </div>
@@ -202,7 +202,7 @@ export default function ProfilePage() {
             <div
               className="d-flex align-items-center gap-3 py-4 px-4 rounded-4"
               style={{
-                background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
+                background: "linear-gradient(135deg, #1C4D8D 0%, #0F2854 100%)",
               }}
             >
               <div
@@ -252,7 +252,7 @@ export default function ProfilePage() {
                 border: "1px solid rgba(255, 255, 255, 0.05)"
               }}
             >
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-500 flex items-center justify-center text-4xl font-bold text-white shadow-lg shadow-violet-500/40 relative">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-500 flex items-center justify-center text-4xl font-bold text-white shadow-lg shadow-primary-500/40 relative">
                 {user.name.charAt(0).toUpperCase()}
                 <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-4 border-slate-800"></div>
               </div>
@@ -261,7 +261,7 @@ export default function ProfilePage() {
                   {user.name}
                 </h3>
                 <p className="text-slate-400 mb-2">{user.email}</p>
-                <span className="inline-block py-1 px-3 bg-violet-500/20 text-violet-400 rounded-full text-xs font-semibold uppercase tracking-wide">
+                <span className="inline-block py-1 px-3 bg-primary-500/20 text-primary-400 rounded-full text-xs font-semibold uppercase tracking-wide">
                   {user.role}
                 </span>
               </div>
@@ -285,7 +285,7 @@ export default function ProfilePage() {
                       border: "1px solid rgba(255, 255, 255, 0.1)",
                       color: "white"
                     }}
-                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-violet-500/50 transition-all placeholder-slate-500"
+                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-primary-500/50 transition-all placeholder-slate-500"
                     placeholder="กรอกชื่อ-นามสกุล"
                   />
                 </div>
@@ -347,7 +347,7 @@ export default function ProfilePage() {
                       border: "1px solid rgba(255, 255, 255, 0.1)",
                       color: "white"
                     }}
-                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-violet-500/50 transition-all placeholder-slate-500"
+                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-primary-500/50 transition-all placeholder-slate-500"
                     placeholder="ชื่อ-นามสกุล ผู้รับ"
                   />
                 </div>
@@ -377,7 +377,7 @@ export default function ProfilePage() {
                       border: "1px solid rgba(255, 255, 255, 0.1)",
                       color: "white"
                     }}
-                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-violet-500/50 transition-all placeholder-slate-500"
+                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-primary-500/50 transition-all placeholder-slate-500"
                     placeholder="08x-xxx-xxxx"
                   />
                 </div>
@@ -406,7 +406,7 @@ export default function ProfilePage() {
                       border: "1px solid rgba(255, 255, 255, 0.1)",
                       color: "white"
                     }}
-                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-violet-500/50 transition-all placeholder-slate-500 resize-none"
+                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-primary-500/50 transition-all placeholder-slate-500 resize-none"
                     placeholder="บ้านเลขที่, ซอย, ถนน"
                   />
                 </div>
@@ -435,7 +435,7 @@ export default function ProfilePage() {
                       border: "1px solid rgba(255, 255, 255, 0.1)",
                       color: "white"
                     }}
-                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-violet-500/50 transition-all placeholder-slate-500"
+                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-primary-500/50 transition-all placeholder-slate-500"
                   />
                 </div>
               </div>
@@ -463,7 +463,7 @@ export default function ProfilePage() {
                       border: "1px solid rgba(255, 255, 255, 0.1)",
                       color: "white"
                     }}
-                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-violet-500/50 transition-all placeholder-slate-500"
+                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-primary-500/50 transition-all placeholder-slate-500"
                   />
                 </div>
               </div>
@@ -491,7 +491,7 @@ export default function ProfilePage() {
                       border: "1px solid rgba(255, 255, 255, 0.1)",
                       color: "white"
                     }}
-                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-violet-500/50 transition-all placeholder-slate-500"
+                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-primary-500/50 transition-all placeholder-slate-500"
                   />
                 </div>
               </div>
@@ -519,7 +519,7 @@ export default function ProfilePage() {
                       border: "1px solid rgba(255, 255, 255, 0.1)",
                       color: "white"
                     }}
-                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-violet-500/50 transition-all placeholder-slate-500"
+                    className="w-full p-3 rounded-xl text-base outline-none focus:ring-1 focus:ring-primary-500/50 transition-all placeholder-slate-500"
                   />
                 </div>
               </div>
@@ -530,7 +530,7 @@ export default function ProfilePage() {
               <button
                 type="submit"
                 disabled={saving}
-                className={`py-4 px-8 bg-gradient-to-r from-violet-500 to-indigo-500 border-none rounded-xl text-white text-base font-semibold flex items-center gap-2 shadow-lg shadow-violet-500/30 transition-all ${
+                className={`py-4 px-8 bg-gradient-to-r from-primary-500 to-primary-500 border-none rounded-xl text-white text-base font-semibold flex items-center gap-2 shadow-lg shadow-primary-500/30 transition-all ${
                   saving
                     ? "opacity-50 cursor-not-allowed"
                     : "cursor-pointer hover:-translate-y-0.5 hover:shadow-xl"
@@ -635,7 +635,7 @@ export default function ProfilePage() {
                     })
                   }
                   required
-                  className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-violet-500/50 transition-colors"
+                  className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-primary-500/50 transition-colors"
                 />
               </div>
 
@@ -655,7 +655,7 @@ export default function ProfilePage() {
                   required
                   minLength={6}
                   placeholder="อย่างน้อย 6 ตัวอักษร"
-                  className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-violet-500/50 transition-colors placeholder:text-slate-600"
+                  className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-primary-500/50 transition-colors placeholder:text-slate-600"
                 />
               </div>
 
@@ -673,17 +673,17 @@ export default function ProfilePage() {
                     })
                   }
                   required
-                  className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-violet-500/50 transition-colors"
+                  className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-base outline-none focus:border-primary-500/50 transition-colors"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={changingPassword}
-                className={`w-full py-4 bg-gradient-to-r from-violet-500 to-indigo-500 border-none rounded-xl text-white text-base font-semibold transition-all ${
+                className={`w-full py-4 bg-gradient-to-r from-primary-500 to-primary-500 border-none rounded-xl text-white text-base font-semibold transition-all ${
                   changingPassword
                     ? "opacity-70 cursor-not-allowed"
-                    : "cursor-pointer hover:shadow-lg hover:shadow-violet-500/30"
+                    : "cursor-pointer hover:shadow-lg hover:shadow-primary-500/30"
                 }`}
               >
                 {changingPassword

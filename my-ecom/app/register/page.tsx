@@ -158,7 +158,7 @@ export default function RegisterPage() {
                   padding: "1rem",
                   background:
                     "linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%)",
-                  border: "1px solid rgba(139, 92, 246, 0.3)",
+                  border: "1px solid rgba(28, 77, 141, 0.3)",
                   borderRadius: "12px",
                   boxShadow: "0 10px 40px rgba(0, 0, 0, 0.5)",
                   zIndex: 100,
@@ -168,7 +168,7 @@ export default function RegisterPage() {
                 <p
                   style={{
                     margin: "0 0 0.75rem 0",
-                    color: "#a78bfa",
+                    color: "#4988C4",
                     fontWeight: 600,
                     fontSize: "0.85rem",
                   }}
