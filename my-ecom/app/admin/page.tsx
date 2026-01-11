@@ -182,7 +182,7 @@ function ShippingSettingsSection() {
               width: "100%",
               padding: "0.75rem 1rem",
               borderRadius: "10px",
-              border: "1px solid rgba(139, 92, 246, 0.3)",
+              border: "1px solid rgba(28, 77, 141, 0.3)",
               background: "rgba(15, 23, 42, 0.5)",
               color: "white",
               fontSize: "1rem",
@@ -226,7 +226,7 @@ function ShippingSettingsSection() {
               width: "100%",
               padding: "0.75rem 1rem",
               borderRadius: "10px",
-              border: "1px solid rgba(139, 92, 246, 0.3)",
+              border: "1px solid rgba(28, 77, 141, 0.3)",
               background: "rgba(15, 23, 42, 0.5)",
               color: "white",
               fontSize: "1rem",
@@ -253,13 +253,13 @@ function ShippingSettingsSection() {
           marginTop: "1.5rem",
           padding: "1rem",
           borderRadius: "10px",
-          background: "rgba(139, 92, 246, 0.1)",
-          border: "1px solid rgba(139, 92, 246, 0.2)",
+          background: "rgba(28, 77, 141, 0.1)",
+          border: "1px solid rgba(28, 77, 141, 0.2)",
         }}
       >
         <p
           style={{
-            color: "#a78bfa",
+            color: "#4988C4",
             fontSize: "0.875rem",
             marginBottom: "0.5rem",
           }}
@@ -295,13 +295,13 @@ function ShippingSettingsSection() {
             padding: "0.75rem 2rem",
             borderRadius: "10px",
             border: "none",
-            background: "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
+            background: "linear-gradient(135deg, #1C4D8D 0%, #4988C4 100%)",
             color: "white",
             fontWeight: 600,
             fontSize: "0.9rem",
             cursor: isSaving ? "not-allowed" : "pointer",
             opacity: isSaving ? 0.7 : 1,
-            boxShadow: "0 4px 16px rgba(139, 92, 246, 0.3)",
+            boxShadow: "0 4px 16px rgba(28, 77, 141, 0.3)",
           }}
         >
           {isSaving ? "⏳ กำลังบันทึก..." : "💾 บันทึกการตั้งค่า"}
@@ -410,7 +410,7 @@ export default function AdminDashboard() {
             value: statusCounts.processing,
             color: "#3b82f6",
           },
-          { name: "จัดส่งแล้ว", value: statusCounts.shipped, color: "#8b5cf6" },
+          { name: "จัดส่งแล้ว", value: statusCounts.shipped, color: "#1C4D8D" },
           { name: "สำเร็จ", value: statusCounts.delivered, color: "#10b981" },
           { name: "ยกเลิก", value: statusCounts.cancelled, color: "#ef4444" },
         ]);
@@ -573,8 +573,8 @@ export default function AdminDashboard() {
       },
       shipped: {
         label: "จัดส่งแล้ว",
-        bg: "rgba(139, 92, 246, 0.2)",
-        color: "#8b5cf6",
+        bg: "rgba(28, 77, 141, 0.2)",
+        color: "#1C4D8D",
       },
       delivered: {
         label: "สำเร็จ",
@@ -723,13 +723,13 @@ export default function AdminDashboard() {
         <div
           style={{
             background: "rgba(15, 23, 42, 0.95)",
-            border: "1px solid rgba(139, 92, 246, 0.3)",
+            border: "1px solid rgba(28, 77, 141, 0.3)",
             borderRadius: "12px",
             padding: "12px 16px",
             boxShadow: "0 8px 32px rgba(0, 0, 0, 0.5)",
           }}
         >
-          <p style={{ color: "#a78bfa", fontWeight: 600, marginBottom: "8px" }}>
+          <p style={{ color: "#4988C4", fontWeight: 600, marginBottom: "8px" }}>
             {label}
           </p>
           {payload.map((entry, index) => (
@@ -807,10 +807,10 @@ export default function AdminDashboard() {
                 alignItems: "center",
                 gap: "0.5rem",
                 padding: "0.5rem 1rem",
-                background: "rgba(139, 92, 246, 0.2)",
-                border: "1px solid rgba(139, 92, 246, 0.3)",
+                background: "rgba(28, 77, 141, 0.2)",
+                border: "1px solid rgba(28, 77, 141, 0.3)",
                 borderRadius: "10px",
-                color: "#a78bfa",
+                color: "#4988C4",
                 textDecoration: "none",
                 fontSize: "0.875rem",
                 fontWeight: 500,
@@ -983,12 +983,12 @@ export default function AdminDashboard() {
                     transition: "all 0.2s",
                     background:
                       timeRange === option.value
-                        ? "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)"
+                        ? "linear-gradient(135deg, #1C4D8D 0%, #4988C4 100%)"
                         : "rgba(255, 255, 255, 0.05)",
                     color: timeRange === option.value ? "white" : "#94a3b8",
                     boxShadow:
                       timeRange === option.value
-                        ? "0 4px 16px rgba(139, 92, 246, 0.3)"
+                        ? "0 4px 16px rgba(28, 77, 141, 0.3)"
                         : "none",
                   }}
                 >
@@ -1034,8 +1034,8 @@ export default function AdminDashboard() {
                       x2="0"
                       y2="1"
                     >
-                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#1C4D8D" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#1C4D8D" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid
@@ -1065,7 +1065,7 @@ export default function AdminDashboard() {
                   <Area
                     type="monotone"
                     dataKey="revenue"
-                    stroke="#8b5cf6"
+                    stroke="#1C4D8D"
                     strokeWidth={3}
                     fillOpacity={1}
                     fill="url(#colorRevenue)"
@@ -1237,7 +1237,7 @@ export default function AdminDashboard() {
               <Link
                 href="/admin/orders"
                 style={{
-                  color: "#8b5cf6",
+                  color: "#1C4D8D",
                   fontSize: "0.875rem",
                   textDecoration: "none",
                 }}
@@ -1282,7 +1282,7 @@ export default function AdminDashboard() {
                         transition: "all 0.2s",
                         border: "1px solid transparent",
                       }}
-                      className="hover:border-violet-500/30 hover:bg-slate-800/80"
+                      className="hover:border-primary-500/30 hover:bg-slate-800/80"
                     >
                       {/* Product Image */}
                       <div
@@ -1344,7 +1344,7 @@ export default function AdminDashboard() {
                               position: "absolute",
                               top: "-4px",
                               right: "-4px",
-                              background: "#8b5cf6",
+                              background: "#1C4D8D",
                               color: "white",
                               fontSize: "10px",
                               width: "18px",
@@ -1385,7 +1385,7 @@ export default function AdminDashboard() {
                       <div style={{ textAlign: "right" }}>
                         <p
                           style={{
-                            color: "#a78bfa",
+                            color: "#4988C4",
                             fontWeight: 700,
                             margin: 0,
                           }}
@@ -1446,7 +1446,7 @@ export default function AdminDashboard() {
               <Link
                 href="/admin/products"
                 style={{
-                  color: "#8b5cf6",
+                  color: "#1C4D8D",
                   fontSize: "0.875rem",
                   textDecoration: "none",
                 }}
@@ -1491,7 +1491,7 @@ export default function AdminDashboard() {
                       transition: "all 0.2s",
                       border: "1px solid transparent",
                     }}
-                    className="hover:border-violet-500/30 hover:bg-slate-800/80"
+                    className="hover:border-primary-500/30 hover:bg-slate-800/80"
                   >
                     <div
                       style={{

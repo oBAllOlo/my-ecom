@@ -191,7 +191,7 @@ export default function AdminCategoriesPage() {
             </Link>
             <button
               onClick={() => handleOpenModal()}
-              className="flex-1 md:flex-initial py-2 md:py-3 px-3 md:px-6 bg-gradient-to-r from-violet-500 to-indigo-500 border-none rounded-xl text-white font-semibold cursor-pointer text-sm md:text-base"
+              className="flex-1 md:flex-initial py-2 md:py-3 px-3 md:px-6 bg-gradient-to-r from-primary-500 to-primary-500 border-none rounded-xl text-white font-semibold cursor-pointer text-sm md:text-base"
             >
               ➕ เพิ่มหมวดหมู่
             </button>
@@ -206,7 +206,7 @@ export default function AdminCategoriesPage() {
               alignItems: "center",
               gap: "1rem",
               padding: "1.25rem 1.5rem",
-              background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
+              background: "linear-gradient(135deg, #1C4D8D 0%, #0F2854 100%)",
               borderRadius: "16px",
             }}
           >
@@ -349,7 +349,7 @@ export default function AdminCategoriesPage() {
                 style={{
                   padding: "0.75rem 1.5rem",
                   background:
-                    "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
+                    "linear-gradient(135deg, #1C4D8D 0%, #4988C4 100%)",
                   border: "none",
                   borderRadius: "12px",
                   color: "white",
@@ -399,9 +399,9 @@ export default function AdminCategoriesPage() {
                     <span
                       style={{
                         padding: "0.375rem 0.75rem",
-                        background: "rgba(139, 92, 246, 0.15)",
+                        background: "rgba(28, 77, 141, 0.15)",
                         borderRadius: "8px",
-                        color: "#a78bfa",
+                        color: "#4988C4",
                         fontSize: "0.75rem",
                         fontWeight: 600,
                       }}
@@ -567,7 +567,7 @@ export default function AdminCategoriesPage() {
                     flex: 1,
                     padding: "0.875rem",
                     background:
-                      "linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)",
+                      "linear-gradient(135deg, #1C4D8D 0%, #4988C4 100%)",
                     border: "none",
                     borderRadius: "12px",
                     color: "white",

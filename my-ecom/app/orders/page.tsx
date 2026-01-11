@@ -81,8 +81,8 @@ const statusConfig: Record<
   },
   shipped: {
     label: "จัดส่งแล้ว",
-    bgClass: "bg-violet-500/20",
-    textClass: "text-violet-400",
+    bgClass: "bg-primary-500/20",
+    textClass: "text-primary-400",
     icon: "🚚",
   },
   delivered: {
@@ -221,7 +221,7 @@ export default function OrdersPage() {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-violet-500/20 border-t-violet-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-12 h-12 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-400">กำลังโหลดข้อมูล...</p>
         </div>
       </div>
@@ -237,7 +237,7 @@ export default function OrdersPage() {
         <div className="flex flex-wrap items-center gap-4 md:gap-6">
           <Link
             href="/"
-            className="text-violet-400 no-underline font-medium py-2 px-3 md:px-4 bg-violet-500/10 rounded-lg hover:bg-violet-500/20 transition-all text-sm md:text-base"
+            className="text-primary-400 no-underline font-medium py-2 px-3 md:px-4 bg-primary-500/10 rounded-lg hover:bg-primary-500/20 transition-all text-sm md:text-base"
           >
             ← กลับ
           </Link>
@@ -298,7 +298,7 @@ export default function OrdersPage() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl p-3 flex items-center gap-3 shadow-lg shadow-violet-500/20">
+          <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl p-3 flex items-center gap-3 shadow-lg shadow-primary-500/20">
             <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-base">
               💰
             </div>
@@ -311,7 +311,7 @@ export default function OrdersPage() {
                   maximumFractionDigits: 1,
                 }).format(orders.reduce((sum, order) => sum + order.total, 0))}
               </p>
-              <p className="text-purple-100 text-xs m-0">ยอดรวม</p>
+              <p className="text-primary-100 text-xs m-0">ยอดรวม</p>
             </div>
           </div>
         </div>
@@ -321,7 +321,7 @@ export default function OrdersPage() {
             onClick={() => handleCategoryChange("all")}
             className={`px-3 md:px-5 py-2 md:py-2.5 rounded-xl font-semibold transition-all flex items-center gap-1 md:gap-2 whitespace-nowrap text-sm md:text-base ${
               categoryFilter === "all"
-                ? "bg-violet-500 text-white shadow-lg shadow-violet-500/30"
+                ? "bg-primary-500 text-white shadow-lg shadow-primary-500/30"
                 : "bg-slate-800/50 text-slate-400 hover:bg-slate-700/50"
             }`}
           >
@@ -338,7 +338,7 @@ export default function OrdersPage() {
             onClick={() => handleCategoryChange("custom")}
             className={`px-5 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 ${
               categoryFilter === "custom"
-                ? "bg-purple-500 text-white shadow-lg shadow-purple-500/30"
+                ? "bg-primary-500 text-white shadow-lg shadow-primary-500/30"
                 : "bg-slate-800/50 text-slate-400 hover:bg-slate-700/50"
             }`}
           >
@@ -382,7 +382,7 @@ export default function OrdersPage() {
               background: "rgba(15, 23, 42, 0.5)",
               border: "1px solid rgba(255, 255, 255, 0.1)"
             }}
-            className="text-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-violet-500 transition-all cursor-pointer"
+            className="text-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-primary-500 transition-all cursor-pointer"
           >
             <option value="all" className="bg-slate-900 text-slate-200">📋 สถานะทั้งหมด</option>
             <option value="pending" className="bg-slate-900 text-slate-200">⏳ รอดำเนินการ</option>
@@ -404,7 +404,7 @@ export default function OrdersPage() {
               background: "rgba(15, 23, 42, 0.5)",
               border: "1px solid rgba(255, 255, 255, 0.1)"
             }}
-            className="flex-1 text-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-violet-500 transition-all placeholder:text-slate-500"
+            className="flex-1 text-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-primary-500 transition-all placeholder:text-slate-500"
           />
         </div>
         {/* Orders - Mobile Cards (visible on mobile) */}
@@ -434,7 +434,7 @@ export default function OrdersPage() {
                       #{orderIdFormatted}
                     </span>
                     {isCustom ? (
-                      <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-500/20 text-purple-400">
+                      <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary-500/20 text-primary-400">
                         🛠️
                       </span>
                     ) : (
@@ -473,7 +473,7 @@ export default function OrdersPage() {
                       />
                     )}
                     {order.items.length > 1 && (
-                      <span className="absolute -top-1 -right-1 bg-violet-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold z-10">
+                      <span className="absolute -top-1 -right-1 bg-primary-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold z-10">
                         +{order.items.length - 1}
                       </span>
                     )}
@@ -506,7 +506,7 @@ export default function OrdersPage() {
                       e.stopPropagation();
                       setSelectedOrder(order);
                     }}
-                    className="py-2 px-4 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-lg font-semibold text-sm border-none cursor-pointer"
+                    className="py-2 px-4 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-lg font-semibold text-sm border-none cursor-pointer"
                   >
                     ดูรายละเอียด
                   </button>
@@ -534,22 +534,22 @@ export default function OrdersPage() {
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  <th className="text-left p-4 bg-violet-500/10 text-violet-400 font-semibold text-sm uppercase tracking-wide">
+                  <th className="text-left p-4 bg-primary-500/10 text-primary-400 font-semibold text-sm uppercase tracking-wide">
                     รหัสคำสั่งซื้อ
                   </th>
-                  <th className="text-left p-4 bg-violet-500/10 text-violet-400 font-semibold text-sm uppercase tracking-wide">
+                  <th className="text-left p-4 bg-primary-500/10 text-primary-400 font-semibold text-sm uppercase tracking-wide">
                     สินค้า
                   </th>
-                  <th className="text-left p-4 bg-violet-500/10 text-violet-400 font-semibold text-sm uppercase tracking-wide">
+                  <th className="text-left p-4 bg-primary-500/10 text-primary-400 font-semibold text-sm uppercase tracking-wide">
                     ยอดรวม
                   </th>
-                  <th className="text-left p-4 bg-violet-500/10 text-violet-400 font-semibold text-sm uppercase tracking-wide">
+                  <th className="text-left p-4 bg-primary-500/10 text-primary-400 font-semibold text-sm uppercase tracking-wide">
                     สถานะ
                   </th>
-                  <th className="text-left p-4 bg-violet-500/10 text-violet-400 font-semibold text-sm uppercase tracking-wide">
+                  <th className="text-left p-4 bg-primary-500/10 text-primary-400 font-semibold text-sm uppercase tracking-wide">
                     วันที่
                   </th>
-                  <th className="text-left p-4 bg-violet-500/10 text-violet-400 font-semibold text-sm uppercase tracking-wide">
+                  <th className="text-left p-4 bg-primary-500/10 text-primary-400 font-semibold text-sm uppercase tracking-wide">
                     จัดการ
                   </th>
                 </tr>
@@ -563,7 +563,7 @@ export default function OrdersPage() {
                   return (
                     <tr
                       key={order._id}
-                      className="hover:bg-violet-500/5 transition-colors"
+                      className="hover:bg-primary-500/5 transition-colors"
                     >
                       <td className="p-4 border-b border-white/5">
                         <div className="flex flex-col gap-1">
@@ -571,7 +571,7 @@ export default function OrdersPage() {
                             #{order._id.slice(-8).toUpperCase()}
                           </span>
                           {isCustom ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-500/20 text-purple-400 w-fit">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary-500/20 text-primary-400 w-fit">
                               🛠️ Custom
                             </span>
                           ) : (
@@ -610,7 +610,7 @@ export default function OrdersPage() {
                               />
                             )}
                             {order.items.length > 1 && (
-                              <span className="absolute -top-1 -right-1 bg-violet-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold z-10">
+                              <span className="absolute -top-1 -right-1 bg-primary-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold z-10">
                                 +{order.items.length - 1}
                               </span>
                             )}
@@ -645,7 +645,7 @@ export default function OrdersPage() {
                       <td className="p-4 border-b border-white/5">
                         <button
                           onClick={() => setSelectedOrder(order)}
-                          className="py-2 px-4 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-lg font-semibold border-none cursor-pointer hover:-translate-y-0.5 hover:shadow-lg hover:shadow-violet-500/30 transition-all"
+                          className="py-2 px-4 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-lg font-semibold border-none cursor-pointer hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary-500/30 transition-all"
                         >
                           ดูรายละเอียด
                         </button>
@@ -723,7 +723,7 @@ export default function OrdersPage() {
                       onClick={() => setCurrentPage(pageNum)}
                       className={`w-10 h-10 rounded-lg font-semibold transition-all ${
                         currentPage === pageNum
-                          ? "bg-violet-500 text-white shadow-lg shadow-violet-500/30"
+                          ? "bg-primary-500 text-white shadow-lg shadow-primary-500/30"
                           : "bg-slate-700 text-slate-300 hover:bg-slate-600"
                       }`}
                     >
@@ -775,7 +775,7 @@ export default function OrdersPage() {
           onClick={() => setSelectedOrder(null)}
         >
           <div
-            className="bg-gradient-to-br from-slate-800 to-slate-900 border border-violet-500/30 rounded-2xl md:rounded-3xl max-w-xl w-full max-h-[95vh] overflow-y-auto"
+            className="bg-gradient-to-br from-slate-800 to-slate-900 border border-primary-500/30 rounded-2xl md:rounded-3xl max-w-xl w-full max-h-[95vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center p-4 md:p-6 border-b border-white/10">
@@ -845,11 +845,11 @@ export default function OrdersPage() {
                             {/* Custom Product Details */}
                             {isCustomProduct && (
                               <div className="mt-2 text-xs space-y-1">
-                                <p className="m-0 text-purple-400 font-medium">
+                                <p className="m-0 text-primary-400 font-medium">
                                   🛠️ ชิ้นส่วนที่เลือก:
                                 </p>
                                 {item.customParts ? (
-                                  <div className="bg-purple-500/10 rounded-lg p-3 mt-2 space-y-2">
+                                  <div className="bg-primary-500/10 rounded-lg p-3 mt-2 space-y-2">
                                     {item.customParts.base?.name && (
                                       <div className="flex items-center gap-2">
                                         {item.customParts.base.image && (
@@ -1011,8 +1011,8 @@ export default function OrdersPage() {
 
               {/* Tracking Info if available */}
               {selectedOrder.trackingNumber && (
-                <div className="bg-violet-500/15 border border-violet-500/30 rounded-xl p-4">
-                  <p className="text-violet-400 m-0 mb-1 text-sm">
+                <div className="bg-primary-500/15 border border-primary-500/30 rounded-xl p-4">
+                  <p className="text-primary-400 m-0 mb-1 text-sm">
                     📦 หมายเลขพัสดุ
                   </p>
                   <p className="text-white m-0 text-lg font-bold tracking-wider">

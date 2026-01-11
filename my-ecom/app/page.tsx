@@ -44,15 +44,15 @@ export default function Home() {
   return (
     <>
       {/* Hero Section */}
-      <section className="hero py-24 px-8 text-center bg-gradient-to-br from-violet-900/50 via-slate-900 to-slate-900">
+      <section className="hero py-24 px-8 text-center bg-gradient-to-br from-primary-900/50 via-slate-900 to-slate-900">
         <div className="max-w-4xl mx-auto">
-          <span className="inline-block bg-gradient-to-r from-violet-500 to-indigo-500 text-white py-2 px-6 rounded-full text-sm font-medium mb-8">
+          <span className="inline-block bg-gradient-to-r from-primary-500 to-primary-500 text-white py-2 px-6 rounded-full text-sm font-medium mb-8">
             🎉 ส่งฟรีทั่วประเทศ เมื่อสั่งซื้อครบ ฿1,500
           </span>
           <h1 className="text-5xl md:text-6xl font-extrabold text-white mb-6 leading-tight">
             คีย์บอร์ดคุณภาพ
             <br />
-            <span className="bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">สำหรับทุกสไตล์การใช้งาน</span>
+            <span className="bg-gradient-to-r from-primary-400 to-primary-400 bg-clip-text text-transparent">สำหรับทุกสไตล์การใช้งาน</span>
           </h1>
 
         </div>
@@ -64,9 +64,9 @@ export default function Home() {
       <section className="section py-16 px-8">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-bold text-white">
-            สินค้า<span className="bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">แนะนำ</span>
+            สินค้า<span className="bg-gradient-to-r from-primary-400 to-primary-400 bg-clip-text text-transparent">แนะนำ</span>
           </h2>
-          <Link href="/products" className="text-violet-400 hover:text-violet-300 transition-colors">
+          <Link href="/products" className="text-primary-400 hover:text-primary-300 transition-colors">
             ดูทั้งหมด →
           </Link>
         </div>
@@ -89,9 +89,9 @@ export default function Home() {
       <section className="section py-16 px-8">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-bold text-white">
-            สินค้า<span className="bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">มาใหม่</span>
+            สินค้า<span className="bg-gradient-to-r from-primary-400 to-primary-400 bg-clip-text text-transparent">มาใหม่</span>
           </h2>
-          <Link href="/products?new=true" className="text-violet-400 hover:text-violet-300 transition-colors">
+          <Link href="/products?new=true" className="text-primary-400 hover:text-primary-300 transition-colors">
             ดูทั้งหมด →
           </Link>
         </div>

@@ -83,7 +83,7 @@ function CheckoutCompleteContent() {
           <p className="text-slate-400 mb-6">ไม่พบข้อมูลการสั่งซื้อ</p>
           <Link 
             href="/" 
-            className="inline-block bg-gradient-to-r from-blue-500 to-violet-500 text-white py-4 px-8 rounded-xl font-semibold hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/30 transition-all"
+            className="inline-block bg-gradient-to-r from-blue-500 to-primary-500 text-white py-4 px-8 rounded-xl font-semibold hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/30 transition-all"
           >
             กลับหน้าแรก
           </Link>
@@ -130,7 +130,7 @@ function CheckoutCompleteContent() {
         <div className="flex flex-col gap-4">
           <Link 
             href={`/tracking?order=${orderId}`} 
-            className="bg-gradient-to-r from-blue-500 to-violet-500 text-white py-4 px-8 rounded-xl font-semibold hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/30 transition-all"
+            className="bg-gradient-to-r from-blue-500 to-primary-500 text-white py-4 px-8 rounded-xl font-semibold hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/30 transition-all"
           >
             📦 ติดตามพัสดุ
           </Link>

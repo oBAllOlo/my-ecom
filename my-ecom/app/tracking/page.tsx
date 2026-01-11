@@ -78,7 +78,7 @@ const statusConfig = {
     icon: "📦",
     step: 2,
   },
-  shipped: { label: "จัดส่งแล้ว", color: "#a78bfa", icon: "🚚", step: 3 },
+  shipped: { label: "จัดส่งแล้ว", color: "#4988C4", icon: "🚚", step: 3 },
   delivered: {
     label: "ได้รับสินค้าแล้ว",
     color: "#34d399",
@@ -210,13 +210,13 @@ function TrackingContent() {
               display: "inline-flex",
               alignItems: "center",
               gap: "0.5rem",
-              color: "#a78bfa",
+              color: "#4988C4",
               textDecoration: "none",
               fontSize: "0.9rem",
               padding: "0.5rem 1rem",
               borderRadius: "8px",
-              background: "rgba(139, 92, 246, 0.1)",
-              border: "1px solid rgba(139, 92, 246, 0.2)",
+              background: "rgba(28, 77, 141, 0.1)",
+              border: "1px solid rgba(28, 77, 141, 0.2)",
             }}
           >
             ← กลับหน้าคำสั่งซื้อ
@@ -252,7 +252,7 @@ function TrackingContent() {
             style={{
               background: "rgba(30, 41, 59, 0.8)",
               borderRadius: "20px",
-              border: "1px solid rgba(139, 92, 246, 0.3)",
+              border: "1px solid rgba(28, 77, 141, 0.3)",
               overflow: "hidden",
             }}
           >
@@ -279,9 +279,9 @@ function TrackingContent() {
                     alignItems: "center",
                     gap: "0.75rem",
                     padding: "0.75rem 1.25rem",
-                    background: "rgba(139, 92, 246, 0.15)",
+                    background: "rgba(28, 77, 141, 0.15)",
                     borderRadius: "12px",
-                    border: "1px solid rgba(139, 92, 246, 0.3)",
+                    border: "1px solid rgba(28, 77, 141, 0.3)",
                   }}
                 >
                   <span style={{ fontSize: "1.25rem" }}>🧾</span>
@@ -299,7 +299,7 @@ function TrackingContent() {
                     </p>
                     <p
                       style={{
-                        color: "#a78bfa",
+                        color: "#4988C4",
                         fontSize: "1.1rem",
                         fontWeight: 700,
                         margin: 0,
@@ -358,7 +358,7 @@ function TrackingContent() {
                       style={{
                         width: `${((currentStep - 1) / 3) * 100}%`,
                         height: "100%",
-                        background: "linear-gradient(90deg, #8b5cf6, #6d28d9)",
+                        background: "linear-gradient(90deg, #1C4D8D, #0F2854)",
                         borderRadius: "2px",
                         transition: "width 0.5s ease",
                       }}
@@ -387,7 +387,7 @@ function TrackingContent() {
                           borderRadius: "50%",
                           background:
                             currentStep >= item.step
-                              ? "linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)"
+                              ? "linear-gradient(135deg, #1C4D8D 0%, #0F2854 100%)"
                               : "rgba(255,255,255,0.1)",
                           display: "flex",
                           alignItems: "center",
@@ -423,10 +423,10 @@ function TrackingContent() {
                 <div
                   style={{
                     background:
-                      "linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(109, 40, 217, 0.2))",
+                      "linear-gradient(135deg, rgba(28, 77, 141, 0.2), rgba(109, 40, 217, 0.2))",
                     borderRadius: "12px",
                     padding: "1.25rem",
-                    border: "1px solid rgba(139, 92, 246, 0.3)",
+                    border: "1px solid rgba(28, 77, 141, 0.3)",
                   }}
                 >
                   <div
@@ -441,7 +441,7 @@ function TrackingContent() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p
                         style={{
-                          color: "#a78bfa",
+                          color: "#4988C4",
                           fontSize: "0.8rem",
                           margin: "0 0 4px",
                         }}
@@ -480,7 +480,7 @@ function TrackingContent() {
                         style={{
                           padding: "0.5rem 1rem",
                           borderRadius: "8px",
-                          background: "#8b5cf6",
+                          background: "#1C4D8D",
                           color: "white",
                           textDecoration: "none",
                           fontWeight: 600,
@@ -542,7 +542,7 @@ function TrackingContent() {
                       borderRadius: "12px",
                       marginBottom: "0.5rem",
                       border: isCustomProduct
-                        ? "1px solid rgba(139, 92, 246, 0.3)"
+                        ? "1px solid rgba(28, 77, 141, 0.3)"
                         : "1px solid rgba(255,255,255,0.05)",
                     }}
                   >
@@ -624,14 +624,14 @@ function TrackingContent() {
                             style={{
                               marginTop: "0.75rem",
                               padding: "0.75rem",
-                              background: "rgba(139, 92, 246, 0.1)",
+                              background: "rgba(28, 77, 141, 0.1)",
                               borderRadius: "8px",
                               fontSize: "0.75rem",
                             }}
                           >
                             <p
                               style={{
-                                color: "#a78bfa",
+                                color: "#4988C4",
                                 margin: "0 0 0.5rem",
                                 fontWeight: 600,
                               }}
@@ -996,7 +996,7 @@ function TrackingContent() {
               padding: "3rem",
               background: "rgba(30, 41, 59, 0.8)",
               borderRadius: "16px",
-              border: "1px solid rgba(139, 92, 246, 0.3)",
+              border: "1px solid rgba(28, 77, 141, 0.3)",
             }}
           >
             <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>📦</div>

@@ -943,7 +943,7 @@ export default function CheckoutPage() {
                         style={{
                           marginTop: "0.5rem",
                           fontSize: "0.75rem",
-                          background: "rgba(139, 92, 246, 0.1)",
+                          background: "rgba(28, 77, 141, 0.1)",
                           borderRadius: "6px",
                           padding: "0.5rem",
                         }}
@@ -951,7 +951,7 @@ export default function CheckoutPage() {
                         <p
                           style={{
                             margin: "0 0 0.25rem",
-                            color: "#a78bfa",
+                            color: "#4988C4",
                             fontWeight: 600,
                           }}
                         >
@@ -1032,12 +1032,12 @@ export default function CheckoutPage() {
                   padding: "0.75rem 1rem",
                   borderRadius: "10px",
                   background:
-                    "linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(109, 40, 217, 0.15) 100%)",
-                  border: "1px solid rgba(139, 92, 246, 0.3)",
+                    "linear-gradient(135deg, rgba(28, 77, 141, 0.15) 0%, rgba(109, 40, 217, 0.15) 100%)",
+                  border: "1px solid rgba(28, 77, 141, 0.3)",
                   textAlign: "center",
                 }}
               >
-                <span style={{ color: "#a78bfa", fontSize: "0.85rem" }}>
+                <span style={{ color: "#4988C4", fontSize: "0.85rem" }}>
                   🚛 สั่งซื้อเพิ่มอีก{" "}
                   <strong style={{ color: "#f59e0b" }}>
                     ฿{amountForFreeShipping.toLocaleString()}
