@@ -531,8 +531,7 @@ export default function CustomKeyboardPage() {
           <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
             <div
               className="h-full transition-all duration-500"
-              style={{ background: "var(--gradient-primary)" }}
-              style={{ width: `${(selectedCount / 6) * 100}%` }}
+              style={{ background: "var(--gradient-primary)", width: `${(selectedCount / 6) * 100}%` }}
             />
           </div>
         </div>
