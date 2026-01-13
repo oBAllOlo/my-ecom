@@ -467,7 +467,7 @@ export default function CheckoutPage() {
           style={{ background: "rgba(34, 197, 94, 0.1)" }}
         >
           <div className="cart-empty-icon">🎉</div>
-          <h3 className="cart-empty-title" style={{ color: "#22C55E" }}>
+          <h3 className="cart-empty-title" style={{ color: "#22c55e" }}>
             สั่งซื้อสำเร็จ!
           </h3>
           <p className="cart-empty-text">
@@ -951,7 +951,7 @@ export default function CheckoutPage() {
                         <p
                           style={{
                             margin: "0 0 0.25rem",
-                            color: "#4988C4",
+                            color: "var(--primary-light)",
                             fontWeight: 600,
                           }}
                         >
@@ -1001,7 +1001,7 @@ export default function CheckoutPage() {
 
             <div className="cart-summary-row">
               <span>ค่าจัดส่ง</span>
-              <span style={{ color: shipping === 0 ? "#22C55E" : "inherit" }}>
+              <span style={{ color: shipping === 0 ? "#22c55e" : "var(--text-secondary)" }}>
                 {shipping === 0 ? "ฟรี!" : formatPrice(shipping)}
               </span>
             </div>
@@ -1037,7 +1037,7 @@ export default function CheckoutPage() {
                   textAlign: "center",
                 }}
               >
-                <span style={{ color: "#4988C4", fontSize: "0.85rem" }}>
+                <span style={{ color: "var(--primary-light)", fontSize: "0.85rem" }}>
                   🚛 สั่งซื้อเพิ่มอีก{" "}
                   <strong style={{ color: "#f59e0b" }}>
                     ฿{amountForFreeShipping.toLocaleString()}

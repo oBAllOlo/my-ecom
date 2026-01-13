@@ -151,7 +151,7 @@ export default function ProfilePage() {
 
   if (isLoading || !user) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0a1628 0%, #050d18 50%, #0f2854 100%)" }}>
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-400">กำลังโหลดข้อมูล...</p>
@@ -161,7 +161,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 relative">
+    <div className="min-h-screen relative" style={{ background: "linear-gradient(135deg, #0a1628 0%, #050d18 50%, #0f2854 100%)" }}>
       <main className="p-8 max-w-4xl mx-auto">
         {/* Welcome Section */}
         <section className="mb-8">
@@ -261,7 +261,7 @@ export default function ProfilePage() {
                   {user.name}
                 </h3>
                 <p className="text-slate-400 mb-2">{user.email}</p>
-                <span className="inline-block py-1 px-3 bg-primary-500/20 text-primary-400 rounded-full text-xs font-semibold uppercase tracking-wide">
+                <span className="inline-block py-1 px-3 rounded-full text-xs font-semibold uppercase tracking-wide" style={{ background: "rgba(28, 77, 141, 0.2)", color: "var(--primary-light)" }}>
                   {user.role}
                 </span>
               </div>
@@ -530,11 +530,12 @@ export default function ProfilePage() {
               <button
                 type="submit"
                 disabled={saving}
-                className={`py-4 px-8 bg-gradient-to-r from-primary-500 to-primary-500 border-none rounded-xl text-white text-base font-semibold flex items-center gap-2 shadow-lg shadow-primary-500/30 transition-all ${
+                className={`py-4 px-8 border-none rounded-xl text-white text-base font-semibold flex items-center gap-2 transition-all ${
                   saving
                     ? "opacity-50 cursor-not-allowed"
                     : "cursor-pointer hover:-translate-y-0.5 hover:shadow-xl"
                 }`}
+                style={{ background: "var(--gradient-primary)", boxShadow: "0 10px 30px rgba(28, 77, 141, 0.3)" }}
               >
                 {saving ? (
                   <>
@@ -680,11 +681,12 @@ export default function ProfilePage() {
               <button
                 type="submit"
                 disabled={changingPassword}
-                className={`w-full py-4 bg-gradient-to-r from-primary-500 to-primary-500 border-none rounded-xl text-white text-base font-semibold transition-all ${
+                className={`w-full py-4 border-none rounded-xl text-white text-base font-semibold transition-all ${
                   changingPassword
                     ? "opacity-70 cursor-not-allowed"
-                    : "cursor-pointer hover:shadow-lg hover:shadow-primary-500/30"
+                    : "cursor-pointer hover:shadow-lg"
                 }`}
+                style={{ background: "var(--gradient-primary)", boxShadow: "0 10px 30px rgba(28, 77, 141, 0.3)" }}
               >
                 {changingPassword
                   ? "⏳ กำลังเปลี่ยนรหัส..."

@@ -1,18 +1,31 @@
 import nodemailer from "nodemailer";
 
+// Validate email environment variables
+const SMTP_HOST = process.env.SMTP_HOST || process.env.EMAIL_HOST;
+const SMTP_PORT = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587;
+const SMTP_USER = process.env.SMTP_USER || process.env.EMAIL_USER;
+const SMTP_PASS = process.env.SMTP_PASS || process.env.EMAIL_PASS;
+const SMTP_FROM = process.env.SMTP_FROM || SMTP_USER;
+
+if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
+  console.warn("⚠️ Email configuration incomplete. SMTP_HOST, SMTP_USER, and SMTP_PASS are required.");
+}
+
 // Create reusable transporter
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: SMTP_HOST,
+  port: SMTP_PORT,
+  secure: SMTP_PORT === 465, // true for 465, false for other ports
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: SMTP_USER,
+    pass: SMTP_PASS,
   },
 });
 
 export async function sendOTPEmail(to: string, otp: string): Promise<boolean> {
   try {
     await transporter.sendMail({
-      from: `"Custom Keyboard System" <${process.env.EMAIL_USER}>`,
+      from: `"Custom Keyboard System" <${SMTP_FROM}>`,
       to,
       subject: "🔐 รหัส OTP ยืนยันตัวตน - Custom Keyboard System",
       html: `
@@ -73,7 +86,7 @@ export async function sendShippingEmail(params: ShippingEmailParams): Promise<bo
 
   try {
     await transporter.sendMail({
-      from: `"Custom Keyboard System" <${process.env.EMAIL_USER}>`,
+      from: `"Custom Keyboard System" <${SMTP_FROM}>`,
       to,
       subject: `🚚 พัสดุของคุณถูกจัดส่งแล้ว! - คำสั่งซื้อ #${orderId.slice(-8).toUpperCase()}`,
       html: `
