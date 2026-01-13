@@ -219,7 +219,7 @@ export default function OrdersPage() {
 
   if (isLoading || loading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0a1628 0%, #050d18 50%, #0f2854 100%)" }}>
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-400">กำลังโหลดข้อมูล...</p>
@@ -258,7 +258,7 @@ export default function OrdersPage() {
       <main className="p-4 md:p-8">
         {/* Statistics Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-4 md:mb-6">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-3 flex items-center gap-3 shadow-lg shadow-blue-500/20">
+          <div className="rounded-xl p-3 flex items-center gap-3 shadow-lg" style={{ background: "var(--gradient-primary)", boxShadow: "0 10px 30px rgba(28, 77, 141, 0.3)" }}>
             <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-base">
               📦
             </div>
@@ -266,11 +266,11 @@ export default function OrdersPage() {
               <p className="text-white text-lg font-bold m-0 leading-tight">
                 {orders.length}
               </p>
-              <p className="text-blue-100 text-xs m-0">คำสั่งซื้อ</p>
+              <p className="text-xs m-0" style={{ color: "rgba(255, 255, 255, 0.8)" }}>คำสั่งซื้อ</p>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-3 flex items-center gap-3 shadow-lg shadow-emerald-500/20">
+          <div className="rounded-xl p-3 flex items-center gap-3 shadow-lg" style={{ background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", boxShadow: "0 10px 30px rgba(16, 185, 129, 0.3)" }}>
             <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-base">
               ✅
             </div>
@@ -278,11 +278,11 @@ export default function OrdersPage() {
               <p className="text-white text-lg font-bold m-0 leading-tight">
                 {orders.filter((o) => o.status === "delivered").length}
               </p>
-              <p className="text-emerald-100 text-xs m-0">สำเร็จ</p>
+              <p className="text-xs m-0" style={{ color: "rgba(255, 255, 255, 0.8)" }}>สำเร็จ</p>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl p-3 flex items-center gap-3 shadow-lg shadow-amber-500/20">
+          <div className="rounded-xl p-3 flex items-center gap-3 shadow-lg" style={{ background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", boxShadow: "0 10px 30px rgba(245, 158, 11, 0.3)" }}>
             <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-base">
               ⏳
             </div>
@@ -294,11 +294,11 @@ export default function OrdersPage() {
                   ).length
                 }
               </p>
-              <p className="text-amber-100 text-xs m-0">รอดำเนินการ</p>
+              <p className="text-xs m-0" style={{ color: "rgba(255, 255, 255, 0.8)" }}>รอดำเนินการ</p>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl p-3 flex items-center gap-3 shadow-lg shadow-primary-500/20">
+          <div className="rounded-xl p-3 flex items-center gap-3 shadow-lg" style={{ background: "var(--gradient-primary)", boxShadow: "0 10px 30px rgba(28, 77, 141, 0.3)" }}>
             <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-base">
               💰
             </div>
@@ -311,7 +311,7 @@ export default function OrdersPage() {
                   maximumFractionDigits: 1,
                 }).format(orders.reduce((sum, order) => sum + order.total, 0))}
               </p>
-              <p className="text-primary-100 text-xs m-0">ยอดรวม</p>
+              <p className="text-xs m-0" style={{ color: "rgba(255, 255, 255, 0.8)" }}>ยอดรวม</p>
             </div>
           </div>
         </div>
@@ -355,9 +355,10 @@ export default function OrdersPage() {
             onClick={() => handleCategoryChange("regular")}
             className={`px-5 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 ${
               categoryFilter === "regular"
-                ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30"
+                ? "text-white shadow-lg"
                 : "bg-slate-800/50 text-slate-400 hover:bg-slate-700/50"
             }`}
+            style={categoryFilter === "regular" ? { background: "var(--gradient-primary)", boxShadow: "0 10px 30px rgba(28, 77, 141, 0.3)" } : {}}
           >
             🛒 สินค้าทั่วไป
             <span
@@ -506,7 +507,8 @@ export default function OrdersPage() {
                       e.stopPropagation();
                       setSelectedOrder(order);
                     }}
-                    className="py-2 px-4 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-lg font-semibold text-sm border-none cursor-pointer"
+                    className="py-2 px-4 text-white rounded-lg font-semibold text-sm border-none cursor-pointer"
+                    style={{ background: "var(--gradient-primary)" }}
                   >
                     ดูรายละเอียด
                   </button>
@@ -645,7 +647,8 @@ export default function OrdersPage() {
                       <td className="p-4 border-b border-white/5">
                         <button
                           onClick={() => setSelectedOrder(order)}
-                          className="py-2 px-4 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-lg font-semibold border-none cursor-pointer hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary-500/30 transition-all"
+                          className="py-2 px-4 text-white rounded-lg font-semibold border-none cursor-pointer hover:-translate-y-0.5 transition-all"
+                          style={{ background: "var(--gradient-primary)", boxShadow: "0 10px 30px rgba(28, 77, 141, 0.3)" }}
                         >
                           ดูรายละเอียด
                         </button>
@@ -775,7 +778,8 @@ export default function OrdersPage() {
           onClick={() => setSelectedOrder(null)}
         >
           <div
-            className="bg-gradient-to-br from-slate-800 to-slate-900 border border-primary-500/30 rounded-2xl md:rounded-3xl max-w-xl w-full max-h-[95vh] overflow-y-auto"
+            className="rounded-2xl md:rounded-3xl max-w-xl w-full max-h-[95vh] overflow-y-auto"
+            style={{ background: "var(--bg-card)", border: "1px solid var(--border-hover)" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center p-4 md:p-6 border-b border-white/10">
@@ -845,7 +849,7 @@ export default function OrdersPage() {
                             {/* Custom Product Details */}
                             {isCustomProduct && (
                               <div className="mt-2 text-xs space-y-1">
-                                <p className="m-0 text-primary-400 font-medium">
+                                <p className="m-0 font-medium" style={{ color: "var(--primary-light)" }}>
                                   🛠️ ชิ้นส่วนที่เลือก:
                                 </p>
                                 {item.customParts ? (
@@ -1011,10 +1015,10 @@ export default function OrdersPage() {
 
               {/* Tracking Info if available */}
               {selectedOrder.trackingNumber && (
-                <div className="bg-primary-500/15 border border-primary-500/30 rounded-xl p-4">
-                  <p className="text-primary-400 m-0 mb-1 text-sm">
-                    📦 หมายเลขพัสดุ
-                  </p>
+                  <div className="rounded-xl p-4" style={{ background: "rgba(28, 77, 141, 0.15)", border: "1px solid var(--border-hover)" }}>
+                    <p className="m-0 mb-1 text-sm" style={{ color: "var(--primary-light)" }}>
+                      📦 หมายเลขพัสดุ
+                    </p>
                   <p className="text-white m-0 text-lg font-bold tracking-wider">
                     {selectedOrder.trackingNumber}
                   </p>

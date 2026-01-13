@@ -197,7 +197,7 @@ function TrackingContent() {
     <div
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)",
+        background: "var(--gradient-hero)",
         padding: "2rem 1rem",
       }}
     >
@@ -210,13 +210,13 @@ function TrackingContent() {
               display: "inline-flex",
               alignItems: "center",
               gap: "0.5rem",
-              color: "#4988C4",
+              color: "var(--primary-light)",
               textDecoration: "none",
               fontSize: "0.9rem",
               padding: "0.5rem 1rem",
               borderRadius: "8px",
               background: "rgba(28, 77, 141, 0.1)",
-              border: "1px solid rgba(28, 77, 141, 0.2)",
+              border: "1px solid var(--border-color)",
             }}
           >
             ← กลับหน้าคำสั่งซื้อ
@@ -281,7 +281,7 @@ function TrackingContent() {
                     padding: "0.75rem 1.25rem",
                     background: "rgba(28, 77, 141, 0.15)",
                     borderRadius: "12px",
-                    border: "1px solid rgba(28, 77, 141, 0.3)",
+                    border: "1px solid var(--border-hover)",
                   }}
                 >
                   <span style={{ fontSize: "1.25rem" }}>🧾</span>
@@ -441,13 +441,13 @@ function TrackingContent() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p
                         style={{
-                          color: "#4988C4",
-                          fontSize: "0.8rem",
-                          margin: "0 0 4px",
-                        }}
-                      >
-                        📦 หมายเลขพัสดุ
-                      </p>
+                      color: "var(--primary-light)",
+                      fontSize: "0.8rem",
+                      margin: "0 0 4px",
+                    }}
+                  >
+                    📦 หมายเลขพัสดุ
+                  </p>
                       <p
                         style={{
                           color: "white",
@@ -480,8 +480,8 @@ function TrackingContent() {
                         style={{
                           padding: "0.5rem 1rem",
                           borderRadius: "8px",
-                          background: "#1C4D8D",
-                          color: "white",
+                        background: "var(--primary)",
+                        color: "white",
                           textDecoration: "none",
                           fontWeight: 600,
                           fontSize: "0.8rem",
@@ -631,7 +631,7 @@ function TrackingContent() {
                           >
                             <p
                               style={{
-                                color: "#4988C4",
+                                color: "var(--primary-light)",
                                 margin: "0 0 0.5rem",
                                 fontWeight: 600,
                               }}
@@ -1029,7 +1029,7 @@ export default function TrackingPage() {
         <div
           style={{
             minHeight: "100vh",
-            background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)",
+            background: "var(--gradient-hero)",
             padding: "2rem 1rem",
             display: "flex",
             alignItems: "center",

@@ -404,17 +404,22 @@ CLOUDINARY_API_SECRET=your_api_secret
 # ==========================================
 # Omise Payment Gateway
 # ==========================================
+# รองรับทั้ง OMISE_PUBLIC_KEY และ NEXT_PUBLIC_OMISE_PUBLIC_KEY
+# สำหรับ frontend ใช้ NEXT_PUBLIC_OMISE_PUBLIC_KEY
 OMISE_PUBLIC_KEY=pkey_test_xxxxxxxxxxxxx
+NEXT_PUBLIC_OMISE_PUBLIC_KEY=pkey_test_xxxxxxxxxxxxx
 OMISE_SECRET_KEY=skey_test_xxxxxxxxxxxxx
 
 # ==========================================
 # Email Service (Nodemailer)
 # ==========================================
+# รองรับทั้ง SMTP_* และ EMAIL_* (สำหรับ backward compatibility)
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your_email@gmail.com
 SMTP_PASS=your_app_password
 SMTP_FROM=noreply@keyboardth.com
+# หรือใช้ EMAIL_USER และ EMAIL_PASS (legacy support)
 
 # ==========================================
 # App Configuration

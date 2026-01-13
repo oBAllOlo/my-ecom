@@ -344,8 +344,8 @@ export default function ProductDetailPage() {
                     cursor: "pointer",
                     border:
                       selectedImage === img
-                        ? "3px solid #1C4D8D"
-                        : "2px solid rgba(255,255,255,0.1)",
+                        ? "3px solid var(--primary)"
+                        : "2px solid var(--border-color)",
                     transition: "all 0.2s ease",
                   }}
                 >
@@ -434,8 +434,8 @@ export default function ProductDetailPage() {
                       cursor: "pointer",
                       border:
                         selectedImage === img
-                          ? "2px solid #1C4D8D"
-                          : "2px solid rgba(255,255,255,0.3)",
+                          ? "2px solid var(--primary)"
+                          : "2px solid var(--border-color)",
                     }}
                   >
                     <img
@@ -525,10 +525,10 @@ export default function ProductDetailPage() {
                 style={{
                   color:
                     product.stock > 10
-                      ? "#22C55E"
+                      ? "#22c55e"
                       : product.stock > 0
-                      ? "#F59E0B"
-                      : "#EF4444",
+                      ? "#f59e0b"
+                      : "#ef4444",
                 }}
               >
                 {product.stock > 0
@@ -595,7 +595,7 @@ export default function ProductDetailPage() {
               onClick={() => setShowReviewForm(true)}
               style={{
                 padding: "0.75rem 1.5rem",
-                background: "linear-gradient(135deg, #1C4D8D 0%, #4988C4 100%)",
+                background: "var(--gradient-primary)",
                 border: "none",
                 borderRadius: "12px",
                 color: "white",
@@ -644,7 +644,7 @@ export default function ProductDetailPage() {
                 <label
                   style={{
                     display: "block",
-                    color: "#94a3b8",
+                    color: "var(--text-secondary)",
                     fontSize: "0.875rem",
                     marginBottom: "0.5rem",
                   }}
@@ -664,8 +664,8 @@ export default function ProductDetailPage() {
                         border: "none",
                         fontSize: "2rem",
                         cursor: "pointer",
-                        color:
-                          star <= reviewForm.rating ? "#fbbf24" : "#4b5563",
+                      color:
+                        star <= reviewForm.rating ? "#fbbf24" : "var(--text-muted)",
                       }}
                     >
                       ★
@@ -679,7 +679,7 @@ export default function ProductDetailPage() {
                 <label
                   style={{
                     display: "block",
-                    color: "#94a3b8",
+                    color: "var(--text-secondary)",
                     fontSize: "0.875rem",
                     marginBottom: "0.5rem",
                   }}
@@ -696,10 +696,10 @@ export default function ProductDetailPage() {
                   style={{
                     width: "100%",
                     padding: "0.875rem 1rem",
-                    background: "rgba(15, 23, 42, 0.5)",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    background: "var(--bg-dark)",
+                    border: "1px solid var(--border-color)",
                     borderRadius: "12px",
-                    color: "white",
+                    color: "var(--text-primary)",
                     fontSize: "1rem",
                     outline: "none",
                   }}
@@ -712,7 +712,7 @@ export default function ProductDetailPage() {
                 <label
                   style={{
                     display: "block",
-                    color: "#94a3b8",
+                    color: "var(--text-secondary)",
                     fontSize: "0.875rem",
                     marginBottom: "0.5rem",
                   }}
@@ -729,10 +729,10 @@ export default function ProductDetailPage() {
                   style={{
                     width: "100%",
                     padding: "0.875rem 1rem",
-                    background: "rgba(15, 23, 42, 0.5)",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    background: "var(--bg-dark)",
+                    border: "1px solid var(--border-color)",
                     borderRadius: "12px",
-                    color: "white",
+                    color: "var(--text-primary)",
                     fontSize: "1rem",
                     outline: "none",
                     resize: "vertical",
@@ -764,8 +764,7 @@ export default function ProductDetailPage() {
                   style={{
                     flex: 1,
                     padding: "0.875rem",
-                    background:
-                      "linear-gradient(135deg, #1C4D8D 0%, #4988C4 100%)",
+                    background: "var(--gradient-primary)",
                     border: "none",
                     borderRadius: "12px",
                     color: "white",
@@ -837,7 +836,7 @@ export default function ProductDetailPage() {
                   fontSize: "0.875rem",
                 }}
               >
-                <Link href="/login" style={{ color: "#4988C4" }}>
+                <Link href="/login" style={{ color: "var(--primary-light)" }}>
                   เข้าสู่ระบบ
                 </Link>{" "}
                 เพื่อเขียนรีวิว
@@ -880,8 +879,7 @@ export default function ProductDetailPage() {
                           width: "40px",
                           height: "40px",
                           borderRadius: "50%",
-                          background:
-                            "linear-gradient(135deg, #1C4D8D 0%, #4988C4 100%)",
+                          background: "var(--gradient-primary)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",

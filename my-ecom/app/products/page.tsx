@@ -160,7 +160,6 @@ function ProductsContent() {
   const styles = {
     page: {
       minHeight: "100vh",
-      background: "linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%)",
       padding: "2rem 0",
     },
     header: {
@@ -174,13 +173,13 @@ function ProductsContent() {
     title: {
       fontSize: "2rem",
       fontWeight: "800",
-      background: "linear-gradient(135deg, #4988C4 0%, #60a5fa 100%)",
+      background: "var(--gradient-primary)",
       WebkitBackgroundClip: "text",
       WebkitTextFillColor: "transparent",
       marginBottom: "0.25rem",
     },
     count: {
-      color: "#94a3b8",
+      color: "var(--text-muted)",
       fontSize: "0.95rem",
     },
     sortSelect: {
@@ -216,14 +215,14 @@ function ProductsContent() {
       boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
     },
     filterTitle: {
-      color: "#4988C4",
+      color: "var(--primary-light)",
       fontSize: "0.9rem",
       fontWeight: "700",
       textTransform: "uppercase" as const,
       letterSpacing: "0.05em",
       marginBottom: "1rem",
       paddingBottom: "0.5rem",
-      borderBottom: "1px solid rgba(28, 77, 141, 0.2)",
+      borderBottom: "1px solid var(--border-color)",
     },
     filterOption: {
       display: "flex",
@@ -246,10 +245,10 @@ function ProductsContent() {
     },
     clearBtn: {
       background: "transparent",
-      border: "1px solid rgba(28, 77, 141, 0.3)",
+      border: "1px solid var(--border-color)",
       borderRadius: "0.5rem",
       padding: "0.75rem",
-      color: "#4988C4",
+      color: "var(--primary-light)",
       fontWeight: "500",
       width: "100%",
       marginTop: "1rem",
@@ -281,7 +280,7 @@ function ProductsContent() {
   };
 
   return (
-    <main style={styles.page}>
+    <main style={styles.page} className="products-main">
       <div className="container">
         {/* Page Header */}
         <div style={styles.header}>
@@ -295,7 +294,7 @@ function ProductsContent() {
 
             {/* Sort Dropdown */}
             <div className="d-flex align-items-center gap-2">
-              <label className="d-none d-md-block" style={{ color: "#94a3b8" }}>
+              <label className="d-none d-md-block" style={{ color: "var(--text-muted)" }}>
                 เรียงตาม:
               </label>
               <select

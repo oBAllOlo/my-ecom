@@ -284,7 +284,7 @@ export default function CustomKeyboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-primary-900/20 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--gradient-hero)" }}>
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary-500/30 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-400 text-lg">กำลังโหลดชิ้นส่วน...</p>
@@ -332,9 +332,10 @@ export default function CustomKeyboardPage() {
                   isLocked
                     ? "cursor-not-allowed"
                     : isOpen
-                    ? "bg-primary-500/20 border-l-2 border-primary-500"
+                    ? "border-l-2"
                     : "hover:bg-white/5 border-l-2 border-transparent"
                 }`}
+                style={isOpen ? { background: "rgba(28, 77, 141, 0.2)", borderLeftColor: "var(--primary)" } : {}}
               >
                 <div className="flex items-center gap-3">
                   <span className="text-xl">{categoryIcons[category]}</span>
@@ -374,11 +375,12 @@ export default function CustomKeyboardPage() {
                       disabled={part.stock === 0}
                       className={`w-full px-4 py-3 text-left transition-all flex items-center gap-3 ${
                         selected?._id === part._id
-                          ? "bg-gradient-to-r from-primary-600/40 to-fuchsia-600/40 border-l-2 border-primary-400"
+                          ? "border-l-2"
                           : part.stock === 0
                           ? "opacity-40 cursor-not-allowed"
                           : "hover:bg-white/5 border-l-2 border-transparent"
                       }`}
+                      style={selected?._id === part._id ? { background: "rgba(28, 77, 141, 0.4)", borderLeftColor: "var(--primary-light)" } : {}}
                     >
                       {part.image && (
                         <div className="w-12 h-12 relative rounded-lg overflow-hidden flex-shrink-0 bg-slate-600 ring-2 ring-white/10 animate-pulse">
@@ -407,7 +409,7 @@ export default function CustomKeyboardPage() {
                         </p>
                       </div>
                       {selected?._id === part._id && (
-                        <span className="text-primary-400 text-lg">✓</span>
+                        <span className="text-lg" style={{ color: "var(--primary-light)" }}>✓</span>
                       )}
                     </button>
                   ))}
@@ -528,7 +530,8 @@ export default function CustomKeyboardPage() {
         <div className="px-3 py-2">
           <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-primary-500 to-fuchsia-500 transition-all duration-500"
+              className="h-full transition-all duration-500"
+              style={{ background: "var(--gradient-primary)" }}
               style={{ width: `${(selectedCount / 6) * 100}%` }}
             />
           </div>
@@ -541,9 +544,10 @@ export default function CustomKeyboardPage() {
             disabled={!isComplete}
             className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
               isComplete
-                ? "bg-gradient-to-r from-primary-500 to-fuchsia-500 text-white hover:shadow-lg hover:shadow-primary-500/30"
+                ? "text-white hover:shadow-lg"
                 : "bg-slate-700 text-slate-500 cursor-not-allowed"
             }`}
+            style={isComplete ? { background: "var(--gradient-primary)", boxShadow: "0 10px 30px rgba(28, 77, 141, 0.3)" } : {}}
           >
             {isComplete
               ? "🛒 เพิ่มลงตะกร้า"
@@ -556,7 +560,7 @@ export default function CustomKeyboardPage() {
 
   // Preview Component
   const PreviewArea = () => (
-    <div className="flex-1 relative flex items-center justify-center bg-slate-800 overflow-hidden min-h-[300px] lg:min-h-0">
+    <div className="flex-1 relative flex items-center justify-center overflow-hidden min-h-[300px] lg:min-h-0" style={{ background: "linear-gradient(135deg, #0a1628 0%, #050d18 50%, #0f2854 100%)" }}>
       {/* Switch Display Card - Top Left */}
       {selectedParts.switch && (
         <div className="absolute top-4 left-4 z-20 bg-slate-900/90 backdrop-blur-sm rounded-xl border border-white/10 p-3 w-32 lg:w-44">
@@ -578,7 +582,10 @@ export default function CustomKeyboardPage() {
               onClick={() =>
                 playSound(getSwitchAudioPath(selectedParts.switch!.name)!)
               }
-              className="w-full py-1.5 lg:py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs lg:text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1"
+              className="w-full py-1.5 lg:py-2 text-white text-xs lg:text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1"
+              style={{ background: "var(--primary)", boxShadow: "0 4px 15px rgba(28, 77, 141, 0.3)" }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "var(--primary-light)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "var(--primary)"; }}
             >
               <span>🔊</span> <span className="hidden sm:inline">Play</span>
             </button>
@@ -662,7 +669,7 @@ export default function CustomKeyboardPage() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row lg:h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen flex flex-col lg:flex-row lg:h-screen overflow-hidden" style={{ background: "linear-gradient(135deg, #0a1628 0%, #050d18 50%, #0f2854 100%)" }}>
 
 
       {/* Mobile View - Conditional rendering */}

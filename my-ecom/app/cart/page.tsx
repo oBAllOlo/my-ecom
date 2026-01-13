@@ -61,7 +61,7 @@ export default function CartPage() {
               <div style={{ marginBottom: "2rem" }}>
                 <h2
                   style={{
-                    color: "#A855F7",
+                    color: "var(--primary-light)",
                     fontSize: "1.25rem",
                     fontWeight: "bold",
                     marginBottom: "1rem",
@@ -74,7 +74,7 @@ export default function CartPage() {
                 </h2>
                 <div
                   style={{
-                    borderLeft: "3px solid #A855F7",
+                    borderLeft: "3px solid var(--primary)",
                     paddingLeft: "1rem",
                   }}
                 >
@@ -93,7 +93,7 @@ export default function CartPage() {
               <div style={{ marginBottom: "2rem" }}>
                 <h2
                   style={{
-                    color: "#3B82F6",
+                    color: "var(--primary-light)",
                     fontSize: "1.25rem",
                     fontWeight: "bold",
                     marginBottom: "1rem",
@@ -106,7 +106,7 @@ export default function CartPage() {
                 </h2>
                 <div
                   style={{
-                    borderLeft: "3px solid #3B82F6",
+                    borderLeft: "3px solid var(--primary)",
                     paddingLeft: "1rem",
                   }}
                 >
@@ -147,7 +147,7 @@ export default function CartPage() {
 
             <div className="cart-summary-row">
               <span>ค่าจัดส่ง</span>
-              <span style={{ color: shipping === 0 ? "#22C55E" : "inherit" }}>
+              <span style={{ color: shipping === 0 ? "#22c55e" : "var(--text-secondary)" }}>
                 {shipping === 0 ? "ฟรี!" : formatPrice(shipping)}
               </span>
             </div>

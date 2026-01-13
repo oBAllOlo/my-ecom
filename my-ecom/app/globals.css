@@ -47,9 +47,9 @@
   --gradient-primary: linear-gradient(135deg, #1c4d8d 0%, #4988c4 100%);
   --gradient-hero: linear-gradient(
     135deg,
-    #0f2854 0%,
-    #1c4d8d 50%,
-    #0a1628 100%
+    #0a1628 0%,
+    #050d18 50%,
+    #0f2854 100%
   );
   --gradient-card: linear-gradient(
     180deg,
@@ -971,11 +971,18 @@ body {
 
 .main-content {
   flex: 1;
+  background: linear-gradient(135deg, #0a1628 0%, #050d18 50%, #0f2854 100%);
+  min-height: calc(100vh - 80px);
 }
 
 /* ============================
    Products Page
    ============================ */
+.products-main {
+  background: linear-gradient(135deg, #0a1628 0%, #050d18 50%, #0f2854 100%) !important;
+  min-height: 100vh;
+}
+
 .products-page {
   padding: 2rem;
   max-width: 1400px;

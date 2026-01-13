@@ -3,8 +3,9 @@ import Omise from "omise";
 import dbConnect from "@/lib/mongodb";
 import Order from "@/models/Order";
 
+// Support both naming conventions for backward compatibility
 const secretKey = process.env.OMISE_SECRET_KEY;
-const publicKey = process.env.OMISE_PUBLIC_KEY;
+const publicKey = process.env.OMISE_PUBLIC_KEY || process.env.NEXT_PUBLIC_OMISE_PUBLIC_KEY;
 console.log("Omise Secret Key loaded:", secretKey ? `${secretKey.substring(0, 15)}...` : "NOT SET");
 console.log("Omise Public Key loaded:", publicKey ? `${publicKey.substring(0, 15)}...` : "NOT SET");
 
