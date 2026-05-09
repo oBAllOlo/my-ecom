@@ -120,7 +120,6 @@ export default function ProfilePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: user?._id,
           currentPassword: passwordData.currentPassword,
           newPassword: passwordData.newPassword,
         }),

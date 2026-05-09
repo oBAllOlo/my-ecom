@@ -2,14 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import Omise from "omise";
 import dbConnect from "@/lib/mongodb";
 import Order from "@/models/Order";
+import { requireAuth } from "@/lib/auth";
+import { canUserAccessOrder } from "@/lib/order-access";
+import { toOmiseAmount } from "@/lib/payment";
 
 const omise = Omise({
   secretKey: process.env.OMISE_SECRET_KEY!,
 });
 
-// Create charge for Credit Card payment
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAuth();
+    if (auth.response || !auth.user) {
+      return auth.response!;
+    }
+
     const { token, amount, orderId, currency = "thb" } = await request.json();
 
     if (!token || !amount || !orderId) {
@@ -19,32 +26,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create charge via Omise
+    await dbConnect();
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return NextResponse.json(
+        { success: false, error: "Order not found" },
+        { status: 404 }
+      );
+    }
+
+    if (
+      !canUserAccessOrder(order.userId.toString(), auth.user._id, auth.user.role)
+    ) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden" },
+        { status: 403 }
+      );
+    }
+
     const charge = await omise.charges.create({
-      amount: Math.round(amount * 100), // Convert to satang
+      amount: toOmiseAmount(amount),
       currency,
       card: token,
       metadata: { orderId },
     });
 
-    await dbConnect();
-
-    // Update order with payment info
-    // If payment is successful, also update order status to "processing"
     const updateData: Record<string, unknown> = {
       paymentStatus: charge.status === "successful" ? "paid" : "pending",
       chargeId: charge.id,
       paymentMethod: "card",
     };
 
-    // If charge is successful, update order status to processing
     if (charge.status === "successful") {
       updateData.status = "processing";
-      console.log(`Order ${orderId} payment successful - status updated to processing`);
     }
 
     await Order.findByIdAndUpdate(orderId, updateData);
-
 
     return NextResponse.json({
       success: true,

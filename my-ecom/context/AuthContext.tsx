@@ -3,8 +3,8 @@
 import React, {
   createContext,
   useContext,
-  useState,
   useEffect,
+  useState,
   ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
@@ -46,18 +46,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  // Load user from localStorage on mount
   useEffect(() => {
-    const savedUser = localStorage.getItem("currentUser");
-    if (savedUser) {
+    let isMounted = true;
+
+    const loadCurrentUser = async () => {
       try {
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
-        console.error("Error loading user:", e);
-        localStorage.removeItem("currentUser");
+        const res = await fetch("/api/auth/me", { cache: "no-store" });
+        const data = await res.json();
+
+        if (!isMounted) {
+          return;
+        }
+
+        if (data.success) {
+          setUser(data.data);
+        }
+      } catch (error) {
+        console.error("Error loading current user:", error);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
-    }
-    setIsLoading(false);
+    };
+
+    void loadCurrentUser();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const login = async (
@@ -78,8 +95,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       setUser(data.data);
-      localStorage.setItem("currentUser", JSON.stringify(data.data));
-
       return { success: true };
     } catch (error) {
       console.error("Login error:", error);
@@ -106,7 +121,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: data.error };
       }
 
-      // Registration now requires verification, don't auto-login
       return {
         success: true,
         requireVerification: data.requireVerification,
@@ -135,10 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: data.error };
       }
 
-      // Auto-login after verification
       setUser(data.data);
-      localStorage.setItem("currentUser", JSON.stringify(data.data));
-
       return { success: true };
     } catch (error) {
       console.error("Verify OTP error:", error);
@@ -147,8 +158,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
+    void fetch("/api/auth/logout", { method: "POST" }).catch((error) => {
+      console.error("Logout error:", error);
+    });
     setUser(null);
-    localStorage.removeItem("currentUser");
     toast.success("ออกจากระบบสำเร็จ!");
     router.push("/login");
   };

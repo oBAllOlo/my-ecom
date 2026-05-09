@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import CustomPart from "@/models/CustomPart";
+import { requireAdmin } from "@/lib/auth";
 
 interface Params {
   params: Promise<{ id: string }>;
 }
 
-// GET single custom part
 export async function GET(request: Request, { params }: Params) {
   try {
     await dbConnect();
@@ -31,9 +31,13 @@ export async function GET(request: Request, { params }: Params) {
   }
 }
 
-// PUT update custom part
 export async function PUT(request: Request, { params }: Params) {
   try {
+    const auth = await requireAdmin();
+    if (auth.response) {
+      return auth.response;
+    }
+
     await dbConnect();
     const { id } = await params;
     const body = await request.json();
@@ -60,9 +64,13 @@ export async function PUT(request: Request, { params }: Params) {
   }
 }
 
-// DELETE custom part
 export async function DELETE(request: Request, { params }: Params) {
   try {
+    const auth = await requireAdmin();
+    if (auth.response) {
+      return auth.response;
+    }
+
     await dbConnect();
     const { id } = await params;
 

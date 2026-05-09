@@ -90,12 +90,11 @@ const statusConfig = {
 
 function TrackingContent() {
   const searchParams = useSearchParams();
-  const { user } = useAuth();
+  useAuth();
   // const { showToast } = useToast();
   const orderId = searchParams.get("order");
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
-  const [searchInput, setSearchInput] = useState(orderId || "");
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [confirmMessage, setConfirmMessage] = useState({ type: "", text: "" });
 
@@ -126,13 +125,6 @@ function TrackingContent() {
     }
   }, [orderId]);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchInput.trim()) {
-      fetchOrder(searchInput.trim());
-    }
-  };
-
   const handleConfirmReceived = async () => {
     if (!order) return;
 
@@ -145,7 +137,6 @@ function TrackingContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           orderId: order._id,
-          userId: user?._id,
         }),
       });
       const data = await res.json();

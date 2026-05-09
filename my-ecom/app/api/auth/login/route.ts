@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
+import { setSessionCookie } from "@/lib/auth";
 
 export async function POST(request: Request) {
   try {
@@ -8,7 +9,6 @@ export async function POST(request: Request) {
 
     const { email, password } = await request.json();
 
-    // Validate input
     if (!email || !password) {
       return NextResponse.json(
         { success: false, error: "กรุณากรอกอีเมลและรหัสผ่าน" },
@@ -16,7 +16,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Find user by email
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
       return NextResponse.json(
@@ -25,7 +24,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check password
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
       return NextResponse.json(
@@ -34,7 +32,16 @@ export async function POST(request: Request) {
       );
     }
 
-    // Return user without password
+    if (!user.isVerified) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "กรุณายืนยันอีเมลด้วย OTP ก่อนเข้าสู่ระบบ",
+        },
+        { status: 403 }
+      );
+    }
+
     const userResponse = {
       _id: user._id,
       name: user.name,
@@ -45,7 +52,10 @@ export async function POST(request: Request) {
       createdAt: user.createdAt,
     };
 
-    return NextResponse.json({ success: true, data: userResponse });
+    const response = NextResponse.json({ success: true, data: userResponse });
+    setSessionCookie(response, user);
+
+    return response;
   } catch (error) {
     console.error("Error logging in:", error);
     return NextResponse.json(

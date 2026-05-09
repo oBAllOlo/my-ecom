@@ -1,23 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
+import { requireAuth } from "@/lib/auth";
 
-// GET user's saved address
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
+    const auth = await requireAuth();
+    if (auth.response || !auth.user) {
+      return auth.response!;
+    }
 
-    if (!userId) {
+    const { searchParams } = new URL(request.url);
+    const requestedUserId = searchParams.get("userId");
+
+    if (requestedUserId && requestedUserId !== auth.user._id && auth.user.role !== "admin") {
       return NextResponse.json(
-        { success: false, error: "User ID required" },
-        { status: 400 }
+        { success: false, error: "Forbidden" },
+        { status: 403 }
       );
     }
 
     await dbConnect();
 
-    const user = await User.findById(userId).select("address name email");
+    const user = await User.findById(requestedUserId || auth.user._id).select(
+      "address name email"
+    );
 
     if (!user) {
       return NextResponse.json(

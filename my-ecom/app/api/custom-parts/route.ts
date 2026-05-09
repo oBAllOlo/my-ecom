@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import CustomPart from "@/models/CustomPart";
+import { requireAdmin } from "@/lib/auth";
 
-// GET all custom parts
 export async function GET(request: Request) {
   try {
     await dbConnect();
@@ -11,7 +11,6 @@ export async function GET(request: Request) {
     const category = searchParams.get("category");
     const activeOnly = searchParams.get("activeOnly") !== "false";
 
-    // Build query
     const query: Record<string, unknown> = {};
     if (category) query.category = category;
     if (activeOnly) query.isActive = true;
@@ -28,14 +27,17 @@ export async function GET(request: Request) {
   }
 }
 
-// POST create new custom part
 export async function POST(request: Request) {
   try {
+    const auth = await requireAdmin();
+    if (auth.response) {
+      return auth.response;
+    }
+
     await dbConnect();
 
     const body = await request.json();
 
-    // Validate required fields
     if (!body.category || !body.name || body.price === undefined || !body.image) {
       return NextResponse.json(
         { success: false, error: "Missing required fields" },

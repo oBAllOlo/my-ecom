@@ -458,7 +458,7 @@ function ProductModal({
 
         const data = await res.json();
         if (data.success) {
-          return data.url;
+          return data.data?.url;
         } else {
           toast.error(`${file.name}: ${data.error || "อัพโหลดไม่สำเร็จ"}`);
           return null;

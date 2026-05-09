@@ -178,7 +178,7 @@ export default function OrdersPage() {
     const fetchOrders = async () => {
       if (user?._id) {
         try {
-          const res = await fetch(`/api/orders?userId=${user._id}`);
+          const res = await fetch("/api/orders");
           const data = await res.json();
           if (data.success) {
             setOrders(data.data);

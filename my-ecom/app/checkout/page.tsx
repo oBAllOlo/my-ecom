@@ -65,10 +65,8 @@ export default function CheckoutPage() {
   // const { showToast } = useToast();
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>("card");
-  const [selectedBank, setSelectedBank] = useState("scb");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
-  const [orderId, setOrderId] = useState<string | null>(null);
 
   const [omiseLoaded, setOmiseLoaded] = useState(false);
 
@@ -202,7 +200,7 @@ export default function CheckoutPage() {
       // Fetch saved address from API
       const fetchSavedAddress = async () => {
         try {
-          const res = await fetch(`/api/users/address?userId=${user._id}`);
+          const res = await fetch("/api/users/address");
           const data = await res.json();
 
           if (data.success && data.data.address) {
@@ -249,7 +247,7 @@ export default function CheckoutPage() {
 
       fetchSavedAddress();
     }
-  }, [user, provinces]);
+      }, [districts, provinces, user]);
 
   // Initialize Omise when script loads
   useEffect(() => {
@@ -277,7 +275,6 @@ export default function CheckoutPage() {
       };
 
       const orderData = {
-        userId: user._id,
         items: items.map((item) => ({
           productId: item.product._id,
           name: item.product.name,
@@ -302,18 +299,6 @@ export default function CheckoutPage() {
 
       const data = await res.json();
       if (data.success) {
-        // Save shipping address to user profile (auto-save for future orders)
-        try {
-          await fetch(`/api/users/${user._id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ address: shippingAddress }),
-          });
-        } catch (err) {
-          console.error("Failed to save address to profile:", err);
-          // Don't block order, just log the error
-        }
-
         return data.data._id;
       }
       throw new Error(data.error);
