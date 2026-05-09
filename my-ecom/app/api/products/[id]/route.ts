@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Product from "@/models/Product";
+import { requireAdmin } from "@/lib/auth";
 
-// GET single product by ID
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -30,12 +30,16 @@ export async function GET(
   }
 }
 
-// PUT update product
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAdmin();
+    if (auth.response) {
+      return auth.response;
+    }
+
     await dbConnect();
     const { id } = await params;
     const body = await request.json();
@@ -62,12 +66,16 @@ export async function PUT(
   }
 }
 
-// DELETE product
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAdmin();
+    if (auth.response) {
+      return auth.response;
+    }
+
     await dbConnect();
     const { id } = await params;
 

@@ -1,15 +1,27 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
+import { requireAuth } from "@/lib/auth";
 
-// GET single user by ID
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAuth();
+    if (auth.response || !auth.user) {
+      return auth.response!;
+    }
+
     await dbConnect();
     const { id } = await params;
+
+    if (auth.user.role !== "admin" && auth.user._id !== id) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden" },
+        { status: 403 }
+      );
+    }
 
     const user = await User.findById(id).select("-password");
 
@@ -30,18 +42,34 @@ export async function GET(
   }
 }
 
-// PUT update user
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAuth();
+    if (auth.response || !auth.user) {
+      return auth.response!;
+    }
+
     await dbConnect();
     const { id } = await params;
-    const body = await request.json();
 
-    // Don't allow password update through this endpoint
+    if (auth.user.role !== "admin" && auth.user._id !== id) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden" },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
     delete body.password;
+
+    if (auth.user.role !== "admin") {
+      delete body.role;
+      delete body.email;
+      delete body.isVerified;
+    }
 
     const user = await User.findByIdAndUpdate(id, body, {
       new: true,
@@ -65,12 +93,23 @@ export async function PUT(
   }
 }
 
-// DELETE user
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAuth();
+    if (auth.response || !auth.user) {
+      return auth.response!;
+    }
+
+    if (auth.user.role !== "admin") {
+      return NextResponse.json(
+        { success: false, error: "Admin access required" },
+        { status: 403 }
+      );
+    }
+
     await dbConnect();
     const { id } = await params;
 

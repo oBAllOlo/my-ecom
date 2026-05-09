@@ -62,22 +62,6 @@ export default function AdminCustomPartsPage() {
     fetchParts();
   }, [fetchParts]);
 
-  const handleSeed = async () => {
-    if (!confirm("จะลบข้อมูลเดิมและ Seed ใหม่ทั้งหมด ยืนยัน?")) return;
-
-    try {
-      const res = await fetch("/api/custom-parts/seed", { method: "POST" });
-      const data = await res.json();
-      if (data.success) {
-        toast.success(`Seeded ${data.data.length} parts สำเร็จ!`);
-        fetchParts();
-      }
-    } catch (error) {
-      console.error("Error seeding:", error);
-      toast.error("Seed ล้มเหลว");
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -125,20 +109,6 @@ export default function AdminCustomPartsPage() {
       isActive: part.isActive,
     });
     setShowForm(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("ยืนยันการลบ?")) return;
-
-    try {
-      const res = await fetch(`/api/custom-parts/${id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (data.success) {
-        fetchParts();
-      }
-    } catch (error) {
-      console.error("Error deleting:", error);
-    }
   };
 
   const handleToggleActive = async (part: CustomPart) => {

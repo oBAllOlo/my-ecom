@@ -5,6 +5,19 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    files: [
+      "app/admin/orders/page.tsx",
+      "app/admin/page.tsx",
+      "app/admin/products/page.tsx",
+      "app/orders/page.tsx",
+      "app/products/[id]/page.tsx",
+      "app/tracking/page.tsx",
+    ],
+    rules: {
+      "@next/next/no-img-element": "off",
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

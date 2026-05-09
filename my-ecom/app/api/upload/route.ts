@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { uploadImage } from "@/lib/cloudinary";
+import { requireAdmin } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdmin();
+    if (auth.response) {
+      return auth.response;
+    }
+
     const formData = await request.formData();
     const file = formData.get("file") as File;
 
@@ -13,7 +19,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check file type
     if (!file.type.startsWith("image/")) {
       return NextResponse.json(
         { success: false, error: "File must be an image" },
@@ -21,7 +26,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       return NextResponse.json(
         { success: false, error: "File size must be less than 5MB" },
@@ -29,17 +33,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Convert to base64
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     const base64 = `data:${file.type};base64,${buffer.toString("base64")}`;
 
-    // Upload to Cloudinary
     const imageUrl = await uploadImage(base64);
 
     return NextResponse.json({
       success: true,
-      url: imageUrl,
+      data: { url: imageUrl },
     });
   } catch (error) {
     console.error("Upload error:", error);

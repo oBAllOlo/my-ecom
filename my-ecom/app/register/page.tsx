@@ -12,7 +12,7 @@ export default function RegisterPage() {
   // const { showToast } = useToast();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -89,13 +89,6 @@ export default function RegisterPage() {
     }
 
     setIsLoading(false);
-  };
-
-  const handleSocialClick = () => {
-    // ใช้ toast.id เพื่อป้องกันการแสดง toast ซ้ำ
-    toast.info("🚧 ฟีเจอร์นี้กำลังพัฒนา - เร็วๆ นี้!", {
-      id: "register-social-feature",
-    });
   };
 
   return (

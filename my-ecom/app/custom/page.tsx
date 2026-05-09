@@ -161,15 +161,6 @@ export default function CustomKeyboardPage() {
     return imageMap[switchName] || null;
   };
 
-  const [showSwitchModal, setShowSwitchModal] = useState(false);
-  const [currentSwitchAudio, setCurrentSwitchAudio] = useState<string | null>(
-    null
-  );
-  const [currentSwitchImage, setCurrentSwitchImage] = useState<string | null>(
-    null
-  );
-  const [currentSwitchName, setCurrentSwitchName] = useState<string>("");
-
   const playSound = (audioPath: string) => {
     const audio = new Audio(audioPath);
     audio.volume = 1.0;
@@ -187,12 +178,9 @@ export default function CustomKeyboardPage() {
 
     if (category === "switch") {
       const audioPath = getSwitchAudioPath(part.name);
-      const imagePath = getSwitchImagePath(part.name);
-
-      setCurrentSwitchName(part.name);
-      setCurrentSwitchAudio(audioPath);
-      setCurrentSwitchImage(imagePath);
-      setShowSwitchModal(true);
+      if (audioPath) {
+        playSound(audioPath);
+      }
     }
   };
 
@@ -310,8 +298,6 @@ export default function CustomKeyboardPage() {
           const selected = selectedParts[category];
           const options = partsByCategory[category];
           const isOpen = openCategory === category;
-          const isOptional =
-            category === "keycapAdd1" || category === "keycapAdd2";
           // Lock other categories until Base is selected
           const isLocked = category !== "base" && !selectedParts.base;
 

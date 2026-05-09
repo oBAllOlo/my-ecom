@@ -2,15 +2,14 @@ import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Category from "@/models/Category";
 import Product from "@/models/Product";
+import { requireAdmin } from "@/lib/auth";
 
-// GET all categories with product counts
 export async function GET() {
   try {
     await dbConnect();
 
     const categories = await Category.find({}).sort({ name: 1 }).lean();
-    
-    // Calculate product count for each category
+
     const categoriesWithCounts = await Promise.all(
       categories.map(async (category) => {
         const productCount = await Product.countDocuments({ category: category.name });
@@ -31,9 +30,13 @@ export async function GET() {
   }
 }
 
-// POST create new category
 export async function POST(request: Request) {
   try {
+    const auth = await requireAdmin();
+    if (auth.response) {
+      return auth.response;
+    }
+
     await dbConnect();
 
     const body = await request.json();

@@ -3,10 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
-import { Product, Category } from "@/lib/types";
+import { Product } from "@/lib/types";
 
 export default function Home() {
-  const [categories, setCategories] = useState<Category[]>([]);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [newProducts, setNewProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -14,22 +13,14 @@ export default function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [productsRes, categoriesRes] = await Promise.all([
-          fetch("/api/products"),
-          fetch("/api/categories"),
-        ]);
+        const productsRes = await fetch("/api/products");
 
         const productsData = await productsRes.json();
-        const categoriesData = await categoriesRes.json();
 
         if (productsData.success) {
           const allProducts = productsData.data;
           setFeaturedProducts(allProducts.filter((p: Product) => p.isFeatured).slice(0, 4));
           setNewProducts(allProducts.filter((p: Product) => p.isNewProduct).slice(0, 4));
-        }
-
-        if (categoriesData.success) {
-          setCategories(categoriesData.data);
         }
       } catch (error) {
         console.error("Error fetching data:", error);

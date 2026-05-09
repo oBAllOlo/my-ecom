@@ -5,16 +5,20 @@ import Category from "@/models/Category";
 import User, { hashPassword } from "@/models/User";
 import { products, categories } from "@/lib/mockData";
 
-// Seed database with mock data
 export async function POST() {
   try {
+    if (process.env.NODE_ENV === "production") {
+      return NextResponse.json(
+        { success: false, error: "Seed route is disabled in production" },
+        { status: 403 }
+      );
+    }
+
     await dbConnect();
 
-    // Clear existing data
     await Product.deleteMany({});
     await Category.deleteMany({});
 
-    // Insert categories
     const insertedCategories = await Category.insertMany(
       categories.map((cat) => ({
         name: cat.name,
@@ -23,7 +27,6 @@ export async function POST() {
       }))
     );
 
-    // Insert products
     const insertedProducts = await Product.insertMany(
       products.map((prod) => ({
         name: prod.name,
@@ -45,10 +48,9 @@ export async function POST() {
       }))
     );
 
-    // Create or update admin user
     const adminEmail = "admin@keyboardth.com";
     let adminUser = await User.findOne({ email: adminEmail });
-    
+
     if (!adminUser) {
       const hashedAdminPassword = await hashPassword("admin123");
       adminUser = await User.create({
@@ -56,13 +58,13 @@ export async function POST() {
         email: adminEmail,
         password: hashedAdminPassword,
         role: "admin",
+        isVerified: true,
       });
     }
 
-    // Create or update test user
     const testEmail = "user@keyboardth.com";
     let testUser = await User.findOne({ email: testEmail });
-    
+
     if (!testUser) {
       const hashedUserPassword = await hashPassword("user123");
       testUser = await User.create({
@@ -70,6 +72,7 @@ export async function POST() {
         email: testEmail,
         password: hashedUserPassword,
         role: "user",
+        isVerified: true,
       });
     }
 
@@ -79,8 +82,6 @@ export async function POST() {
       data: {
         categories: insertedCategories.length,
         products: insertedProducts.length,
-        adminUser: { email: adminEmail, password: "admin123" },
-        testUser: { email: testEmail, password: "user123" },
       },
     });
   } catch (error) {
@@ -92,4 +93,3 @@ export async function POST() {
     );
   }
 }
-

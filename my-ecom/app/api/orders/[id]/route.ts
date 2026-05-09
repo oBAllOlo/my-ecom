@@ -1,43 +1,57 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Order from "@/models/Order";
+import { requireAuth } from "@/lib/auth";
 
-// GET single order by ID (supports full ID or last 8 characters)
+async function getOrderForUser(orderId: string, currentUserId: string, isAdmin: boolean) {
+  const order = await Order.findById(orderId).populate("userId", "name email");
+
+  if (!order) {
+    return { order: null, response: NextResponse.json({ success: false, error: "Order not found" }, { status: 404 }) };
+  }
+
+  const populatedUser = order.userId as { _id?: { toString(): string }; toString(): string };
+  const ownerId = populatedUser._id?.toString() ?? populatedUser.toString();
+
+  if (!isAdmin && ownerId !== currentUserId) {
+    return {
+      order: null,
+      response: NextResponse.json(
+        { success: false, error: "Forbidden" },
+        { status: 403 }
+      ),
+    };
+  }
+
+  return { order, response: null };
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAuth();
+    if (auth.response || !auth.user) {
+      return auth.response!;
+    }
+
     await dbConnect();
     const { id } = await params;
 
-    let order;
-
-    // If ID is 24 characters, it's a full MongoDB ObjectId
-    if (id.length === 24) {
-      order = await Order.findById(id).populate("userId", "name email");
-    } else {
-      // Otherwise, search by the last 8 characters of _id
-      // This allows customers to search with short order numbers like "1232D2D"
-      const searchPattern = id.toLowerCase();
-      order = await Order.findOne({
-        $expr: {
-          $regexMatch: {
-            input: { $toString: "$_id" },
-            regex: new RegExp(searchPattern + "$", "i"),
-          },
-        },
-      }).populate("userId", "name email");
-    }
-
-    if (!order) {
+    if (id.length !== 24) {
       return NextResponse.json(
         { success: false, error: "Order not found" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ success: true, data: order });
+    const result = await getOrderForUser(id, auth.user._id, auth.user.role === "admin");
+    if (result.response) {
+      return result.response;
+    }
+
+    return NextResponse.json({ success: true, data: result.order });
   } catch (error) {
     console.error("Error fetching order:", error);
     return NextResponse.json(
@@ -47,13 +61,23 @@ export async function GET(
   }
 }
 
-
-// PUT update order status
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAuth();
+    if (auth.response || !auth.user) {
+      return auth.response!;
+    }
+
+    if (auth.user.role !== "admin") {
+      return NextResponse.json(
+        { success: false, error: "Admin access required" },
+        { status: 403 }
+      );
+    }
+
     await dbConnect();
     const { id } = await params;
     const { status } = await request.json();
@@ -89,12 +113,23 @@ export async function PUT(
   }
 }
 
-// DELETE order
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAuth();
+    if (auth.response || !auth.user) {
+      return auth.response!;
+    }
+
+    if (auth.user.role !== "admin") {
+      return NextResponse.json(
+        { success: false, error: "Admin access required" },
+        { status: 403 }
+      );
+    }
+
     await dbConnect();
     const { id } = await params;
 
