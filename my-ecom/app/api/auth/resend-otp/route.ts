@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
-import OTP from "@/models/OTP";
-import { generateOTP, sendOTPEmail } from "@/lib/email";
+import OTP, { OTP_RESEND_COOLDOWN_SECONDS } from "@/models/OTP";
+import { generateOTP, sendOTPEmail, isEmailConfigured } from "@/lib/email";
 
 export async function POST(request: Request) {
     try {
@@ -35,6 +35,23 @@ export async function POST(request: Request) {
             );
         }
 
+        // Cooldown: block requesting a new OTP within the cooldown window.
+        const lastOtp = await OTP.findOne({
+            email: normalizedEmail,
+            purpose: "verify",
+        }).sort({ createdAt: -1 });
+        if (lastOtp) {
+            const wait = Math.ceil(
+                OTP_RESEND_COOLDOWN_SECONDS - (Date.now() - lastOtp.createdAt.getTime()) / 1000
+            );
+            if (wait > 0) {
+                return NextResponse.json(
+                    { success: false, error: `กรุณารอ ${wait} วินาทีก่อนขอรหัส OTP ใหม่`, retryAfter: wait },
+                    { status: 429 }
+                );
+            }
+        }
+
         // Generate new OTP
         const otpCode = generateOTP();
         await OTP.deleteMany({ email: normalizedEmail }); // Clear old OTPs
@@ -54,8 +71,8 @@ export async function POST(request: Request) {
             {
                 success: true,
                 message: "ส่งรหัส OTP ใหม่แล้ว กรุณาตรวจสอบอีเมล",
-                // DEMO MODE: email is mocked, so the OTP is returned here.
-                devOtp: otpCode,
+                // Only expose the OTP in DEMO MODE (no SMTP configured).
+                ...(isEmailConfigured ? {} : { devOtp: otpCode }),
             },
             { status: 200 }
         );

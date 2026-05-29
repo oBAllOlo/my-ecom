@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import User, { hashPassword } from "@/models/User";
 import OTP from "@/models/OTP";
-import { generateOTP, sendOTPEmail } from "@/lib/email";
+import { generateOTP, sendOTPEmail, isEmailConfigured } from "@/lib/email";
 
 export async function POST(request: Request) {
   try {
@@ -72,8 +72,9 @@ export async function POST(request: Request) {
         message: "สมัครสมาชิกสำเร็จ กรุณาตรวจสอบอีเมลเพื่อยืนยัน OTP",
         requireVerification: true,
         email: normalizedEmail,
-        // DEMO MODE: email is mocked, so the OTP is returned here for convenience.
-        devOtp: otpCode,
+        // Only expose the OTP in DEMO MODE (no SMTP configured). When real email
+        // is enabled, never leak it — otherwise verification provides no security.
+        ...(isEmailConfigured ? {} : { devOtp: otpCode }),
       },
       { status: 201 }
     );

@@ -70,6 +70,15 @@ export default function LoginPage() {
             />
           </Field>
 
+          <div className="-mt-1 text-right">
+            <Link
+              href="/forgot-password"
+              className="text-sm font-medium text-brand hover:text-brand-hover"
+            >
+              ลืมรหัสผ่าน?
+            </Link>
+          </div>
+
           <Button type="submit" variant="primary" disabled={isLoading} className="mt-2 w-full">
             {isLoading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
           </Button>

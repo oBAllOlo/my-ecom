@@ -16,6 +16,7 @@
     "lucide-react": "^0.469.0",
     "mongoose": "^9.0.2",
     "next": "16.0.10",
+    "nodemailer": "^8.0.10",
     "react": "19.2.1",
     "react-dom": "19.2.1",
     "recharts": "^3.6.0",
@@ -24,6 +25,7 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.19.27",
+    "@types/nodemailer": "^8.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.23",

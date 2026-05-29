@@ -1,18 +1,24 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
-import User from "@/models/User";
+import User, { hashPassword } from "@/models/User";
 import OTP, { MAX_OTP_ATTEMPTS } from "@/models/OTP";
-import { setSessionCookie } from "@/lib/auth";
 
 export async function POST(request: Request) {
   try {
     await dbConnect();
 
-    const { email, otp } = await request.json();
+    const { email, otp, newPassword } = await request.json();
 
-    if (!email || !otp) {
+    if (!email || !otp || !newPassword) {
       return NextResponse.json(
         { success: false, error: "กรุณากรอกข้อมูลให้ครบถ้วน" },
+        { status: 400 }
+      );
+    }
+
+    if (newPassword.length < 6) {
+      return NextResponse.json(
+        { success: false, error: "รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร" },
         { status: 400 }
       );
     }
@@ -20,7 +26,7 @@ export async function POST(request: Request) {
     const normalizedEmail = email.toLowerCase();
     const otpRecord = await OTP.findOne({
       email: normalizedEmail,
-      purpose: "verify",
+      purpose: "reset",
     }).sort({ createdAt: -1 });
 
     if (!otpRecord) {
@@ -56,12 +62,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const user = await User.findOneAndUpdate(
-      { email: normalizedEmail },
-      { isVerified: true },
-      { new: true }
-    );
-
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       return NextResponse.json(
         { success: false, error: "ไม่พบผู้ใช้" },
@@ -69,33 +70,24 @@ export async function POST(request: Request) {
       );
     }
 
-    await OTP.deleteMany({ email: normalizedEmail });
+    user.password = await hashPassword(newPassword);
+    // Resetting via an emailed OTP also proves email ownership.
+    user.isVerified = true;
+    await user.save();
 
-    const userResponse = {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      phoneNumber: user.phoneNumber,
-      isVerified: user.isVerified,
-      createdAt: user.createdAt,
-    };
+    await OTP.deleteMany({ email: normalizedEmail, purpose: "reset" });
 
-    const response = NextResponse.json(
+    return NextResponse.json(
       {
         success: true,
-        message: "ยืนยันอีเมลสำเร็จ",
-        data: userResponse,
+        message: "รีเซ็ตรหัสผ่านสำเร็จ กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่",
       },
       { status: 200 }
     );
-
-    setSessionCookie(response, user);
-    return response;
   } catch (error) {
-    console.error("Error verifying OTP:", error);
+    console.error("Error in reset-password:", error);
     return NextResponse.json(
-      { success: false, error: "เกิดข้อผิดพลาดในการยืนยัน OTP" },
+      { success: false, error: "เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน" },
       { status: 500 }
     );
   }
