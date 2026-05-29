@@ -3,7 +3,31 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { CheckCircle2, XCircle, Package, type LucideIcon } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { Card, Spinner, buttonClasses } from "@/components/ui";
+
+function StatusShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-[70vh] items-center justify-center px-4 py-12">
+      <Card className="w-full max-w-md p-10 text-center">{children}</Card>
+    </div>
+  );
+}
+
+function StatusIcon({
+  icon: Icon,
+  tone,
+}: {
+  icon: LucideIcon;
+  tone: string;
+}) {
+  return (
+    <span className={`mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full ${tone}`}>
+      <Icon className="h-7 w-7" />
+    </span>
+  );
+}
 
 function CheckoutCompleteContent() {
   const searchParams = useSearchParams();
@@ -21,9 +45,7 @@ function CheckoutCompleteContent() {
   const checkCount = useRef(0);
 
   useEffect(() => {
-    if (!orderId) {
-      return;
-    }
+    if (!orderId) return;
 
     if (!hasCleared.current) {
       hasCleared.current = true;
@@ -38,10 +60,7 @@ function CheckoutCompleteContent() {
       try {
         const res = await fetch(`/api/payment/check-status?orderId=${orderId}`);
         const data = await res.json();
-
-        if (isCancelled || !data.success) {
-          return;
-        }
+        if (isCancelled || !data.success) return;
 
         setPaymentStatus(data.data.paymentStatus);
 
@@ -49,7 +68,6 @@ function CheckoutCompleteContent() {
           setStatus("success");
           return;
         }
-
         if (data.data.paymentStatus === "failed") {
           setStatus("error");
           return;
@@ -57,15 +75,12 @@ function CheckoutCompleteContent() {
 
         setStatus("pending");
         checkCount.current += 1;
-
         if (checkCount.current < 10) {
           timeoutId = setTimeout(checkPaymentStatus, 3000);
         }
       } catch (error) {
         console.error("Error checking payment:", error);
-        if (!isCancelled) {
-          setStatus("pending");
-        }
+        if (!isCancelled) setStatus("pending");
       }
     };
 
@@ -73,106 +88,81 @@ function CheckoutCompleteContent() {
 
     return () => {
       isCancelled = true;
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
+      if (timeoutId) clearTimeout(timeoutId);
     };
   }, [clearCart, orderId]);
 
+  const orderCode = orderId?.slice(-8).toUpperCase();
+
   if (status === "loading") {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center p-8 bg-gradient-to-br from-slate-900 to-slate-800">
-        <div className="bg-slate-800/80 backdrop-blur-md rounded-3xl p-12 text-center max-w-md w-full border border-white/10">
-          <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-6"></div>
-          <p className="text-slate-400">กำลังตรวจสอบการชำระเงิน...</p>
-        </div>
-      </div>
+      <StatusShell>
+        <Spinner className="mx-auto mb-5 h-10 w-10" />
+        <p className="text-fg-muted">กำลังตรวจสอบการชำระเงิน...</p>
+      </StatusShell>
     );
   }
 
   if (status === "error") {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center p-8 bg-gradient-to-br from-slate-900 to-slate-800">
-        <div className="bg-slate-800/80 backdrop-blur-md rounded-3xl p-12 text-center max-w-md w-full border border-white/10">
-          <div className="text-6xl mb-6">❌</div>
-          <h1 className="text-white text-3xl font-bold mb-2">เกิดข้อผิดพลาด</h1>
-          <p className="text-slate-400 mb-6">ไม่พบข้อมูลการสั่งซื้อ</p>
-          <Link
-            href="/"
-            className="inline-block bg-gradient-to-r from-blue-500 to-primary-500 text-white py-4 px-8 rounded-xl font-semibold hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/30 transition-all"
-          >
-            กลับหน้าแรก
-          </Link>
-        </div>
-      </div>
+      <StatusShell>
+        <StatusIcon icon={XCircle} tone="bg-danger/10 text-danger" />
+        <h1 className="text-2xl font-semibold text-fg">เกิดข้อผิดพลาด</h1>
+        <p className="mt-2 text-sm text-fg-muted">ไม่พบข้อมูลการสั่งซื้อ</p>
+        <Link href="/" className={buttonClasses({ variant: "primary", className: "mt-6 w-full" })}>
+          กลับหน้าแรก
+        </Link>
+      </StatusShell>
     );
   }
 
   if (status === "pending") {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center p-8 bg-gradient-to-br from-slate-900 to-slate-800">
-        <div className="bg-slate-800/80 backdrop-blur-md rounded-3xl p-12 text-center max-w-md w-full border border-white/10">
-          <div className="text-6xl mb-6">⏳</div>
-          <h1 className="text-white text-3xl font-bold mb-2">รอการชำระเงิน</h1>
-          <p className="bg-amber-500/10 text-amber-400 p-4 rounded-lg my-6">
-            หมายเลขคำสั่งซื้อ:{" "}
-            <strong className="text-amber-300 font-mono">
-              {orderId?.slice(-8).toUpperCase()}
-            </strong>
-          </p>
-          <p className="text-slate-400 mb-4">ระบบกำลังตรวจสอบการชำระเงิน...</p>
-          <div className="w-10 h-10 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-500 text-sm mb-6">
-            หน้านี้จะอัปเดตอัตโนมัติเมื่อชำระเงินสำเร็จ
-          </p>
-          <Link
-            href="/orders"
-            className="inline-block bg-transparent text-slate-400 py-4 px-8 border border-slate-400/30 rounded-xl font-medium hover:bg-slate-400/10 hover:text-white transition-all"
-          >
-            ดูประวัติการสั่งซื้อ
-          </Link>
+      <StatusShell>
+        <Spinner className="mx-auto mb-5 h-10 w-10 text-warning" />
+        <h1 className="text-2xl font-semibold text-fg">รอการชำระเงิน</h1>
+        <div className="my-5 rounded-md bg-warning/10 px-4 py-3 text-sm text-warning">
+          หมายเลขคำสั่งซื้อ:{" "}
+          <strong className="font-mono">{orderCode}</strong>
         </div>
-      </div>
+        <p className="mb-6 text-sm text-fg-subtle">
+          หน้านี้จะอัปเดตอัตโนมัติเมื่อชำระเงินสำเร็จ
+        </p>
+        <Link href="/orders" className={buttonClasses({ variant: "secondary", className: "w-full" })}>
+          ดูประวัติการสั่งซื้อ
+        </Link>
+      </StatusShell>
     );
   }
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center p-8 bg-gradient-to-br from-slate-900 to-slate-800">
-      <div className="bg-slate-800/80 backdrop-blur-md rounded-3xl p-12 text-center max-w-md w-full border border-white/10">
-        <div className="text-6xl mb-6">✅</div>
-        <h1 className="text-white text-3xl font-bold mb-2">ชำระเงินสำเร็จ!</h1>
-        <p className="text-slate-400 mb-2">ขอบคุณสำหรับการสั่งซื้อ</p>
-        <p className="bg-blue-500/10 text-blue-400 p-4 rounded-lg my-6">
-          หมายเลขคำสั่งซื้อ:{" "}
-          <strong className="text-blue-300 font-mono text-sm">
-            {orderId?.slice(-8).toUpperCase()}
-          </strong>
-        </p>
-        <p className="text-slate-500 text-sm mb-6">
-          เรากำลังเตรียมสินค้าของคุณ คุณสามารถติดตามสถานะได้ที่หน้าประวัติการสั่งซื้อ
-        </p>
-        <div className="flex flex-col gap-4">
-          <Link
-            href={`/tracking?order=${orderId}`}
-            className="bg-gradient-to-r from-blue-500 to-primary-500 text-white py-4 px-8 rounded-xl font-semibold hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-500/30 transition-all"
-          >
-            📦 ติดตามพัสดุ
-          </Link>
-          <Link
-            href="/orders"
-            className="bg-transparent text-slate-400 py-4 px-8 border border-slate-400/30 rounded-xl font-medium hover:bg-slate-400/10 hover:text-white transition-all"
-          >
-            ดูประวัติการสั่งซื้อ
-          </Link>
-          <Link
-            href="/"
-            className="bg-transparent text-slate-400 py-4 px-8 border border-slate-400/30 rounded-xl font-medium hover:bg-slate-400/10 hover:text-white transition-all"
-          >
-            กลับหน้าแรก
-          </Link>
-        </div>
+    <StatusShell>
+      <StatusIcon icon={CheckCircle2} tone="bg-success/10 text-success" />
+      <h1 className="text-2xl font-semibold text-fg">ชำระเงินสำเร็จ!</h1>
+      <p className="mt-2 text-sm text-fg-muted">ขอบคุณสำหรับการสั่งซื้อ</p>
+      <div className="my-5 rounded-md bg-brand-subtle px-4 py-3 text-sm text-fg-muted">
+        หมายเลขคำสั่งซื้อ:{" "}
+        <strong className="font-mono text-brand">{orderCode}</strong>
       </div>
-    </div>
+      <p className="mb-6 text-sm text-fg-subtle">
+        เรากำลังเตรียมสินค้าของคุณ ติดตามสถานะได้ที่หน้าประวัติการสั่งซื้อ
+      </p>
+      <div className="flex flex-col gap-3">
+        <Link
+          href={`/tracking?order=${orderId}`}
+          className={buttonClasses({ variant: "primary", className: "w-full" })}
+        >
+          <Package className="h-4 w-4" />
+          ติดตามพัสดุ
+        </Link>
+        <Link href="/orders" className={buttonClasses({ variant: "secondary", className: "w-full" })}>
+          ดูประวัติการสั่งซื้อ
+        </Link>
+        <Link href="/" className={buttonClasses({ variant: "ghost", className: "w-full" })}>
+          กลับหน้าแรก
+        </Link>
+      </div>
+    </StatusShell>
   );
 }
 
@@ -180,12 +170,10 @@ export default function CheckoutCompletePage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-[80vh] flex items-center justify-center p-8 bg-gradient-to-br from-slate-900 to-slate-800">
-          <div className="bg-slate-800/80 backdrop-blur-md rounded-3xl p-12 text-center max-w-md w-full border border-white/10">
-            <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-6"></div>
-            <p className="text-slate-400">กำลังโหลด...</p>
-          </div>
-        </div>
+        <StatusShell>
+          <Spinner className="mx-auto mb-5 h-10 w-10" />
+          <p className="text-fg-muted">กำลังโหลด...</p>
+        </StatusShell>
       }
     >
       <CheckoutCompleteContent />

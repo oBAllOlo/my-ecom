@@ -16,6 +16,8 @@ interface RegisterResult {
   error?: string;
   requireVerification?: boolean;
   email?: string;
+  // DEMO MODE: OTP returned by the API since email is mocked.
+  devOtp?: string;
 }
 
 interface AuthContextType {
@@ -125,6 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         success: true,
         requireVerification: data.requireVerification,
         email: data.email,
+        devOtp: data.devOtp,
       };
     } catch (error) {
       console.error("Register error:", error);

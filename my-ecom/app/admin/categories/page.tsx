@@ -1,11 +1,22 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Plus, Pencil, Trash2, FolderTree, Package, CheckCircle2, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import ConfirmModal from "@/components/ConfirmModal";
+import {
+  PageHeader,
+  Card,
+  Field,
+  Input,
+  Button,
+  Badge,
+  EmptyState,
+  Spinner,
+  cn,
+} from "@/components/ui";
 
 interface Category {
   _id: string;
@@ -18,27 +29,20 @@ interface Category {
 export default function AdminCategoriesPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
-  // const { showToast } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    icon: "📁",
-  });
+  const [formData, setFormData] = useState({ name: "", icon: "folder" });
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState({ type: "", content: "" });
-  const [deleteConfirm, setDeleteConfirm] = useState<{
-    show: boolean;
-    id: string;
-    name: string;
-  }>({ show: false, id: "", name: "" });
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; id: string; name: string }>({
+    show: false,
+    id: "",
+    name: "",
+  });
 
   useEffect(() => {
-    if (!isLoading && (!user || user.role !== "admin")) {
-      router.push("/login");
-    }
+    if (!isLoading && (!user || user.role !== "admin")) router.push("/login");
   }, [user, isLoading, router]);
 
   useEffect(() => {
@@ -49,9 +53,7 @@ export default function AdminCategoriesPage() {
     try {
       const res = await fetch("/api/categories");
       const data = await res.json();
-      if (data.success) {
-        setCategories(data.data);
-      }
+      if (data.success) setCategories(data.data);
     } catch (error) {
       console.error("Error fetching categories:", error);
     } finally {
@@ -62,84 +64,52 @@ export default function AdminCategoriesPage() {
   const handleOpenModal = (category?: Category) => {
     if (category) {
       setEditingCategory(category);
-      setFormData({
-        name: category.name,
-        icon: category.icon,
-      });
+      setFormData({ name: category.name, icon: category.icon || "folder" });
     } else {
       setEditingCategory(null);
-      setFormData({ name: "", icon: "📁" });
+      setFormData({ name: "", icon: "folder" });
     }
     setShowModal(true);
-    setMessage({ type: "", content: "" });
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingCategory(null);
-    setFormData({ name: "", icon: "📁" });
-    setMessage({ type: "", content: "" });
+    setFormData({ name: "", icon: "folder" });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setMessage({ type: "", content: "" });
-
     try {
-      const url = editingCategory
-        ? `/api/categories/${editingCategory._id}`
-        : "/api/categories";
-      const method = editingCategory ? "PUT" : "POST";
-
+      const url = editingCategory ? `/api/categories/${editingCategory._id}` : "/api/categories";
       const res = await fetch(url, {
-        method,
+        method: editingCategory ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-
       const data = await res.json();
-
       if (data.success) {
-        toast.success(
-          editingCategory ? "อัปเดตหมวดหมู่สำเร็จ!" : "เพิ่มหมวดหมู่สำเร็จ!"
-        );
-        setMessage({
-          type: "success",
-          content: editingCategory
-            ? "อัปเดตหมวดหมู่สำเร็จ!"
-            : "เพิ่มหมวดหมู่สำเร็จ!",
-        });
+        toast.success(editingCategory ? "อัปเดตหมวดหมู่สำเร็จ!" : "เพิ่มหมวดหมู่สำเร็จ!");
         fetchCategories();
-        setTimeout(() => {
-          handleCloseModal();
-        }, 1000);
+        handleCloseModal();
       } else {
-        setMessage({ type: "error", content: data.error || "เกิดข้อผิดพลาด" });
+        toast.error(data.error || "เกิดข้อผิดพลาด");
       }
     } catch (error) {
       console.error("Error saving category:", error);
-      setMessage({ type: "error", content: "เกิดข้อผิดพลาดในการเชื่อมต่อ" });
+      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDeleteClick = (category: Category) => {
-    setDeleteConfirm({ show: true, id: category._id, name: category.name });
-  };
-
   const handleDeleteConfirm = async () => {
     const id = deleteConfirm.id;
     setDeleteConfirm({ show: false, id: "", name: "" });
-
     try {
-      const res = await fetch(`/api/categories/${id}`, {
-        method: "DELETE",
-      });
-
+      const res = await fetch(`/api/categories/${id}`, { method: "DELETE" });
       const data = await res.json();
-
       if (data.success) {
         toast.success("ลบหมวดหมู่แล้ว");
         fetchCategories();
@@ -152,443 +122,123 @@ export default function AdminCategoriesPage() {
     }
   };
 
-
-
   if (isLoading || loading) {
     return (
-      <div className="admin-loading">
-        <div className="admin-loading-spinner"></div>
-        <p>กำลังโหลดข้อมูล...</p>
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Spinner className="h-8 w-8" />
       </div>
     );
   }
+  if (!user || user.role !== "admin") return null;
 
-  if (!user || user.role !== "admin") {
-    return null;
-  }
+  const stats = [
+    { icon: FolderTree, tone: "bg-brand-subtle text-brand", value: categories.length, label: "หมวดหมู่ทั้งหมด" },
+    { icon: Package, tone: "bg-info/10 text-info", value: categories.reduce((s, c) => s + c.productCount, 0), label: "สินค้าทั้งหมด" },
+    { icon: CheckCircle2, tone: "bg-success/10 text-success", value: categories.filter((c) => c.productCount > 0).length, label: "หมวดหมู่ที่ใช้งาน" },
+  ];
 
   return (
-    <div className="admin-dashboard">
-      <div className="admin-bg-pattern"></div>
+    <>
+      <PageHeader
+        title="จัดการหมวดหมู่"
+        subtitle="เพิ่ม แก้ไข หรือลบหมวดหมู่สินค้า"
+        actions={
+          <Button variant="primary" onClick={() => handleOpenModal()}>
+            <Plus className="h-4 w-4" /> เพิ่มหมวดหมู่
+          </Button>
+        }
+      />
 
-      <main className="admin-main" style={{ paddingTop: "2rem" }}>
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 md:mb-8">
-          <div>
-            <h1 className="text-white text-xl md:text-2xl font-bold mb-1 md:mb-2">
-              🏷️ จัดการหมวดหมู่
-            </h1>
-            <p className="text-slate-500 text-sm md:text-base">
-              เพิ่ม แก้ไข หรือลบหมวดหมู่สินค้า
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2 md:gap-4 w-full md:w-auto">
-            <Link
-              href="/admin"
-              className="flex-1 md:flex-initial text-center py-2 md:py-3 px-3 md:px-6 bg-white/5 border-none rounded-xl text-white no-underline font-medium text-sm md:text-base"
-            >
-              ← กลับ
-            </Link>
-            <button
-              onClick={() => handleOpenModal()}
-              className="flex-1 md:flex-initial py-2 md:py-3 px-3 md:px-6 bg-gradient-to-r from-primary-500 to-primary-500 border-none rounded-xl text-white font-semibold cursor-pointer text-sm md:text-base"
-            >
-              ➕ เพิ่มหมวดหมู่
-            </button>
-          </div>
-        </div>
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {stats.map((s) => {
+          const Icon = s.icon;
+          return (
+            <Card key={s.label} className="flex items-center gap-3 p-4">
+              <span className={cn("flex h-11 w-11 items-center justify-center rounded-md", s.tone)}>
+                <Icon className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-xs text-fg-subtle">{s.label}</p>
+                <p className="text-xl font-bold text-fg">{s.value}</p>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "1rem",
-              padding: "1.25rem 1.5rem",
-              background: "linear-gradient(135deg, #1C4D8D 0%, #0F2854 100%)",
-              borderRadius: "16px",
-            }}
-          >
-            <div
-              style={{
-                width: "48px",
-                height: "48px",
-                background: "rgba(255,255,255,0.2)",
-                borderRadius: "12px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "1.5rem",
-              }}
-            >
-              🏷️
-            </div>
-            <div>
-              <p
-                style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.75rem" }}
-              >
-                หมวดหมู่ทั้งหมด
-              </p>
-              <p
-                style={{ color: "white", fontSize: "1.5rem", fontWeight: 700 }}
-              >
-                {categories.length}
-              </p>
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "1rem",
-              padding: "1.25rem 1.5rem",
-              background: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
-              borderRadius: "16px",
-            }}
-          >
-            <div
-              style={{
-                width: "48px",
-                height: "48px",
-                background: "rgba(255,255,255,0.2)",
-                borderRadius: "12px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "1.5rem",
-              }}
-            >
-              📦
-            </div>
-            <div>
-              <p
-                style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.75rem" }}
-              >
-                สินค้าทั้งหมด
-              </p>
-              <p
-                style={{ color: "white", fontSize: "1.5rem", fontWeight: 700 }}
-              >
-                {categories.reduce((sum, c) => sum + c.productCount, 0)}
-              </p>
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "1rem",
-              padding: "1.25rem 1.5rem",
-              background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-              borderRadius: "16px",
-            }}
-          >
-            <div
-              style={{
-                width: "48px",
-                height: "48px",
-                background: "rgba(255,255,255,0.2)",
-                borderRadius: "12px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "1.5rem",
-              }}
-            >
-              ✅
-            </div>
-            <div>
-              <p
-                style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.75rem" }}
-              >
-                หมวดหมู่ที่ใช้งาน
-              </p>
-              <p
-                style={{ color: "white", fontSize: "1.5rem", fontWeight: 700 }}
-              >
-                {categories.filter((c) => c.productCount > 0).length}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Categories Grid */}
-        <section
-          style={{
-            background: "rgba(30, 41, 59, 0.5)",
-            borderRadius: "16px",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
-            padding: "1.5rem",
-          }}
-        >
-          <h3
-            style={{
-              color: "white",
-              fontSize: "1.125rem",
-              fontWeight: 600,
-              marginBottom: "1.5rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-            }}
-          >
-            <span>📋</span> รายการหมวดหมู่
-          </h3>
-
-          {categories.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "3rem" }}>
-              <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>📁</div>
-              <p style={{ color: "#64748b", marginBottom: "1rem" }}>
-                ยังไม่มีหมวดหมู่
-              </p>
-              <button
-                onClick={() => handleOpenModal()}
-                style={{
-                  padding: "0.75rem 1.5rem",
-                  background:
-                    "linear-gradient(135deg, #1C4D8D 0%, #4988C4 100%)",
-                  border: "none",
-                  borderRadius: "12px",
-                  color: "white",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
-                ➕ เพิ่มหมวดหมู่แรก
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-3 md:gap-4">
-              {categories.map((category) => (
-                <div
-                  key={category._id}
-                  style={{
-                    background: "rgba(15, 23, 42, 0.5)",
-                    borderRadius: "12px",
-                    border: "1px solid rgba(255, 255, 255, 0.05)",
-                    padding: "1.5rem",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "1rem",
-                  }}
-                >
-                  <div>
-                    <h4
-                      style={{
-                        color: "white",
-                        fontWeight: 600,
-                        marginBottom: "0.25rem",
-                      }}
-                    >
-                      {category.name}
-                    </h4>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      paddingTop: "1rem",
-                      borderTop: "1px solid rgba(255, 255, 255, 0.05)",
-                    }}
+      {categories.length === 0 ? (
+        <EmptyState
+          icon={FolderTree}
+          title="ยังไม่มีหมวดหมู่"
+          action={
+            <Button variant="primary" onClick={() => handleOpenModal()}>
+              <Plus className="h-4 w-4" /> เพิ่มหมวดหมู่แรก
+            </Button>
+          }
+        />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {categories.map((category) => (
+            <Card key={category._id} className="flex flex-col gap-4 p-5">
+              <h4 className="font-semibold text-fg">{category.name}</h4>
+              <div className="flex items-center justify-between border-t border-line pt-4">
+                <Badge tone="brand">{category.productCount} สินค้า</Badge>
+                <div className="flex gap-2">
+                  <Button variant="secondary" size="sm" onClick={() => handleOpenModal(category)}>
+                    <Pencil className="h-3.5 w-3.5" /> แก้ไข
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDeleteConfirm({ show: true, id: category._id, name: category.name })}
+                    className="text-danger hover:bg-danger/10 hover:text-danger"
                   >
-                    <span
-                      style={{
-                        padding: "0.375rem 0.75rem",
-                        background: "rgba(28, 77, 141, 0.15)",
-                        borderRadius: "8px",
-                        color: "#4988C4",
-                        fontSize: "0.75rem",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {category.productCount} สินค้า
-                    </span>
-                    <div style={{ display: "flex", gap: "0.5rem" }}>
-                      <button
-                        onClick={() => handleOpenModal(category)}
-                        style={{
-                          padding: "0.5rem 0.75rem",
-                          background: "rgba(59, 130, 246, 0.15)",
-                          border: "1px solid rgba(59, 130, 246, 0.3)",
-                          borderRadius: "8px",
-                          color: "#60a5fa",
-                          cursor: "pointer",
-                          fontSize: "0.75rem",
-                          fontWeight: 500,
-                        }}
-                      >
-                        ✏️ แก้ไข
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(category)}
-                        style={{
-                          padding: "0.5rem 0.75rem",
-                          background: "rgba(239, 68, 68, 0.15)",
-                          border: "1px solid rgba(239, 68, 68, 0.3)",
-                          borderRadius: "8px",
-                          color: "#f87171",
-                          cursor: "pointer",
-                          fontSize: "0.75rem",
-                          fontWeight: 500,
-                        }}
-                      >
-                        🗑️ ลบ
-                      </button>
-                    </div>
-                  </div>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
-              ))}
-            </div>
-          )}
-        </section>
-      </main>
-
-      {/* Modal */}
-      {showModal && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0, 0, 0, 0.7)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-            padding: "1rem",
-          }}
-        >
-          <div
-            style={{
-              background: "#1e293b",
-              borderRadius: "20px",
-              padding: "2rem",
-              maxWidth: "500px",
-              width: "100%",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-              boxShadow: "0 24px 48px rgba(0, 0, 0, 0.5)",
-            }}
-          >
-            <h2
-              style={{
-                color: "white",
-                fontSize: "1.5rem",
-                fontWeight: 700,
-                marginBottom: "1.5rem",
-              }}
-            >
-              {editingCategory ? "✏️ แก้ไขหมวดหมู่" : "➕ เพิ่มหมวดหมู่ใหม่"}
-            </h2>
-
-            {message.content && (
-              <div
-                style={{
-                  padding: "1rem",
-                  borderRadius: "12px",
-                  marginBottom: "1rem",
-                  background:
-                    message.type === "success"
-                      ? "rgba(16, 185, 129, 0.15)"
-                      : "rgba(239, 68, 68, 0.15)",
-                  border: `1px solid ${
-                    message.type === "success"
-                      ? "rgba(16, 185, 129, 0.3)"
-                      : "rgba(239, 68, 68, 0.3)"
-                  }`,
-                  color: message.type === "success" ? "#10b981" : "#ef4444",
-                }}
-              >
-                {message.content}
               </div>
-            )}
-
-            <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label
-                  style={{
-                    display: "block",
-                    color: "#94a3b8",
-                    fontSize: "0.875rem",
-                    marginBottom: "0.5rem",
-                    fontWeight: 500,
-                  }}
-                >
-                  ชื่อหมวดหมู่
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  required
-                  style={{
-                    width: "100%",
-                    padding: "0.875rem 1rem",
-                    background: "rgba(15, 23, 42, 0.5)",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                    borderRadius: "12px",
-                    color: "white",
-                    fontSize: "1rem",
-                    outline: "none",
-                  }}
-                  placeholder="กรุณาใส่หมวดหมู่"
-                />
-              </div>
-
-              <div style={{ display: "flex", gap: "1rem" }}>
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  style={{
-                    flex: 1,
-                    padding: "0.875rem",
-                    background: "rgba(255, 255, 255, 0.05)",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                    borderRadius: "12px",
-                    color: "white",
-                    fontWeight: 500,
-                    cursor: "pointer",
-                  }}
-                >
-                  ยกเลิก
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  style={{
-                    flex: 1,
-                    padding: "0.875rem",
-                    background:
-                      "linear-gradient(135deg, #1C4D8D 0%, #4988C4 100%)",
-                    border: "none",
-                    borderRadius: "12px",
-                    color: "white",
-                    fontWeight: 600,
-                    cursor: saving ? "not-allowed" : "pointer",
-                    opacity: saving ? 0.5 : 1,
-                  }}
-                >
-                  {saving
-                    ? "กำลังบันทึก..."
-                    : editingCategory
-                    ? "อัปเดต"
-                    : "เพิ่มหมวดหมู่"}
-                </button>
-              </div>
-            </form>
-          </div>
+            </Card>
+          ))}
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <Card className="w-full max-w-md p-6">
+            <div className="mb-5 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-fg">
+                {editingCategory ? "แก้ไขหมวดหมู่" : "เพิ่มหมวดหมู่ใหม่"}
+              </h2>
+              <button
+                onClick={handleCloseModal}
+                className="flex h-8 w-8 items-center justify-center rounded-md text-fg-subtle hover:bg-white/5 hover:text-fg"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <Field label="ชื่อหมวดหมู่" required>
+                <Input
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                  placeholder="กรุณาใส่หมวดหมู่"
+                />
+              </Field>
+              <div className="flex gap-3">
+                <Button type="button" variant="secondary" onClick={handleCloseModal} className="flex-1">
+                  ยกเลิก
+                </Button>
+                <Button type="submit" variant="primary" disabled={saving} className="flex-1">
+                  {saving ? "กำลังบันทึก..." : editingCategory ? "อัปเดต" : "เพิ่มหมวดหมู่"}
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
+
       <ConfirmModal
         isOpen={deleteConfirm.show}
         title="ยืนยันการลบ"
@@ -599,6 +249,6 @@ export default function AdminCategoriesPage() {
         onCancel={() => setDeleteConfirm({ show: false, id: "", name: "" })}
         type="danger"
       />
-    </div>
+    </>
   );
 }

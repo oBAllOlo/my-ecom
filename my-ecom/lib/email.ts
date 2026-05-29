@@ -1,51 +1,10 @@
-import nodemailer from "nodemailer";
-
-// Validate email environment variables
-const SMTP_HOST = process.env.SMTP_HOST || process.env.EMAIL_HOST;
-const SMTP_PORT = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587;
-const SMTP_USER = process.env.SMTP_USER || process.env.EMAIL_USER;
-const SMTP_PASS = process.env.SMTP_PASS || process.env.EMAIL_PASS;
-const SMTP_FROM = process.env.SMTP_FROM || SMTP_USER;
-
-if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
-  console.warn("⚠️ Email configuration incomplete. SMTP_HOST, SMTP_USER, and SMTP_PASS are required.");
-}
-
-// Create reusable transporter
-const transporter = nodemailer.createTransport({
-  host: SMTP_HOST,
-  port: SMTP_PORT,
-  secure: SMTP_PORT === 465, // true for 465, false for other ports
-  auth: {
-    user: SMTP_USER,
-    pass: SMTP_PASS,
-  },
-});
+// DEMO MODE: email sending is mocked. No SMTP server required.
+// The OTP is logged to the server console (and returned by the register API
+// as `devOtp`) so the verification flow stays fully usable without email.
 
 export async function sendOTPEmail(to: string, otp: string): Promise<boolean> {
-  try {
-    await transporter.sendMail({
-      from: `"Custom Keyboard System" <${SMTP_FROM}>`,
-      to,
-      subject: "🔐 รหัส OTP ยืนยันตัวตน - Custom Keyboard System",
-      html: `
-        <div style="font-family: 'Segoe UI', sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px;">
-          <div style="background: white; border-radius: 12px; padding: 32px; text-align: center;">
-            <h1 style="color: #333; margin: 0 0 16px;">🔐 ยืนยันอีเมลของคุณ</h1>
-            <p style="color: #666; margin: 0 0 24px;">กรุณาใช้รหัส OTP ด้านล่างเพื่อยืนยันตัวตน</p>
-            <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 0 0 24px;">
-              <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #667eea;">${otp}</span>
-            </div>
-            <p style="color: #999; font-size: 14px; margin: 0;">รหัสนี้จะหมดอายุใน 5 นาที</p>
-          </div>
-        </div>
-      `,
-    });
-    return true;
-  } catch (error) {
-    console.error("Error sending OTP email:", error);
-    return false;
-  }
+  console.log(`📧 [DEMO] OTP email skipped. To: ${to} | OTP: ${otp}`);
+  return true;
 }
 
 export function generateOTP(): string {
@@ -76,62 +35,11 @@ interface ShippingEmailParams {
 }
 
 export async function sendShippingEmail(params: ShippingEmailParams): Promise<boolean> {
-  const { to, customerName, orderId, trackingNumber, carrier, items } = params;
-  const carrierData = getCarrierInfo(carrier);
-  const trackingUrl = carrierData.trackingUrl ? `${carrierData.trackingUrl}${trackingNumber}` : "";
-
-  const itemsList = items.map(item =>
-    `<li style="margin-bottom: 4px;">${item.name} x${item.quantity}</li>`
-  ).join("");
-
-  try {
-    await transporter.sendMail({
-      from: `"Custom Keyboard System" <${SMTP_FROM}>`,
-      to,
-      subject: `🚚 พัสดุของคุณถูกจัดส่งแล้ว! - คำสั่งซื้อ #${orderId.slice(-8).toUpperCase()}`,
-      html: `
-        <div style="font-family: 'Segoe UI', sans-serif; max-width: 520px; margin: 0 auto; padding: 32px; background: linear-gradient(135deg, #1C4D8D 0%, #0F2854 100%); border-radius: 16px;">
-          <div style="background: white; border-radius: 12px; padding: 32px;">
-            <div style="text-align: center; margin-bottom: 24px;">
-              <span style="font-size: 48px;">🚚</span>
-              <h1 style="color: #333; margin: 16px 0 8px;">พัสดุของคุณถูกจัดส่งแล้ว!</h1>
-              <p style="color: #666; margin: 0;">สวัสดีคุณ ${customerName}</p>
-            </div>
-            
-            <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-              <p style="margin: 0 0 8px; color: #666; font-size: 14px;">หมายเลขพัสดุ</p>
-              <p style="margin: 0; font-size: 24px; font-weight: bold; color: #1C4D8D; letter-spacing: 2px;">${trackingNumber}</p>
-            </div>
-            
-            <div style="background: #f0f9ff; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
-              <p style="margin: 0 0 4px; color: #666; font-size: 14px;">🏢 บริษัทขนส่ง</p>
-              <p style="margin: 0; font-weight: 600; color: #0369a1;">${carrierData.name}</p>
-            </div>
-            
-            ${trackingUrl ? `
-            <a href="${trackingUrl}" target="_blank" style="display: block; text-align: center; background: linear-gradient(135deg, #1C4D8D 0%, #0F2854 100%); color: white; padding: 14px 24px; border-radius: 10px; text-decoration: none; font-weight: 600; margin-bottom: 20px;">
-              📍 ติดตามพัสดุ
-            </a>
-            ` : ""}
-            
-            <div style="border-top: 1px solid #eee; padding-top: 20px;">
-              <p style="margin: 0 0 8px; color: #666; font-size: 14px;">📦 รายการสินค้า</p>
-              <ul style="margin: 0; padding-left: 20px; color: #333;">
-                ${itemsList}
-              </ul>
-            </div>
-            
-            <p style="color: #999; font-size: 12px; margin-top: 24px; text-align: center;">
-              คำสั่งซื้อ #${orderId.slice(-8).toUpperCase()}<br>
-              ขอบคุณที่ใช้บริการ Custom Keyboard System 💜
-            </p>
-          </div>
-        </div>
-      `,
-    });
-    return true;
-  } catch (error) {
-    console.error("Error sending shipping email:", error);
-    return false;
-  }
+  const { to, orderId, trackingNumber, carrier } = params;
+  console.log(
+    `📧 [DEMO] Shipping email skipped. To: ${to} | Order: #${orderId
+      .slice(-8)
+      .toUpperCase()} | ${getCarrierInfo(carrier).name} | Tracking: ${trackingNumber}`
+  );
+  return true;
 }

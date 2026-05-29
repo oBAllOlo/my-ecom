@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { Minus, Plus, Trash2 } from "lucide-react";
 import { CartItem as CartItemType } from "@/lib/types";
 import { formatPrice } from "@/lib/mockData";
 import { useCart } from "@/context/CartContext";
@@ -12,109 +13,89 @@ interface CartItemProps {
 export default function CartItemComponent({ item }: CartItemProps) {
   const { updateQuantity, removeFromCart } = useCart();
   const { product, quantity } = item;
+  const atMax = quantity >= product.stock;
 
   return (
-    <div className="cart-item">
-      {/* Image - Stack images for custom builds */}
-      <div 
-        className="cart-item-image" 
-        style={{ 
-          position: "relative", 
-          width: "120px", 
-          height: "120px",
-          minWidth: "120px",
-          flexShrink: 0,
-          overflow: "hidden",
-          borderRadius: "12px",
-          backgroundColor: "#1e293b"
-        }}
-      >
-        {product.category === "custom" && product.images && product.images.length > 1 ? (
-          // Stacked images for custom keyboard
-          <>
-            {product.images.map((img, index) => (
-              <Image
-                key={index}
-                src={img}
-                alt={`${product.name} layer ${index + 1}`}
-                fill
-                className="cart-image"
-                style={{
-                  objectFit: "contain",
-                  zIndex: index + 1,
-                }}
-              />
-            ))}
-          </>
+    <div className="flex gap-4 rounded-xl border border-line bg-surface p-4">
+      {/* Image */}
+      <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-bg-deep sm:h-28 sm:w-28">
+        {product.category === "custom" &&
+        product.images &&
+        product.images.length > 1 ? (
+          product.images.map((img, index) => (
+            <Image
+              key={index}
+              src={img}
+              alt={`${product.name} layer ${index + 1}`}
+              fill
+              className="object-contain"
+              style={{ zIndex: index + 1 }}
+            />
+          ))
         ) : (
-          // Single image for regular products
           <Image
             src={product.image}
             alt={product.name}
             fill
-            className="cart-image"
-            style={{ objectFit: "contain" }}
+            className="object-contain"
           />
         )}
       </div>
 
-      {/* Info */}
-      <div className="cart-item-info">
-        <h3 className="cart-item-name">{product.name}</h3>
-        <p className="cart-item-brand">{product.brand}</p>
-        {product.switchType && (
-          <p className="cart-item-switch">🔘 {product.switchType}</p>
-        )}
-      </div>
-
-      {/* Price */}
-      <div className="cart-item-price">
-        <span className="price-label">ราคา</span>
-        <span className="price-value">{formatPrice(product.price)}</span>
-      </div>
-
-      {/* Quantity */}
-      <div className="cart-item-quantity">
-        <span className="quantity-label">จำนวน</span>
-        <div className="quantity-controls">
-          <button
-            className="quantity-button"
-            onClick={() => updateQuantity(product._id, quantity - 1)}
-          >
-            −
-          </button>
-          <span className="quantity-value">{quantity}</span>
-          <button
-            className="quantity-button"
-            onClick={() => updateQuantity(product._id, quantity + 1)}
-            disabled={quantity >= product.stock}
-          >
-            +
-          </button>
+      {/* Info + controls */}
+      <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h3 className="truncate font-semibold text-fg">{product.name}</h3>
+          <p className="text-sm font-medium text-brand">{product.brand}</p>
+          {product.switchType && (
+            <p className="text-sm text-fg-muted">{product.switchType}</p>
+          )}
+          <p className="mt-1 text-sm text-fg-subtle">
+            {formatPrice(product.price)} / ชิ้น
+          </p>
         </div>
-        {quantity >= product.stock && (
-          <span style={{ fontSize: '0.7rem', color: '#f59e0b', marginTop: '0.25rem' }}>
-            (สูงสุด {product.stock} ชิ้น)
-          </span>
-        )}
+
+        <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end">
+          <div className="flex flex-col items-start gap-1 sm:items-center">
+            <div className="flex items-center gap-1 rounded-md border border-line bg-bg-deep p-1">
+              <button
+                onClick={() => updateQuantity(product._id, quantity - 1)}
+                className="flex h-7 w-7 items-center justify-center rounded text-fg-muted transition-colors hover:bg-white/5 hover:text-fg"
+                aria-label="ลดจำนวน"
+              >
+                <Minus className="h-4 w-4" />
+              </button>
+              <span className="w-8 text-center text-sm font-semibold text-fg">
+                {quantity}
+              </span>
+              <button
+                onClick={() => updateQuantity(product._id, quantity + 1)}
+                disabled={atMax}
+                className="flex h-7 w-7 items-center justify-center rounded text-fg-muted transition-colors hover:bg-white/5 hover:text-fg disabled:opacity-40"
+                aria-label="เพิ่มจำนวน"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+            {atMax && (
+              <span className="text-xs text-warning">สูงสุด {product.stock} ชิ้น</span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-lg font-bold text-fg">
+              {formatPrice(product.price * quantity)}
+            </span>
+            <button
+              onClick={() => removeFromCart(product._id)}
+              className="flex h-9 w-9 items-center justify-center rounded-md text-fg-subtle transition-colors hover:bg-danger/10 hover:text-danger"
+              aria-label="ลบสินค้า"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
       </div>
-
-
-      {/* Subtotal */}
-      <div className="cart-item-subtotal">
-        <span className="subtotal-label">รวม</span>
-        <span className="subtotal-value">
-          {formatPrice(product.price * quantity)}
-        </span>
-      </div>
-
-      {/* Remove */}
-      <button
-        className="cart-item-remove"
-        onClick={() => removeFromCart(product._id)}
-      >
-        🗑️
-      </button>
     </div>
   );
 }

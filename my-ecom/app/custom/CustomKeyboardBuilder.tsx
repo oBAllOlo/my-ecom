@@ -4,11 +4,23 @@ import React, { memo, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import {
+  Wrench,
+  Volume2,
+  Keyboard,
+  CircuitBoard,
+  CircleDot,
+  Cable,
+  Check,
+  ChevronDown,
+  ShoppingCart,
+  type LucideIcon,
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
+import { Spinner } from "@/components/ui";
 import type { Product } from "@/lib/types";
 import {
-  categoryIcons,
   categoryLabels,
   categoryOrder,
   isCloudinaryUrl,
@@ -16,6 +28,15 @@ import {
   type CategoryType,
   type CustomPartRecord,
 } from "@/lib/custom-parts";
+
+const categoryIconMap: Record<CategoryType, LucideIcon> = {
+  base: CircuitBoard,
+  switch: CircleDot,
+  keycapBase: Keyboard,
+  keycapAdd1: Keyboard,
+  keycapAdd2: Keyboard,
+  wire: Cable,
+};
 
 const switchAudioMap: Record<string, string> = {
   "Alpacas (Linear)": "/audio/alpacas.mp3",
@@ -71,10 +92,19 @@ function formatPrice(price: number) {
   return new Intl.NumberFormat("th-TH").format(price);
 }
 
+// Track URLs already requested so repeated preload effects don't re-fire the
+// same network requests (selecting a part triggers several preload paths).
+const preloadedUrls = new Set<string>();
+
 function preloadImage(url: string | null) {
   if (!url || typeof window === "undefined") {
     return;
   }
+
+  if (preloadedUrls.has(url)) {
+    return;
+  }
+  preloadedUrls.add(url);
 
   const image = new window.Image();
   image.decoding = "async";
@@ -157,15 +187,11 @@ const PartOptionButton = memo(function PartOptionButton({
       )}
       <div className="flex-1 min-w-0">
         <p className="text-white text-sm font-medium truncate">{part.name}</p>
-        <p className="text-emerald-400 text-sm font-bold">
-          ฿{formatPrice(part.price)}
+        <p className="text-success text-sm font-bold">
+          {formatPrice(part.price)} บาท
         </p>
       </div>
-      {isSelected && (
-        <span className="text-lg" style={{ color: "var(--primary-light)" }}>
-          ✓
-        </span>
-      )}
+      {isSelected && <Check className="h-4 w-4 text-brand" />}
     </button>
   );
 });
@@ -183,7 +209,7 @@ const LayeredPreview = memo(function LayeredPreview({
     <>
       {images.map((image, index) => (
         <Image
-          key={`${image.key}-${image.src}`}
+          key={image.key}
           src={image.src}
           alt={image.alt}
           fill
@@ -229,7 +255,7 @@ const PartsSelector = memo(function PartsSelector({
     <div className="flex flex-col h-full">
       <div className="p-4 border-b border-white/10">
         <h2 className="text-white font-bold text-lg flex items-center gap-2">
-          <span className="text-2xl">🛠️</span> สร้างคีย์บอร์ด
+          <Wrench className="h-5 w-5 text-brand" /> สร้างคีย์บอร์ด
         </h2>
         <p className="text-slate-500 text-sm mt-1">เลือกชิ้นส่วนที่ต้องการ</p>
       </div>
@@ -240,6 +266,7 @@ const PartsSelector = memo(function PartsSelector({
           const options = partsByCategory[category];
           const isOpen = openCategory === category;
           const isLocked = category !== "base" && !selectedParts.base;
+          const CatIcon = categoryIconMap[category];
 
           return (
             <div
@@ -271,29 +298,25 @@ const PartsSelector = memo(function PartsSelector({
                 }
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-xl">{categoryIcons[category]}</span>
+                  <CatIcon className="h-5 w-5 text-fg-muted" />
                   <div>
                     <span className="text-sm font-semibold text-white">
                       {categoryLabels[category]}
                     </span>
                     {selected && (
-                      <p className="text-emerald-400 text-xs truncate max-w-[140px]">
+                      <p className="text-success text-xs truncate max-w-[140px]">
                         {selected.name}
                       </p>
                     )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {selected && (
-                    <span className="text-emerald-400 text-xs font-bold">✓</span>
-                  )}
-                  <span
-                    className={`text-slate-400 text-xs transition-transform ${
+                  {selected && <Check className="h-4 w-4 text-success" />}
+                  <ChevronDown
+                    className={`h-4 w-4 text-fg-subtle transition-transform ${
                       isOpen ? "rotate-180" : ""
                     }`}
-                  >
-                    ▼
-                  </span>
+                  />
                 </div>
               </button>
 
@@ -347,7 +370,7 @@ const PartsSelector = memo(function PartsSelector({
                       onClick={() => onPlaySound(currentSwitchAudioPath)}
                       className="mt-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1"
                     >
-                      🔊 ฟังเสียง
+                      <Volume2 className="h-4 w-4" /> ฟังเสียง
                     </button>
                   )}
                 </div>
@@ -358,13 +381,14 @@ const PartsSelector = memo(function PartsSelector({
 
         <div className="px-3 py-2 bg-slate-800/50 flex justify-between items-center">
           <span className="text-slate-400 text-sm">ราคารวม</span>
-          <span className="text-xl font-bold text-emerald-400">
-            ฿{formatPrice(
+          <span className="text-xl font-bold text-success">
+            {formatPrice(
               Object.values(selectedParts).reduce(
                 (sum, part) => sum + (part?.price || 0),
                 0
               )
-            )}
+            )}{" "}
+            บาท
           </span>
         </div>
 
@@ -384,22 +408,15 @@ const PartsSelector = memo(function PartsSelector({
           <button
             onClick={onAddToCart}
             disabled={!isComplete}
-            className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
+            className={`flex w-full items-center justify-center gap-2 rounded-md py-3 text-sm font-semibold transition-colors ${
               isComplete
-                ? "text-white hover:shadow-lg"
-                : "bg-slate-700 text-slate-500 cursor-not-allowed"
+                ? "bg-brand text-white hover:bg-brand-hover"
+                : "cursor-not-allowed bg-surface-raised text-fg-subtle"
             }`}
-            style={
-              isComplete
-                ? {
-                    background: "var(--gradient-primary)",
-                    boxShadow: "0 10px 30px rgba(28, 77, 141, 0.3)",
-                  }
-                : undefined
-            }
           >
+            {isComplete && <ShoppingCart className="h-4 w-4" />}
             {isComplete
-              ? "🛒 เพิ่มลงตะกร้า"
+              ? "เพิ่มลงตะกร้า"
               : `เลือก ${selectedCount}/${categoryOrder.length} รายการ`}
           </button>
         </div>
@@ -491,19 +508,22 @@ export default function CustomKeyboardBuilder({
     : null;
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     const visibleOptions = openCategory ? partsByCategory[openCategory] : [];
     preloadImages(
       visibleOptions
         .slice(0, 8)
         .map((part) => getThumbnailSrc(part.image))
     );
-  }, [openCategory, partsByCategory]);
+  }, [openCategory, partsByCategory, isAuthenticated]);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     preloadImages(previewImages.map((image) => image.src));
-  }, [previewImages]);
+  }, [previewImages, isAuthenticated]);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     const lastSelectedCategory = [...categoryOrder]
       .reverse()
       .find((category) => selectedParts[category]);
@@ -522,7 +542,7 @@ export default function CustomKeyboardBuilder({
         .slice(0, 10)
         .map((part) => getThumbnailSrc(part.image))
     );
-  }, [partsByCategory, selectedParts]);
+  }, [partsByCategory, selectedParts, isAuthenticated]);
 
   const playSound = (audioPath: string) => {
     const audio = new Audio(audioPath);
@@ -636,6 +656,16 @@ export default function CustomKeyboardBuilder({
     toast.success("เพิ่มสินค้าลงตะกร้าแล้ว");
   };
 
+  // Block render (and image preloads above are gated) until auth resolves —
+  // unauthenticated users are redirected to /login without loading the builder.
+  if (authLoading || !isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-bg">
+        <Spinner className="h-8 w-8" />
+      </div>
+    );
+  }
+
   return (
     <div
       className="min-h-screen flex flex-col lg:flex-row lg:h-screen overflow-hidden"
@@ -643,27 +673,8 @@ export default function CustomKeyboardBuilder({
         background: "linear-gradient(135deg, #0a1628 0%, #050d18 50%, #0f2854 100%)",
       }}
     >
-        <div className="lg:hidden flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-hidden bg-slate-900/80">
-            <PartsSelector
-              openCategory={openCategory}
-              partsByCategory={partsByCategory}
-              previewImages={previewImages}
-              selectedCount={selectedCount}
-              selectedParts={selectedParts}
-              currentSwitchAudioPath={currentSwitchAudioPath}
-              currentSwitchImageSrc={currentSwitchImageSrc}
-              onAddToCart={handleAddToCart}
-              onOpenCategoryChange={setOpenCategory}
-              onPlaySound={playSound}
-              onSelectPart={handleSelectPart}
-              isComplete={isComplete}
-            />
-          </div>
-        </div>
-
-      <div className="hidden lg:flex lg:flex-1 lg:h-full">
-        <div className="w-72 bg-slate-900/80 backdrop-blur-xl border-r border-white/10 flex flex-col h-full">
+        {/* Sidebar — rendered once; layout switches via CSS (no duplicate DOM) */}
+        <div className="w-full flex-1 lg:flex-none lg:w-72 lg:h-full flex flex-col overflow-hidden bg-slate-900/80 lg:backdrop-blur-xl lg:border-r lg:border-white/10">
           <PartsSelector
             openCategory={openCategory}
             partsByCategory={partsByCategory}
@@ -680,8 +691,9 @@ export default function CustomKeyboardBuilder({
           />
         </div>
 
+        {/* Big preview — desktop only */}
         <div
-          className="flex-1 relative flex items-center justify-center overflow-hidden min-h-[300px] lg:min-h-0"
+          className="hidden lg:flex lg:flex-1 lg:h-full relative items-center justify-center overflow-hidden min-h-0"
           style={{
             background:
               "linear-gradient(135deg, #0a1628 0%, #050d18 50%, #0f2854 100%)",
@@ -717,7 +729,7 @@ export default function CustomKeyboardBuilder({
                     event.currentTarget.style.background = "var(--primary)";
                   }}
                 >
-                  <span>🔊</span> <span className="hidden sm:inline">Play</span>
+                  <Volume2 className="h-4 w-4" /> <span className="hidden sm:inline">Play</span>
                 </button>
               )}
             </div>
@@ -733,9 +745,7 @@ export default function CustomKeyboardBuilder({
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center text-slate-500 p-8">
-              <span className="text-6xl lg:text-8xl mb-4 lg:mb-6 opacity-30">
-                ⌨️
-              </span>
+              <Keyboard className="mb-4 h-16 w-16 opacity-30 lg:mb-6 lg:h-24 lg:w-24" strokeWidth={1.5} />
               <p className="text-lg lg:text-2xl font-medium text-center">
                 เลือก Base เพื่อดูตัวอย่าง
               </p>
@@ -745,7 +755,6 @@ export default function CustomKeyboardBuilder({
             </div>
           )}
         </div>
-      </div>
     </div>
   );
 }

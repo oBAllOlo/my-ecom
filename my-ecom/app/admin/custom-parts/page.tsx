@@ -2,8 +2,19 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { Plus, Package, X, Pencil } from "lucide-react";
 import { toast } from "sonner";
+import {
+  PageHeader,
+  Card,
+  Field,
+  Input,
+  Select,
+  Button,
+  Badge,
+  Spinner,
+  cn,
+} from "@/components/ui";
 
 interface CustomPart {
   _id: string;
@@ -24,20 +35,22 @@ const categoryLabels: Record<string, string> = {
   wire: "Wire",
 };
 
+const emptyForm = {
+  category: "base",
+  name: "",
+  price: 0,
+  image: "",
+  stock: 0,
+  isActive: true,
+};
+
 export default function AdminCustomPartsPage() {
   const [parts, setParts] = useState<CustomPart[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [editingPart, setEditingPart] = useState<CustomPart | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({
-    category: "base",
-    name: "",
-    price: 0,
-    image: "",
-    stock: 0,
-    isActive: true,
-  });
+  const [formData, setFormData] = useState(emptyForm);
 
   const fetchParts = useCallback(async () => {
     try {
@@ -47,9 +60,7 @@ export default function AdminCustomPartsPage() {
           : `/api/custom-parts?category=${selectedCategory}&activeOnly=false`;
       const res = await fetch(url);
       const data = await res.json();
-      if (data.success) {
-        setParts(data.data);
-      }
+      if (data.success) setParts(data.data);
     } catch (error) {
       console.error("Error fetching parts:", error);
       toast.error("โหลดข้อมูลล้มเหลว");
@@ -64,38 +75,32 @@ export default function AdminCustomPartsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     try {
-      if (editingPart) {
-        const res = await fetch(`/api/custom-parts/${editingPart._id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        });
-        const data = await res.json();
-        if (data.success) {
-          toast.success("อัปเดตสำเร็จ!");
-          setShowForm(false);
-          setEditingPart(null);
-          fetchParts();
-        }
+      const url = editingPart ? `/api/custom-parts/${editingPart._id}` : "/api/custom-parts";
+      const res = await fetch(url, {
+        method: editingPart ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(editingPart ? "อัปเดตสำเร็จ!" : "เพิ่มสำเร็จ!");
+        setShowForm(false);
+        setEditingPart(null);
+        fetchParts();
       } else {
-        const res = await fetch("/api/custom-parts", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        });
-        const data = await res.json();
-        if (data.success) {
-          toast.success("เพิ่มสำเร็จ!");
-          setShowForm(false);
-          fetchParts();
-        }
+        toast.error(data.error || "บันทึกล้มเหลว");
       }
     } catch (error) {
       console.error("Error saving:", error);
       toast.error("บันทึกล้มเหลว");
     }
+  };
+
+  const openAdd = () => {
+    setEditingPart(null);
+    setFormData(emptyForm);
+    setShowForm(true);
   };
 
   const handleEdit = (part: CustomPart) => {
@@ -137,7 +142,7 @@ export default function AdminCustomPartsPage() {
     }
   };
 
-  const formatPrice = (price: number) => price.toLocaleString("th-TH") + " ฿";
+  const formatPrice = (price: number) => price.toLocaleString("th-TH") + " บาท";
 
   const groupedParts = parts.reduce((acc, part) => {
     if (!acc[part.category]) acc[part.category] = [];
@@ -146,190 +151,53 @@ export default function AdminCustomPartsPage() {
   }, {} as Record<string, CustomPart[]>);
 
   return (
-    <div className="p-4 lg:p-8 min-h-screen bg-slate-900">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-6 lg:mb-8">
-        <h1 className="text-slate-50 text-xl lg:text-2xl font-bold">
-          ⌨️ จัดการ Custom Parts
-        </h1>
-        <Link
-          href="/admin"
-          className="py-2 lg:py-3 px-4 lg:px-6 rounded-lg font-semibold text-sm lg:text-base bg-white/10 text-slate-400 no-underline hover:bg-white/20 transition-all inline-block w-fit"
-        >
-          ← กลับ
-        </Link>
-      </div>
+    <>
+      <PageHeader
+        title="จัดการ Custom Parts"
+        subtitle={`${parts.length} ชิ้นส่วน`}
+        actions={
+          <Button variant="primary" onClick={openAdd}>
+            <Plus className="h-4 w-4" /> เพิ่มชิ้นส่วน
+          </Button>
+        }
+      />
 
-
-      <div className="flex gap-2 mb-8 flex-wrap">
+      <div className="mb-6 flex flex-wrap gap-2">
         <button
-          className={`py-2 px-4 rounded-full border transition-all ${
-            selectedCategory === "all"
-              ? "bg-primary-700 text-white border-primary-700"
-              : "bg-slate-800 text-slate-400 border-transparent hover:bg-slate-700 hover:text-white hover:border-slate-600"
-          }`}
           onClick={() => setSelectedCategory("all")}
+          className={cn(
+            "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+            selectedCategory === "all" ? "bg-brand text-white" : "bg-surface text-fg-muted hover:bg-surface-raised"
+          )}
         >
           ทั้งหมด ({parts.length})
         </button>
         {Object.entries(categoryLabels).map(([key, label]) => (
           <button
             key={key}
-            className={`py-2 px-4 rounded-full border transition-all ${
-              selectedCategory === key
-                ? "bg-primary-700 text-white border-primary-700"
-                : "bg-slate-800 text-slate-400 border-transparent hover:bg-slate-700 hover:text-white hover:border-slate-600"
-            }`}
             onClick={() => setSelectedCategory(key)}
+            className={cn(
+              "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+              selectedCategory === key ? "bg-brand text-white" : "bg-surface text-fg-muted hover:bg-surface-raised"
+            )}
           >
             {label}
           </button>
         ))}
       </div>
 
-      {/* Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[1000]">
-          <div className="bg-slate-800 p-8 rounded-2xl w-full max-w-lg">
-            <h2 className="text-slate-50 text-xl mb-6">
-              {editingPart ? "แก้ไข Part" : "เพิ่ม Part ใหม่"}
-            </h2>
-            <form onSubmit={handleSubmit}>
-              <div className="mb-4">
-                <label className="block text-slate-400 mb-2">หมวดหมู่</label>
-                <select
-                  value={formData.category}
-                  onChange={(e) =>
-                    setFormData({ ...formData, category: e.target.value })
-                  }
-                  className="w-full p-3 rounded-lg border border-white/10 bg-white/5 text-slate-50"
-                >
-                  {Object.entries(categoryLabels).map(([key, label]) => (
-                    <option key={key} value={key} className="bg-slate-800">
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="mb-4">
-                <label className="block text-slate-400 mb-2">ชื่อ</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  required
-                  className="w-full p-3 rounded-lg border border-white/10 bg-white/5 text-slate-50"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-slate-400 mb-2">ราคา (฿)</label>
-                  <input
-                    type="number"
-                    value={formData.price}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        price: Number(e.target.value),
-                      })
-                    }
-                    required
-                    className="w-full p-3 rounded-lg border border-white/10 bg-white/5 text-slate-50"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-400 mb-2">Stock</label>
-                  <input
-                    type="number"
-                    value={formData.stock}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        stock: Number(e.target.value),
-                      })
-                    }
-                    required
-                    className="w-full p-3 rounded-lg border border-white/10 bg-white/5 text-slate-50"
-                  />
-                </div>
-              </div>
-              {/* <div className="mb-4">
-                <label className="block text-slate-400 mb-2">
-                  รูปภาพ (URL)
-                </label>
-                <input
-                  type="text"
-                  value={formData.image}
-                  onChange={(e) =>
-                    setFormData({ ...formData, image: e.target.value })
-                  }
-                  placeholder="/images/products/..."
-                  className="w-full p-3 rounded-lg border border-white/10 bg-white/5 text-slate-50 placeholder:text-slate-600"
-                />
-              </div> */}
-              <div className="mb-4">
-                <label className="flex items-center gap-2 text-slate-400 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.isActive}
-                    onChange={(e) =>
-                      setFormData({ ...formData, isActive: e.target.checked })
-                    }
-                    className="w-4 h-4"
-                  />
-                  เปิดขาย
-                </label>
-              </div>
-              <div className="flex gap-4 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="flex-1 py-3 px-6 rounded-lg font-semibold bg-white/10 text-slate-400 border-none cursor-pointer hover:bg-white/20 transition-all"
-                >
-                  ยกเลิก
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-3 px-6 rounded-lg font-semibold bg-gradient-to-r from-blue-500 to-primary-500 text-white border-none cursor-pointer hover:shadow-lg transition-all"
-                >
-                  {editingPart ? "อัปเดต" : "เพิ่ม"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Parts List */}
       {loading ? (
-        <div className="text-center text-slate-400 py-12">กำลังโหลด...</div>
-      ) : (
-        <div>
-          {selectedCategory === "all" ? (
-            Object.entries(groupedParts).map(([category, categoryParts]) => (
-              <div key={category} className="mb-8">
-                <h2 className="text-slate-50 text-xl mb-4 pb-2 border-b border-white/10">
-                  {categoryLabels[category] || category}
-                </h2>
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
-                  {categoryParts.map((part) => (
-                    <PartCard
-                      key={part._id}
-                      part={part}
-                      onEdit={handleEdit}
-                      onToggleActive={handleToggleActive}
-                      onUpdateStock={handleUpdateStock}
-                      formatPrice={formatPrice}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
-              {parts.map((part) => (
+        <div className="flex justify-center py-12">
+          <Spinner className="h-8 w-8" />
+        </div>
+      ) : selectedCategory === "all" ? (
+        Object.entries(groupedParts).map(([category, categoryParts]) => (
+          <div key={category} className="mb-8">
+            <h2 className="mb-4 border-b border-line pb-2 text-lg font-semibold text-fg">
+              {categoryLabels[category] || category}
+            </h2>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+              {categoryParts.map((part) => (
                 <PartCard
                   key={part._id}
                   part={part}
@@ -340,14 +208,99 @@ export default function AdminCustomPartsPage() {
                 />
               ))}
             </div>
-          )}
+          </div>
+        ))
+      ) : (
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          {parts.map((part) => (
+            <PartCard
+              key={part._id}
+              part={part}
+              onEdit={handleEdit}
+              onToggleActive={handleToggleActive}
+              onUpdateStock={handleUpdateStock}
+              formatPrice={formatPrice}
+            />
+          ))}
         </div>
       )}
-    </div>
+
+      {/* Form modal */}
+      {showForm && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <Card className="w-full max-w-lg p-6">
+            <div className="mb-5 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-fg">
+                {editingPart ? "แก้ไข Part" : "เพิ่ม Part ใหม่"}
+              </h2>
+              <button
+                onClick={() => setShowForm(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-md text-fg-subtle hover:bg-white/5 hover:text-fg"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <Field label="หมวดหมู่">
+                <Select
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                >
+                  {Object.entries(categoryLabels).map(([key, label]) => (
+                    <option key={key} value={key}>{label}</option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label="ชื่อ" required>
+                <Input
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                />
+              </Field>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="ราคา (บาท)" required>
+                  <Input
+                    type="number"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                    required
+                  />
+                </Field>
+                <Field label="Stock" required>
+                  <Input
+                    type="number"
+                    value={formData.stock}
+                    onChange={(e) => setFormData({ ...formData, stock: Number(e.target.value) })}
+                    required
+                  />
+                </Field>
+              </div>
+              <label className="flex items-center gap-2 text-sm text-fg-muted">
+                <input
+                  type="checkbox"
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                  className="accent-brand"
+                />
+                เปิดขาย
+              </label>
+              <div className="flex gap-3">
+                <Button type="button" variant="secondary" onClick={() => setShowForm(false)} className="flex-1">
+                  ยกเลิก
+                </Button>
+                <Button type="submit" variant="primary" className="flex-1">
+                  {editingPart ? "อัปเดต" : "เพิ่ม"}
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
+    </>
   );
 }
 
-// Part Card Component
 function PartCard({
   part,
   onEdit,
@@ -364,75 +317,49 @@ function PartCard({
   const [stock, setStock] = useState(part.stock);
 
   return (
-    <div
-      className={`rounded-xl overflow-hidden ${
-        !part.isActive ? "opacity-50" : ""
-      }`}
-      style={{
-        background: "rgba(30, 41, 59, 0.5)"
-      }}
-    >
-      <div className="relative h-[120px] bg-black/20">
+    <Card className={cn("overflow-hidden", !part.isActive && "opacity-60")}>
+      <div className="relative h-28 bg-bg-deep">
         {part.image ? (
-          <Image
-            src={part.image}
-            alt={part.name}
-            fill
-            className="object-contain"
-          />
+          <Image src={part.image} alt={part.name} fill className="object-contain" />
         ) : (
-          <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-3xl">
-            📦
-          </span>
+          <Package className="absolute left-1/2 top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 text-fg-subtle" />
         )}
-        {/* Out of stock badge */}
         {part.stock === 0 && (
-          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-            <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
-              สินค้าหมด
-            </span>
+          <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+            <Badge tone="danger">สินค้าหมด</Badge>
           </div>
         )}
       </div>
       <div className="p-4">
-        <h3 className="text-slate-50 text-sm mb-2">{part.name}</h3>
-        <p className="text-blue-500 font-semibold mb-2">
-          {formatPrice(part.price)}
-        </p>
-        <div className="flex items-center gap-2 mb-3">
-          <label className="text-slate-400 text-sm">Stock:</label>
+        <h3 className="mb-1 truncate text-sm font-medium text-fg">{part.name}</h3>
+        <p className="mb-3 font-semibold text-brand">{formatPrice(part.price)}</p>
+        <div className="mb-3 flex items-center gap-2">
+          <label className="text-sm text-fg-muted">Stock:</label>
           <input
             type="number"
             value={stock}
             onChange={(e) => setStock(Number(e.target.value))}
             onBlur={() => {
-              if (stock !== part.stock) {
-                onUpdateStock(part, stock);
-              }
+              if (stock !== part.stock) onUpdateStock(part, stock);
             }}
             min="0"
-            className="w-[60px] py-1 px-2 rounded border-none bg-slate-900 text-slate-50 text-center outline-none focus:ring-1 focus:ring-primary-500 transition-colors"
+            className="w-16 rounded border border-line bg-bg-deep px-2 py-1 text-center text-fg outline-none focus:border-brand"
           />
         </div>
         <div className="flex gap-2">
-          <button
+          <Button
+            size="sm"
+            variant={part.isActive ? "primary" : "secondary"}
             onClick={() => onToggleActive(part)}
-            className={`flex-1 py-2 rounded-md border-none cursor-pointer text-xs font-semibold ${
-              part.isActive
-                ? "bg-emerald-500 text-white"
-                : "bg-gray-500 text-white"
-            }`}
+            className={cn("flex-1", part.isActive && "bg-success hover:opacity-90")}
           >
-            {part.isActive ? "✓ เปิด" : "✗ ปิด"}
-          </button>
-          <button
-            onClick={() => onEdit(part)}
-            className="flex-1 py-2 rounded-md border-none cursor-pointer text-xs font-semibold bg-blue-500 text-white"
-          >
-            แก้ไข
-          </button>
+            {part.isActive ? "เปิด" : "ปิด"}
+          </Button>
+          <Button size="sm" variant="secondary" onClick={() => onEdit(part)} className="flex-1">
+            <Pencil className="h-3.5 w-3.5" /> แก้ไข
+          </Button>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

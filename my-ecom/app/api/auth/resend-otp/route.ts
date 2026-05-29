@@ -53,7 +53,9 @@ export async function POST(request: Request) {
         return NextResponse.json(
             {
                 success: true,
-                message: "ส่งรหัส OTP ใหม่แล้ว กรุณาตรวจสอบอีเมล"
+                message: "ส่งรหัส OTP ใหม่แล้ว กรุณาตรวจสอบอีเมล",
+                // DEMO MODE: email is mocked, so the OTP is returned here.
+                devOtp: otpCode,
             },
             { status: 200 }
         );

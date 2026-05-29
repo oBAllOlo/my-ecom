@@ -3,13 +3,14 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { UserPlus, Check, Circle } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { Card, Field, Input, PasswordInput, Button, cn } from "@/components/ui";
 
 export default function RegisterPage() {
   const router = useRouter();
   const { register, isAuthenticated } = useAuth();
-  // const { showToast } = useToast();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber] = useState("");
@@ -18,265 +19,140 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPasswordHint, setShowPasswordHint] = useState(false);
 
-  // Redirect if already logged in
   useEffect(() => {
-    if (isAuthenticated) {
-      router.push("/");
-    }
+    if (isAuthenticated) router.push("/");
   }, [isAuthenticated, router]);
+
+  const rules = [
+    { label: "อย่างน้อย 6 ตัวอักษร", ok: password.length >= 6 },
+    { label: "ตัวพิมพ์ใหญ่ (A-Z)", ok: /[A-Z]/.test(password) },
+    { label: "ตัวพิมพ์เล็ก (a-z)", ok: /[a-z]/.test(password) },
+    { label: "ตัวเลข (0-9)", ok: /[0-9]/.test(password) },
+    { label: "อักขระพิเศษ (!@#$%^&*)", ok: /[!@#$%^&*(),.?":{}|<>]/.test(password) },
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Validate passwords match
     if (password !== confirmPassword) {
       toast.error("รหัสผ่านไม่ตรงกัน");
       return;
     }
-
-    // Validate password strength
-    if (password.length < 6) {
-      toast.error("รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร");
+    if (!rules.every((r) => r.ok)) {
+      toast.error("รหัสผ่านไม่ตรงตามเงื่อนไข");
       return;
     }
-
-    if (!/[A-Z]/.test(password)) {
-      toast.error("รหัสผ่านต้องมีตัวพิมพ์ใหญ่อย่างน้อย 1 ตัว");
-      return;
-    }
-
-    if (!/[a-z]/.test(password)) {
-      toast.error("รหัสผ่านต้องมีตัวพิมพ์เล็กอย่างน้อย 1 ตัว");
-      return;
-    }
-
-    if (!/[0-9]/.test(password)) {
-      toast.error("รหัสผ่านต้องมีตัวเลขอย่างน้อย 1 ตัว");
-      return;
-    }
-
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      toast.error("รหัสผ่านต้องมีอักขระพิเศษอย่างน้อย 1 ตัว เช่น !@#$%^&*");
-      return;
-    }
-
-    // Validate name
     if (name.trim().length < 2) {
       toast.error("ชื่อต้องมีความยาวอย่างน้อย 2 ตัวอักษร");
       return;
     }
 
     setIsLoading(true);
-
-    const result = await register(
-      name,
-      email,
-      password,
-      phoneNumber || undefined
-    );
-
+    const result = await register(name, email, password, phoneNumber || undefined);
     if (result.success) {
-      toast.success(
-        "สมัครสมาชิกสำเร็จ! กรุณายืนยัน OTP ที่ส่งไปยังอีเมลของคุณ"
-      );
+      toast.success("สมัครสมาชิกสำเร็จ! กรุณายืนยัน OTP");
       if (result.requireVerification && result.email) {
-        router.push(`/verify?email=${encodeURIComponent(result.email)}`);
+        const devOtpParam = result.devOtp
+          ? `&devOtp=${encodeURIComponent(result.devOtp)}`
+          : "";
+        router.push(`/verify?email=${encodeURIComponent(result.email)}${devOtpParam}`);
       } else {
         router.push("/");
       }
     } else {
       toast.error(result.error || "เกิดข้อผิดพลาดในการสมัครสมาชิก");
     }
-
     setIsLoading(false);
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-container">
-        <div className="auth-header">
-          <span className="auth-icon">✨</span>
-          <h1 className="auth-title">สมัครสมาชิก</h1>
-          <p className="auth-subtitle">
+    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
+      <Card className="w-full max-w-md p-8">
+        <div className="mb-6 text-center">
+          <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-brand-subtle text-brand">
+            <UserPlus className="h-6 w-6" />
+          </span>
+          <h1 className="text-2xl font-semibold text-fg">สมัครสมาชิก</h1>
+          <p className="mt-1 text-sm text-fg-muted">
             สร้างบัญชีใหม่เพื่อเริ่มช้อปปิ้งกับเรา
           </p>
         </div>
 
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label">ชื่อ-นามสกุล</label>
-            <input
-              type="text"
-              className="form-input"
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <Field label="ชื่อ-นามสกุล">
+            <Input
               placeholder="ชื่อของคุณ"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
             />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">อีเมล</label>
-            <input
+          </Field>
+          <Field label="อีเมล">
+            <Input
               type="email"
-              className="form-input"
               placeholder="your@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
-          </div>
-
-          <div className="form-group" style={{ position: "relative" }}>
-            <label className="form-label">รหัสผ่าน</label>
-            <input
-              type="password"
-              className="form-input"
+          </Field>
+          <Field label="รหัสผ่าน">
+            <PasswordInput
               placeholder="สร้างรหัสผ่านที่ปลอดภัย"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onFocus={() => setShowPasswordHint(true)}
-              onBlur={() => setShowPasswordHint(false)}
               required
               minLength={6}
             />
-            {/* Password Requirements Popup */}
             {showPasswordHint && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: "calc(100% + 1rem)",
-                  width: "280px",
-                  padding: "1rem",
-                  background:
-                    "linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%)",
-                  border: "1px solid rgba(28, 77, 141, 0.3)",
-                  borderRadius: "12px",
-                  boxShadow: "0 10px 40px rgba(0, 0, 0, 0.5)",
-                  zIndex: 100,
-                  fontSize: "0.8rem",
-                }}
-              >
-                <p
-                  style={{
-                    margin: "0 0 0.75rem 0",
-                    color: "#4988C4",
-                    fontWeight: 600,
-                    fontSize: "0.85rem",
-                  }}
-                >
-                  📋 เงื่อนไขรหัสผ่าน:
-                </p>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "0.5rem",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                      color: password.length >= 6 ? "#4ade80" : "#94a3b8",
-                    }}
-                  >
-                    <span>{password.length >= 6 ? "✅" : "⬜"}</span>
-                    <span>อย่างน้อย 6 ตัวอักษร</span>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                      color: /[A-Z]/.test(password) ? "#4ade80" : "#94a3b8",
-                    }}
-                  >
-                    <span>{/[A-Z]/.test(password) ? "✅" : "⬜"}</span>
-                    <span>ตัวพิมพ์ใหญ่ (A-Z)</span>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                      color: /[a-z]/.test(password) ? "#4ade80" : "#94a3b8",
-                    }}
-                  >
-                    <span>{/[a-z]/.test(password) ? "✅" : "⬜"}</span>
-                    <span>ตัวพิมพ์เล็ก (a-z)</span>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                      color: /[0-9]/.test(password) ? "#4ade80" : "#94a3b8",
-                    }}
-                  >
-                    <span>{/[0-9]/.test(password) ? "✅" : "⬜"}</span>
-                    <span>ตัวเลข (0-9)</span>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                      color: /[!@#$%^&*(),.?":{}|<>]/.test(password)
-                        ? "#4ade80"
-                        : "#94a3b8",
-                    }}
-                  >
-                    <span>
-                      {/[!@#$%^&*(),.?":{}|<>]/.test(password) ? "✅" : "⬜"}
-                    </span>
-                    <span>อักขระพิเศษ (!@#$%^&*)</span>
-                  </div>
+              <div className="mt-2 rounded-md border border-line bg-bg-deep p-3">
+                <p className="mb-2 text-xs font-medium text-fg-muted">เงื่อนไขรหัสผ่าน</p>
+                <div className="flex flex-col gap-1.5">
+                  {rules.map((rule) => (
+                    <div
+                      key={rule.label}
+                      className={cn(
+                        "flex items-center gap-2 text-xs",
+                        rule.ok ? "text-success" : "text-fg-subtle"
+                      )}
+                    >
+                      {rule.ok ? <Check className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
+                      <span>{rule.label}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">ยืนยันรหัสผ่าน</label>
-            <input
-              type="password"
-              className="form-input"
+          </Field>
+          <Field label="ยืนยันรหัสผ่าน">
+            <PasswordInput
               placeholder="กรอกรหัสผ่านอีกครั้ง"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
             />
-          </div>
+          </Field>
 
-          <div className="auth-terms">
-            <label>
-              <input type="checkbox" required />
-              <span>
-                ฉันยอมรับ <a href="#">เงื่อนไขการใช้งาน</a> และ{" "}
-                <a href="#">นโยบายความเป็นส่วนตัว</a>
-              </span>
-            </label>
-          </div>
+          <label className="flex items-start gap-2 text-sm text-fg-muted">
+            <input type="checkbox" required className="mt-0.5 accent-brand" />
+            <span>
+              ฉันยอมรับ <span className="text-brand">เงื่อนไขการใช้งาน</span> และ{" "}
+              <span className="text-brand">นโยบายความเป็นส่วนตัว</span>
+            </span>
+          </label>
 
-          <button
-            type="submit"
-            className="btn btn-primary auth-submit"
-            disabled={isLoading}
-          >
-            {isLoading ? "⏳ กำลังสมัครสมาชิก..." : "🎉 สมัครสมาชิก"}
-          </button>
+          <Button type="submit" variant="primary" disabled={isLoading} className="mt-1 w-full">
+            {isLoading ? "กำลังสมัครสมาชิก..." : "สมัครสมาชิก"}
+          </Button>
         </form>
 
-        <p className="auth-footer">
+        <p className="mt-6 text-center text-sm text-fg-muted">
           มีบัญชีอยู่แล้ว?{" "}
-          <Link href="/login" className="auth-link">
+          <Link href="/login" className="font-medium text-brand hover:text-brand-hover">
             เข้าสู่ระบบ
           </Link>
         </p>
-      </div>
+      </Card>
     </div>
   );
 }

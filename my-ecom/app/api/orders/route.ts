@@ -23,13 +23,16 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const requestedUserId = searchParams.get("userId");
     const status = searchParams.get("status");
+    const scopeAll = searchParams.get("scope") === "all";
 
     const query: Record<string, unknown> = {};
     if (status) query.status = status;
 
-    if (auth.user.role === "admin" && requestedUserId) {
-      query.userId = requestedUserId;
+    if (auth.user.role === "admin" && (scopeAll || requestedUserId)) {
+      // Admin management view: all orders, or a specific user's when requested.
+      if (requestedUserId) query.userId = requestedUserId;
     } else {
+      // Everyone else (and admins on their personal page) → own orders only.
       query.userId = auth.user._id;
     }
 

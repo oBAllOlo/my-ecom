@@ -3,8 +3,29 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import {
+  ChevronLeft,
+  Clock,
+  Package,
+  Truck,
+  CheckCircle2,
+  XCircle,
+  ExternalLink,
+  MapPin,
+  ReceiptText,
+  type LucideIcon,
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import {
+  PageContainer,
+  Card,
+  Badge,
+  Button,
+  Spinner,
+  EmptyState,
+  cn,
+} from "@/components/ui";
 
 interface Order {
   _id: string;
@@ -38,60 +59,46 @@ interface Order {
   };
 }
 
-const carriers: Record<
-  string,
-  { name: string; trackingUrl: string; icon: string }
-> = {
-  kerry: {
-    name: "Kerry Express",
-    trackingUrl: "https://th.kerryexpress.com/th/track/?track=",
-    icon: "🟠",
-  },
-  flash: {
-    name: "Flash Express",
-    trackingUrl: "https://flashexpress.com/tracking?se=",
-    icon: "🟡",
-  },
-  jt: {
-    name: "J&T Express",
-    trackingUrl: "https://www.jtexpress.co.th/tracking?billcode=",
-    icon: "🔴",
-  },
-  thaipost: {
-    name: "ไปรษณีย์ไทย",
-    trackingUrl: "https://track.thailandpost.co.th/?trackNumber=",
-    icon: "🟤",
-  },
-  scg: {
-    name: "SCG Express",
-    trackingUrl: "https://www.scgexpress.co.th/tracking?tracking_no=",
-    icon: "🟢",
-  },
-  other: { name: "ขนส่งอื่นๆ", trackingUrl: "", icon: "⚪" },
+const carriers: Record<string, { name: string; trackingUrl: string }> = {
+  kerry: { name: "Kerry Express", trackingUrl: "https://th.kerryexpress.com/th/track/?track=" },
+  flash: { name: "Flash Express", trackingUrl: "https://flashexpress.com/tracking?se=" },
+  jt: { name: "J&T Express", trackingUrl: "https://www.jtexpress.co.th/tracking?billcode=" },
+  thaipost: { name: "ไปรษณีย์ไทย", trackingUrl: "https://track.thailandpost.co.th/?trackNumber=" },
+  scg: { name: "SCG Express", trackingUrl: "https://www.scgexpress.co.th/tracking?tracking_no=" },
+  other: { name: "ขนส่งอื่นๆ", trackingUrl: "" },
 };
 
-const statusConfig = {
-  pending: { label: "รอดำเนินการ", color: "#fbbf24", icon: "⏳", step: 1 },
-  processing: {
-    label: "กำลังเตรียมสินค้า",
-    color: "#60a5fa",
-    icon: "📦",
-    step: 2,
-  },
-  shipped: { label: "จัดส่งแล้ว", color: "#4988C4", icon: "🚚", step: 3 },
-  delivered: {
-    label: "ได้รับสินค้าแล้ว",
-    color: "#34d399",
-    icon: "✅",
-    step: 4,
-  },
-  cancelled: { label: "ยกเลิก", color: "#f87171", icon: "❌", step: 0 },
+type Tone = "warning" | "info" | "brand" | "success" | "danger";
+const statusConfig: Record<
+  Order["status"],
+  { label: string; tone: Tone; step: number }
+> = {
+  pending: { label: "รอดำเนินการ", tone: "warning", step: 1 },
+  processing: { label: "กำลังเตรียมสินค้า", tone: "info", step: 2 },
+  shipped: { label: "จัดส่งแล้ว", tone: "brand", step: 3 },
+  delivered: { label: "ได้รับสินค้าแล้ว", tone: "success", step: 4 },
+  cancelled: { label: "ยกเลิก", tone: "danger", step: 0 },
+};
+
+const steps: { step: number; icon: LucideIcon; label: string }[] = [
+  { step: 1, icon: Clock, label: "รอดำเนินการ" },
+  { step: 2, icon: Package, label: "เตรียมสินค้า" },
+  { step: 3, icon: Truck, label: "จัดส่งแล้ว" },
+  { step: 4, icon: CheckCircle2, label: "สำเร็จ" },
+];
+
+const partLabels: Record<string, string> = {
+  base: "เคส",
+  switch: "สวิตช์",
+  keycapBase: "คีย์แคปหลัก",
+  keycapAdd1: "คีย์แคปเสริม 1",
+  keycapAdd2: "คีย์แคปเสริม 2",
+  wire: "สาย",
 };
 
 function TrackingContent() {
   const searchParams = useSearchParams();
   useAuth();
-  // const { showToast } = useToast();
   const orderId = searchParams.get("order");
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -118,919 +125,314 @@ function TrackingContent() {
   };
 
   useEffect(() => {
-    if (orderId) {
-      fetchOrder(orderId);
-    } else {
-      setLoading(false);
-    }
+    if (orderId) fetchOrder(orderId);
+    else setLoading(false);
   }, [orderId]);
 
   const handleConfirmReceived = async () => {
     if (!order) return;
-
     setConfirmLoading(true);
     setConfirmMessage({ type: "", text: "" });
-
     try {
       const res = await fetch("/api/orders/confirm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderId: order._id,
-        }),
+        body: JSON.stringify({ orderId: order._id }),
       });
       const data = await res.json();
-
       if (data.success) {
-        setConfirmMessage({
-          type: "success",
-          text: "✅ ยืนยันรับสินค้าเรียบร้อย ขอบคุณที่ใช้บริการ!",
-        });
+        setConfirmMessage({ type: "success", text: "ยืนยันรับสินค้าเรียบร้อย ขอบคุณที่ใช้บริการ!" });
         setOrder({ ...order, status: "delivered" });
       } else {
-        setConfirmMessage({
-          type: "error",
-          text: data.error || "เกิดข้อผิดพลาด",
-        });
+        setConfirmMessage({ type: "error", text: data.error || "เกิดข้อผิดพลาด" });
       }
     } catch {
-      setConfirmMessage({
-        type: "error",
-        text: "เกิดข้อผิดพลาดในการเชื่อมต่อ",
-      });
+      setConfirmMessage({ type: "error", text: "เกิดข้อผิดพลาดในการเชื่อมต่อ" });
     } finally {
       setConfirmLoading(false);
     }
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("th-TH", {
-      style: "currency",
-      currency: "THB",
-      minimumFractionDigits: 0,
-    }).format(price);
-  };
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("th-TH", {
+  const formatPrice = (price: number) =>
+    `${new Intl.NumberFormat("th-TH", { maximumFractionDigits: 0 }).format(price)} บาท`;
+  const formatDate = (dateStr: string) =>
+    new Date(dateStr).toLocaleDateString("th-TH", {
       year: "numeric",
       month: "long",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
     });
-  };
 
   const currentStep = order ? statusConfig[order.status]?.step || 0 : 0;
   const carrierInfo = order?.carrier ? carriers[order.carrier] : null;
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "var(--gradient-hero)",
-        padding: "2rem 1rem",
-      }}
-    >
-      <div style={{ maxWidth: "600px", margin: "0 auto" }}>
-        {/* Header */}
-        <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-          <Link
-            href="/orders"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              color: "var(--primary-light)",
-              textDecoration: "none",
-              fontSize: "0.9rem",
-              padding: "0.5rem 1rem",
-              borderRadius: "8px",
-              background: "rgba(28, 77, 141, 0.1)",
-              border: "1px solid var(--border-color)",
-            }}
-          >
-            ← กลับหน้าคำสั่งซื้อ
-          </Link>
-          <h1
-            style={{
-              color: "white",
-              fontSize: "1.75rem",
-              fontWeight: 800,
-              marginTop: "1.5rem",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "0.75rem",
-            }}
-          >
-            <span style={{ fontSize: "1.5rem" }}>📍</span>
-            รายละเอียดคำสั่งซื้อ
-          </h1>
+    <PageContainer className="max-w-2xl">
+      <Link
+        href="/orders"
+        className="mb-4 inline-flex items-center gap-1 text-sm text-fg-muted transition-colors hover:text-fg"
+      >
+        <ChevronLeft className="h-4 w-4" /> กลับหน้าคำสั่งซื้อ
+      </Link>
+      <h1 className="mb-6 text-2xl font-semibold tracking-tight text-fg">
+        รายละเอียดคำสั่งซื้อ
+      </h1>
+
+      {loading && (
+        <div className="flex flex-col items-center gap-3 py-16">
+          <Spinner className="h-8 w-8" />
+          <p className="text-sm text-fg-muted">กำลังค้นหา...</p>
         </div>
+      )}
 
-        {/* Loading */}
-        {loading && (
-          <div style={{ textAlign: "center", padding: "3rem" }}>
-            <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>⏳</div>
-            <p style={{ color: "#94a3b8" }}>กำลังค้นหา...</p>
-          </div>
-        )}
-
-        {/* Order Found */}
-        {order && !loading && (
-          <div
-            style={{
-              background: "rgba(30, 41, 59, 0.8)",
-              borderRadius: "20px",
-              border: "1px solid rgba(28, 77, 141, 0.3)",
-              overflow: "hidden",
-            }}
-          >
-            {/* Order Header */}
-            <div
-              style={{
-                padding: "1.5rem",
-                borderBottom: "1px solid rgba(255,255,255,0.1)",
-                background: "rgba(0,0,0,0.2)",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                  gap: "1rem",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.75rem",
-                    padding: "0.75rem 1.25rem",
-                    background: "rgba(28, 77, 141, 0.15)",
-                    borderRadius: "12px",
-                    border: "1px solid var(--border-hover)",
-                  }}
-                >
-                  <span style={{ fontSize: "1.25rem" }}>🧾</span>
-                  <div>
-                    <p
-                      style={{
-                        color: "#94a3b8",
-                        fontSize: "0.7rem",
-                        margin: 0,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.05em",
-                      }}
-                    >
-                      หมายเลขคำสั่งซื้อ
-                    </p>
-                    <p
-                      style={{
-                        color: "#4988C4",
-                        fontSize: "1.1rem",
-                        fontWeight: 700,
-                        margin: 0,
-                        fontFamily: "monospace",
-                      }}
-                    >
-                      #{order._id.slice(-8).toUpperCase()}
-                    </p>
-                  </div>
-                </div>
-                <div
-                  style={{
-                    padding: "0.6rem 1.25rem",
-                    borderRadius: "12px",
-                    background: statusConfig[order.status].color,
-                    color: "white",
-                    fontWeight: 700,
-                    fontSize: "0.9rem",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem",
-                    boxShadow: `0 4px 12px ${
-                      statusConfig[order.status].color
-                    }40`,
-                  }}
-                >
-                  {statusConfig[order.status].icon}{" "}
-                  {statusConfig[order.status].label}
-                </div>
+      {order && !loading && (
+        <Card className="overflow-hidden">
+          {/* Header */}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-surface-raised/50 px-5 py-4">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-md bg-brand-subtle text-brand">
+                <ReceiptText className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-fg-subtle">หมายเลขคำสั่งซื้อ</p>
+                <p className="font-mono text-base font-bold text-brand">
+                  #{order._id.slice(-8).toUpperCase()}
+                </p>
               </div>
             </div>
+            <Badge tone={statusConfig[order.status].tone}>
+              {statusConfig[order.status].label}
+            </Badge>
+          </div>
 
-            {/* Progress Steps */}
-            {order.status !== "cancelled" && (
-              <div style={{ padding: "1.5rem" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    position: "relative",
-                  }}
-                >
-                  {/* Progress Line */}
+          {/* Progress */}
+          {order.status !== "cancelled" && (
+            <div className="px-5 py-6">
+              <div className="relative flex justify-between">
+                <div className="absolute left-4 right-4 top-4 h-1 rounded bg-white/10">
                   <div
-                    style={{
-                      position: "absolute",
-                      top: "16px",
-                      left: "32px",
-                      right: "32px",
-                      height: "4px",
-                      background: "rgba(255,255,255,0.1)",
-                      borderRadius: "2px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: `${((currentStep - 1) / 3) * 100}%`,
-                        height: "100%",
-                        background: "linear-gradient(90deg, #1C4D8D, #0F2854)",
-                        borderRadius: "2px",
-                        transition: "width 0.5s ease",
-                      }}
-                    />
-                  </div>
-
-                  {/* Steps */}
-                  {[
-                    { step: 1, icon: "⏳", label: "รอดำเนินการ" },
-                    { step: 2, icon: "📦", label: "เตรียมสินค้า" },
-                    { step: 3, icon: "🚚", label: "จัดส่งแล้ว" },
-                    { step: 4, icon: "✅", label: "สำเร็จ" },
-                  ].map((item) => (
-                    <div
-                      key={item.step}
-                      style={{
-                        textAlign: "center",
-                        position: "relative",
-                        zIndex: 1,
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: "36px",
-                          height: "36px",
-                          borderRadius: "50%",
-                          background:
-                            currentStep >= item.step
-                              ? "linear-gradient(135deg, #1C4D8D 0%, #0F2854 100%)"
-                              : "rgba(255,255,255,0.1)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          margin: "0 auto 8px",
-                          fontSize: "1rem",
-                          border:
-                            currentStep >= item.step
-                              ? "none"
-                              : "2px solid rgba(255,255,255,0.2)",
-                        }}
-                      >
-                        {item.icon}
-                      </div>
-                      <p
-                        style={{
-                          color: currentStep >= item.step ? "white" : "#64748b",
-                          fontSize: "0.7rem",
-                          margin: 0,
-                        }}
-                      >
-                        {item.label}
-                      </p>
-                    </div>
-                  ))}
+                    className="h-full rounded bg-brand transition-all duration-500"
+                    style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
+                  />
                 </div>
-              </div>
-            )}
-
-            {/* Tracking Info */}
-            {order.trackingNumber && carrierInfo && (
-              <div style={{ padding: "0 1.5rem 1.5rem" }}>
-                <div
-                  style={{
-                    background:
-                      "linear-gradient(135deg, rgba(28, 77, 141, 0.2), rgba(109, 40, 217, 0.2))",
-                    borderRadius: "12px",
-                    padding: "1.25rem",
-                    border: "1px solid rgba(28, 77, 141, 0.3)",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "flex-start",
-                      gap: "1rem",
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p
-                        style={{
-                      color: "var(--primary-light)",
-                      fontSize: "0.8rem",
-                      margin: "0 0 4px",
-                    }}
-                  >
-                    📦 หมายเลขพัสดุ
-                  </p>
-                      <p
-                        style={{
-                          color: "white",
-                          fontSize: "1rem",
-                          fontWeight: 700,
-                          margin: 0,
-                          letterSpacing: "1px",
-                          wordBreak: "break-all",
-                          overflowWrap: "break-word",
-                        }}
+                {steps.map(({ step, icon: Icon, label }) => {
+                  const active = currentStep >= step;
+                  return (
+                    <div key={step} className="relative z-10 text-center">
+                      <div
+                        className={cn(
+                          "mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-full",
+                          active ? "bg-brand text-white" : "border border-line-strong bg-surface text-fg-subtle"
+                        )}
                       >
-                        {order.trackingNumber}
-                      </p>
-
-                      <p
-                        style={{
-                          color: "#94a3b8",
-                          fontSize: "0.8rem",
-                          margin: "8px 0 0",
-                        }}
-                      >
-                        {carrierInfo.icon} {carrierInfo.name}
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <p className={cn("text-xs", active ? "text-fg" : "text-fg-subtle")}>
+                        {label}
                       </p>
                     </div>
-                    {carrierInfo.trackingUrl && (
-                      <a
-                        href={`${carrierInfo.trackingUrl}${order.trackingNumber}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          padding: "0.5rem 1rem",
-                          borderRadius: "8px",
-                        background: "var(--primary)",
-                        color: "white",
-                          textDecoration: "none",
-                          fontWeight: 600,
-                          fontSize: "0.8rem",
-                        }}
-                      >
-                        ติดตาม →
-                      </a>
-                    )}
-                  </div>
-                  {order.shippedAt && (
-                    <p
-                      style={{
-                        color: "#64748b",
-                        fontSize: "0.75rem",
-                        margin: "12px 0 0",
-                      }}
-                    >
-                      📅 จัดส่งเมื่อ {formatDate(order.shippedAt)}
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Tracking info */}
+          {order.trackingNumber && carrierInfo && (
+            <div className="px-5 pb-5">
+              <div className="rounded-lg border border-line bg-brand-subtle p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="mb-1 text-xs text-brand">หมายเลขพัสดุ</p>
+                    <p className="break-all font-semibold tracking-wide text-fg">
+                      {order.trackingNumber}
                     </p>
+                    <p className="mt-2 text-sm text-fg-muted">{carrierInfo.name}</p>
+                  </div>
+                  {carrierInfo.trackingUrl && (
+                    <a
+                      href={`${carrierInfo.trackingUrl}${order.trackingNumber}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-md bg-brand px-3 py-2 text-sm font-medium text-white hover:bg-brand-hover"
+                    >
+                      ติดตาม <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
                   )}
                 </div>
+                {order.shippedAt && (
+                  <p className="mt-3 text-xs text-fg-subtle">
+                    จัดส่งเมื่อ {formatDate(order.shippedAt)}
+                  </p>
+                )}
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Order Items */}
-            <div style={{ padding: "1.25rem 1.5rem" }}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                  marginBottom: "1rem",
-                  paddingBottom: "0.75rem",
-                  borderBottom: "1px solid rgba(255,255,255,0.08)",
-                }}
-              >
-                <span style={{ fontSize: "1rem" }}>🛒</span>
-                <span
-                  style={{
-                    color: "#94a3b8",
-                    fontSize: "0.85rem",
-                    fontWeight: 600,
-                  }}
-                >
-                  สินค้าในคำสั่งซื้อ (
-                  {order.items.reduce((sum, item) => sum + item.quantity, 0)}{" "}
-                  ชิ้น)
-                </span>
-              </div>
+          {/* Items */}
+          <div className="px-5 pb-5">
+            <p className="mb-3 border-b border-line pb-2 text-sm font-medium text-fg-muted">
+              สินค้าในคำสั่งซื้อ ({order.items.reduce((s, i) => s + i.quantity, 0)} ชิ้น)
+            </p>
+            <div className="flex flex-col gap-2">
               {order.items.map((item, idx) => {
-                const isCustomProduct = item.productId?.startsWith("custom-") || !!item.customParts;
+                const isCustom = item.productId?.startsWith("custom-") || !!item.customParts;
                 return (
                   <div
                     key={idx}
-                    style={{
-                      padding: "1rem",
-                      background: "rgba(255,255,255,0.03)",
-                      borderRadius: "12px",
-                      marginBottom: "0.5rem",
-                      border: isCustomProduct
-                        ? "1px solid rgba(28, 77, 141, 0.3)"
-                        : "1px solid rgba(255,255,255,0.05)",
-                    }}
+                    className={cn(
+                      "rounded-lg border p-3",
+                      isCustom ? "border-brand/30 bg-brand-subtle" : "border-line bg-white/[0.02]"
+                    )}
                   >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: "1rem",
-                      }}
-                    >
-                      {/* Image - Stack for custom products */}
+                    <div className="flex items-start gap-3">
                       <div
-                        style={{
-                          position: "relative",
-                          width: isCustomProduct ? "80px" : "52px",
-                          height: isCustomProduct ? "80px" : "52px",
-                          borderRadius: "10px",
-                          overflow: "hidden",
-                          background: "#334155",
-                          flexShrink: 0,
-                        }}
+                        className={cn(
+                          "relative shrink-0 overflow-hidden rounded-md bg-bg-deep",
+                          isCustom ? "h-20 w-20" : "h-14 w-14"
+                        )}
                       >
-                        {isCustomProduct &&
-                        item.images &&
-                        item.images.length > 1 ? (
-                          <>
-                            {item.images.map((img, imgIdx) => (
-                              <img
-                                key={imgIdx}
-                                src={img}
-                                alt={`${item.name} layer ${imgIdx + 1}`}
-                                style={{
-                                  position: "absolute",
-                                  inset: 0,
-                                  width: "100%",
-                                  height: "100%",
-                                  objectFit: "contain",
-                                  zIndex: imgIdx + 1,
-                                }}
-                              />
-                            ))}
-                          </>
+                        {isCustom && item.images && item.images.length > 1 ? (
+                          item.images.map((img, imgIdx) => (
+                            <img
+                              key={imgIdx}
+                              src={img}
+                              alt={`${item.name} layer ${imgIdx + 1}`}
+                              className="absolute inset-0 h-full w-full object-contain"
+                              style={{ zIndex: imgIdx + 1 }}
+                            />
+                          ))
                         ) : (
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                            }}
-                          />
+                          <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
                         )}
                       </div>
-                      <div style={{ flex: 1 }}>
-                        <p
-                          style={{
-                            color: "white",
-                            margin: 0,
-                            fontSize: "0.9rem",
-                            fontWeight: 600,
-                          }}
-                        >
-                          {item.name}
-                        </p>
-                        <p
-                          style={{
-                            color: "#64748b",
-                            margin: 0,
-                            fontSize: "0.8rem",
-                          }}
-                        >
-                          x{item.quantity}
-                        </p>
-
-                        {/* Custom Parts Display */}
-                        {isCustomProduct && item.customParts && (
-                          <div
-                            style={{
-                              marginTop: "0.75rem",
-                              padding: "0.75rem",
-                              background: "rgba(28, 77, 141, 0.1)",
-                              borderRadius: "8px",
-                              fontSize: "0.75rem",
-                            }}
-                          >
-                            <p
-                              style={{
-                                color: "var(--primary-light)",
-                                margin: "0 0 0.5rem",
-                                fontWeight: 600,
-                              }}
-                            >
-                              🛠️ ชิ้นส่วนที่เลือก:
-                            </p>
-                            <div
-                              style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: "0.4rem",
-                              }}
-                            >
-                              {item.customParts.base?.name && (
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "0.5rem",
-                                  }}
-                                >
-                                  {item.customParts.base.image && (
-                                    <img
-                                      src={item.customParts.base.image}
-                                      alt="Base"
-                                      style={{
-                                        width: "32px",
-                                        height: "32px",
-                                        borderRadius: "4px",
-                                        objectFit: "contain",
-                                        background: "#334155",
-                                      }}
-                                    />
-                                  )}
-                                  <span style={{ color: "#94a3b8" }}>🖥️</span>
-                                  <span style={{ color: "white" }}>
-                                    {item.customParts.base.name}
-                                  </span>
-                                </div>
-                              )}
-                              {item.customParts.switch?.name && (
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "0.5rem",
-                                  }}
-                                >
-                                  {item.customParts.switch.image && (
-                                    <img
-                                      src={item.customParts.switch.image}
-                                      alt="Switch"
-                                      style={{
-                                        width: "32px",
-                                        height: "32px",
-                                        borderRadius: "4px",
-                                        objectFit: "contain",
-                                        background: "#334155",
-                                      }}
-                                    />
-                                  )}
-                                  <span style={{ color: "#94a3b8" }}>🔘</span>
-                                  <span style={{ color: "white" }}>
-                                    {item.customParts.switch.name}
-                                  </span>
-                                </div>
-                              )}
-                              {item.customParts.keycapBase?.name && (
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "0.5rem",
-                                  }}
-                                >
-                                  {item.customParts.keycapBase.image && (
-                                    <img
-                                      src={item.customParts.keycapBase.image}
-                                      alt="Keycap"
-                                      style={{
-                                        width: "32px",
-                                        height: "32px",
-                                        borderRadius: "4px",
-                                        objectFit: "contain",
-                                        background: "#334155",
-                                      }}
-                                    />
-                                  )}
-                                  <span style={{ color: "#94a3b8" }}>⌨️</span>
-                                  <span style={{ color: "white" }}>
-                                    {item.customParts.keycapBase.name}
-                                  </span>
-                                </div>
-                              )}
-                              {item.customParts.keycapAdd1?.name && (
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "0.5rem",
-                                  }}
-                                >
-                                  {item.customParts.keycapAdd1.image && (
-                                    <img
-                                      src={item.customParts.keycapAdd1.image}
-                                      alt="Add-on 1"
-                                      style={{
-                                        width: "32px",
-                                        height: "32px",
-                                        borderRadius: "4px",
-                                        objectFit: "contain",
-                                        background: "#334155",
-                                      }}
-                                    />
-                                  )}
-                                  <span style={{ color: "#94a3b8" }}>🔠</span>
-                                  <span style={{ color: "white" }}>
-                                    {item.customParts.keycapAdd1.name}
-                                  </span>
-                                </div>
-                              )}
-                              {item.customParts.keycapAdd2?.name && (
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "0.5rem",
-                                  }}
-                                >
-                                  {item.customParts.keycapAdd2.image && (
-                                    <img
-                                      src={item.customParts.keycapAdd2.image}
-                                      alt="Add-on 2"
-                                      style={{
-                                        width: "32px",
-                                        height: "32px",
-                                        borderRadius: "4px",
-                                        objectFit: "contain",
-                                        background: "#334155",
-                                      }}
-                                    />
-                                  )}
-                                  <span style={{ color: "#94a3b8" }}>🔣</span>
-                                  <span style={{ color: "white" }}>
-                                    {item.customParts.keycapAdd2.name}
-                                  </span>
-                                </div>
-                              )}
-                              {item.customParts.wire?.name && (
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "0.5rem",
-                                  }}
-                                >
-                                  {item.customParts.wire.image && (
-                                    <img
-                                      src={item.customParts.wire.image}
-                                      alt="Wire"
-                                      style={{
-                                        width: "32px",
-                                        height: "32px",
-                                        borderRadius: "4px",
-                                        objectFit: "contain",
-                                        background: "#334155",
-                                      }}
-                                    />
-                                  )}
-                                  <span style={{ color: "#94a3b8" }}>🔌</span>
-                                  <span style={{ color: "white" }}>
-                                    {item.customParts.wire.name}
-                                  </span>
-                                </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-fg">{item.name}</p>
+                        <p className="text-xs text-fg-subtle">x{item.quantity}</p>
+                        {isCustom && item.customParts && (
+                          <div className="mt-2 rounded-md bg-black/20 p-2.5 text-xs">
+                            <p className="mb-1.5 font-medium text-brand">ชิ้นส่วนที่เลือก</p>
+                            <div className="flex flex-col gap-1.5">
+                              {(
+                                Object.entries(item.customParts) as [
+                                  string,
+                                  { name?: string; image?: string } | undefined
+                                ][]
+                              ).map(([key, part]) =>
+                                part?.name ? (
+                                  <div key={key} className="flex items-center gap-2">
+                                    {part.image && (
+                                      <img
+                                        src={part.image}
+                                        alt={key}
+                                        className="h-8 w-8 rounded bg-surface-raised object-contain"
+                                      />
+                                    )}
+                                    <span className="text-fg-subtle">{partLabels[key] ?? key}:</span>
+                                    <span className="text-fg">{part.name}</span>
+                                  </div>
+                                ) : null
                               )}
                             </div>
                           </div>
                         )}
                       </div>
-                      <p
-                        style={{
-                          color: "#10b981",
-                          fontWeight: 600,
-                          margin: 0,
-                          whiteSpace: "nowrap",
-                        }}
-                      >
+                      <p className="whitespace-nowrap text-sm font-semibold text-fg">
                         {formatPrice(item.price)}
                       </p>
                     </div>
                   </div>
                 );
               })}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  paddingTop: "1rem",
-                  marginTop: "0.5rem",
-                  borderTop: "1px solid rgba(255,255,255,0.1)",
-                }}
-              >
-                <span style={{ color: "#94a3b8" }}>ยอดรวม</span>
-                <span
-                  style={{
-                    color: "#10b981",
-                    fontSize: "1.25rem",
-                    fontWeight: 700,
-                  }}
-                >
-                  {formatPrice(order.total)}
-                </span>
-              </div>
             </div>
-
-            {/* Shipping Address */}
-            <div style={{ padding: "0 1.5rem 1.5rem" }}>
-              <p
-                style={{
-                  color: "#94a3b8",
-                  fontSize: "0.8rem",
-                  margin: "0 0 0.5rem",
-                }}
-              >
-                📍 ที่อยู่จัดส่ง
-              </p>
-              <p style={{ color: "white", margin: 0 }}>
-                {order.shippingAddress.fullName} • {order.shippingAddress.phone}
-              </p>
-              <p style={{ color: "#64748b", margin: 0, fontSize: "0.85rem" }}>
-                {order.shippingAddress.province}
-              </p>
+            <div className="mt-3 flex justify-between border-t border-line pt-3">
+              <span className="text-fg-muted">ยอดรวม</span>
+              <span className="text-lg font-bold text-fg">{formatPrice(order.total)}</span>
             </div>
+          </div>
 
-            {/* Confirm Received Button - Only show for shipped orders */}
-            {order.status === "shipped" && (
-              <div style={{ padding: "0 1.5rem 1.5rem" }}>
-                {confirmMessage.text && (
-                  <div
-                    style={{
-                      padding: "0.75rem 1rem",
-                      borderRadius: "10px",
-                      marginBottom: "1rem",
-                      background:
-                        confirmMessage.type === "success"
-                          ? "rgba(34, 197, 94, 0.15)"
-                          : "rgba(239, 68, 68, 0.15)",
-                      border: `1px solid ${
-                        confirmMessage.type === "success"
-                          ? "rgba(34, 197, 94, 0.3)"
-                          : "rgba(239, 68, 68, 0.3)"
-                      }`,
-                      color:
-                        confirmMessage.type === "success"
-                          ? "#22c55e"
-                          : "#ef4444",
-                      textAlign: "center",
-                    }}
-                  >
-                    {confirmMessage.text}
-                  </div>
-                )}
+          {/* Address */}
+          <div className="px-5 pb-5">
+            <p className="mb-1 flex items-center gap-1.5 text-sm text-fg-muted">
+              <MapPin className="h-4 w-4" /> ที่อยู่จัดส่ง
+            </p>
+            <p className="text-fg">
+              {order.shippingAddress.fullName} • {order.shippingAddress.phone}
+            </p>
+            <p className="text-sm text-fg-subtle">{order.shippingAddress.province}</p>
+          </div>
 
-                <button
-                  onClick={handleConfirmReceived}
-                  disabled={confirmLoading}
-                  style={{
-                    width: "100%",
-                    padding: "1rem",
-                    background: confirmLoading
-                      ? "rgba(34, 197, 94, 0.3)"
-                      : "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
-                    border: "none",
-                    borderRadius: "12px",
-                    color: "white",
-                    fontWeight: 700,
-                    fontSize: "1rem",
-                    cursor: confirmLoading ? "not-allowed" : "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "0.5rem",
-                  }}
-                >
-                  {confirmLoading
-                    ? "⏳ กำลังดำเนินการ..."
-                    : "✅ ยืนยันได้รับสินค้าแล้ว"}
-                </button>
-
-                <p
-                  style={{
-                    color: "#64748b",
-                    fontSize: "0.75rem",
-                    textAlign: "center",
-                    marginTop: "0.75rem",
-                  }}
-                >
-                  ⏰ หากไม่กดยืนยัน ระบบจะปิดคำสั่งซื้ออัตโนมัติใน 7 วัน
-                </p>
-              </div>
-            )}
-
-            {/* Delivered Thank You */}
-            {order.status === "delivered" && (
-              <div style={{ padding: "0 1.5rem 1.5rem" }}>
+          {/* Confirm received */}
+          {order.status === "shipped" && (
+            <div className="px-5 pb-5">
+              {confirmMessage.text && (
                 <div
-                  style={{
-                    padding: "1rem",
-                    background: "rgba(34, 197, 94, 0.15)",
-                    border: "1px solid rgba(34, 197, 94, 0.3)",
-                    borderRadius: "12px",
-                    textAlign: "center",
-                  }}
+                  className={cn(
+                    "mb-3 rounded-md px-4 py-2.5 text-center text-sm",
+                    confirmMessage.type === "success"
+                      ? "bg-success/10 text-success"
+                      : "bg-danger/10 text-danger"
+                  )}
                 >
-                  <p
-                    style={{ color: "#22c55e", margin: 0, fontSize: "1.5rem" }}
-                  >
-                    ✅
-                  </p>
-                  <p
-                    style={{
-                      color: "#22c55e",
-                      margin: "0.5rem 0 0",
-                      fontWeight: 600,
-                    }}
-                  >
-                    ได้รับสินค้าเรียบร้อยแล้ว
-                  </p>
-                  <p
-                    style={{
-                      color: "#64748b",
-                      margin: "0.25rem 0 0",
-                      fontSize: "0.8rem",
-                    }}
-                  >
-                    ขอบคุณที่ใช้บริการ! 💜
-                  </p>
+                  {confirmMessage.text}
                 </div>
-              </div>
-            )}
-
-            {/* Order Date */}
-            <div
-              style={{
-                padding: "1rem 1.5rem",
-                background: "rgba(0,0,0,0.2)",
-                textAlign: "center",
-              }}
-            >
-              <p style={{ color: "#64748b", margin: 0, fontSize: "0.8rem" }}>
-                สั่งซื้อเมื่อ {formatDate(order.createdAt)}
+              )}
+              <Button
+                onClick={handleConfirmReceived}
+                disabled={confirmLoading}
+                className="w-full bg-success text-white hover:opacity-90"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                {confirmLoading ? "กำลังดำเนินการ..." : "ยืนยันได้รับสินค้าแล้ว"}
+              </Button>
+              <p className="mt-3 text-center text-xs text-fg-subtle">
+                หากไม่กดยืนยัน ระบบจะปิดคำสั่งซื้ออัตโนมัติใน 7 วัน
               </p>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* No Order ID */}
-        {!orderId && !order && !loading && (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "3rem",
-              background: "rgba(30, 41, 59, 0.8)",
-              borderRadius: "16px",
-              border: "1px solid rgba(28, 77, 141, 0.3)",
-            }}
-          >
-            <div style={{ fontSize: "4rem", marginBottom: "1rem" }}>📦</div>
-            <p
-              style={{
-                color: "white",
-                fontSize: "1.1rem",
-                marginBottom: "0.5rem",
-              }}
-            >
-              ค้นหาคำสั่งซื้อของคุณ
-            </p>
-            <p style={{ color: "#64748b", fontSize: "0.9rem" }}>
-              กรอกหมายเลขคำสั่งซื้อ 8 หลักด้านบน
-              <br />
-              เพื่อดูสถานะและติดตามพัสดุ
-            </p>
+          {order.status === "delivered" && (
+            <div className="px-5 pb-5">
+              <div className="flex flex-col items-center gap-1 rounded-lg bg-success/10 px-4 py-5 text-center">
+                <CheckCircle2 className="h-7 w-7 text-success" />
+                <p className="font-semibold text-success">ได้รับสินค้าเรียบร้อยแล้ว</p>
+                <p className="text-xs text-fg-subtle">ขอบคุณที่ใช้บริการ</p>
+              </div>
+            </div>
+          )}
+
+          <div className="bg-surface-raised/50 px-5 py-3 text-center">
+            <p className="text-xs text-fg-subtle">สั่งซื้อเมื่อ {formatDate(order.createdAt)}</p>
           </div>
-        )}
-      </div>
-    </div>
+        </Card>
+      )}
+
+      {!orderId && !order && !loading && (
+        <EmptyState
+          icon={Package}
+          title="ค้นหาคำสั่งซื้อของคุณ"
+          description="เปิดหน้านี้จากประวัติคำสั่งซื้อเพื่อดูสถานะและติดตามพัสดุ"
+        />
+      )}
+
+      {orderId && !order && !loading && (
+        <EmptyState
+          icon={XCircle}
+          title="ไม่พบคำสั่งซื้อ"
+          description="กรุณาตรวจสอบหมายเลขคำสั่งซื้ออีกครั้ง"
+        />
+      )}
+    </PageContainer>
   );
 }
 
-// Wrap with Suspense for Next.js 14+ static generation
 export default function TrackingPage() {
   return (
     <Suspense
       fallback={
-        <div
-          style={{
-            minHeight: "100vh",
-            background: "var(--gradient-hero)",
-            padding: "2rem 1rem",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>⏳</div>
-            <p style={{ color: "#94a3b8" }}>กำลังโหลด...</p>
-          </div>
+        <div className="flex min-h-[50vh] items-center justify-center">
+          <Spinner className="h-8 w-8" />
         </div>
       }
     >

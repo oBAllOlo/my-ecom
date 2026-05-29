@@ -7,18 +7,61 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: {
-          50: '#e6f4fc',
-          100: '#BDE8F5',
-          200: '#8dd5ed',
-          300: '#4988C4',
-          400: '#1C4D8D',
-          500: '#1C4D8D',
-          600: '#175a7a',
-          700: '#0F2854',
-          800: '#0a1d3d',
-          900: '#050d18',
+        brand: {
+          DEFAULT: 'rgb(99 102 241 / <alpha-value>)',
+          hover: 'rgb(129 140 248 / <alpha-value>)',
+          active: 'rgb(79 70 229 / <alpha-value>)',
+          subtle: 'var(--brand-subtle)',
         },
+        bg: {
+          DEFAULT: 'var(--bg)',
+          deep: 'var(--bg-deep)',
+        },
+        surface: {
+          DEFAULT: 'var(--surface)',
+          raised: 'var(--surface-2)',
+        },
+        fg: {
+          DEFAULT: 'var(--fg)',
+          muted: 'var(--fg-muted)',
+          subtle: 'var(--fg-subtle)',
+        },
+        line: {
+          DEFAULT: 'var(--border)',
+          strong: 'var(--border-strong)',
+        },
+        success: 'rgb(16 185 129 / <alpha-value>)',
+        warning: 'rgb(245 158 11 / <alpha-value>)',
+        danger: 'rgb(244 63 94 / <alpha-value>)',
+        info: 'rgb(14 165 233 / <alpha-value>)',
+        // Legacy indigo scale (kept for any primary-* utilities still in use)
+        primary: {
+          50: '#eef2ff',
+          100: '#e0e7ff',
+          200: '#c7d2fe',
+          300: '#a5b4fc',
+          400: '#818cf8',
+          500: '#6366f1',
+          600: '#4f46e5',
+          700: '#4338ca',
+          800: '#3730a3',
+          900: '#312e81',
+        },
+      },
+      borderRadius: {
+        sm: 'var(--radius-sm)',
+        md: 'var(--radius-md)',
+        lg: 'var(--radius-lg)',
+        xl: 'var(--radius-xl)',
+      },
+      boxShadow: {
+        sm: 'var(--shadow-sm)',
+        md: 'var(--shadow-md)',
+        lg: 'var(--shadow-lg)',
+        glow: 'var(--shadow-glow)',
+      },
+      fontFamily: {
+        sans: ['var(--font-thai)', 'var(--font-inter)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       animation: {
         fadeIn: 'fadeIn 0.2s ease',

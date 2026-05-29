@@ -25,9 +25,9 @@
 | DB | MongoDB | — |
 | ODM | Mongoose | ^9.0.2 |
 | Auth | bcryptjs | ^3.0.3 — salt rounds = 10 |
-| Payment | Omise | ^1.1.0 |
-| Email | Nodemailer | ^7.0.11 |
-| Upload | Cloudinary | ^2.8.0 |
+| Payment | (mocked) | demo mode — ไม่ต่อ gateway จริง |
+| Email | (mocked) | demo mode — log แทนการส่งจริง |
+| Upload | Cloudinary | ^2.8.0 — ใช้งานจริง |
 | Toast | Sonner | ^2.0.7 |
 | Charts | Recharts | ^3.6.0 |
 
@@ -150,8 +150,6 @@ const { user, isLoading, login, register, verifyOTP, logout, isAuthenticated } =
 ### 6.2 Sensitive Routes
 - `/api/seed` และ `/api/custom-parts/seed`
   - ใช้ได้เฉพาะ non-production
-- `/api/cron/auto-complete`
-  - ต้องมี `CRON_SECRET` ผ่าน header `x-cron-secret` ใน production
 - `/api/upload`
   - admin only
 
@@ -178,32 +176,22 @@ const { items, addToCart, removeFromCart, updateQuantity, clearCart, getCartTota
 ### 8.1 Order Creation
 - `POST /api/orders` ต้อง login ก่อน
 - `userId` ของ order ใช้จาก session ฝั่ง server
-- ระบบ reserve stock ตอนสร้าง order
-- ถ้าระหว่าง flow ล้มเหลว ต้อง rollback stock ที่ reserve ไปแล้ว
+- ระบบตัด stock ตอนสร้าง order (สินค้า `custom-*` ไม่ตัด stock)
 
-### 8.2 Payment (Omise)
-- Public key ใช้ `NEXT_PUBLIC_OMISE_PUBLIC_KEY` หรือ `OMISE_PUBLIC_KEY`
-- Secret key ใช้ `OMISE_SECRET_KEY`
-- รองรับ:
-  - Credit Card
-  - Internet Banking
-  - PromptPay
+### 8.2 Payment (Demo Mode)
+- การชำระเงินถูก mock ไว้ ไม่ต่อ Omise และไม่ต้องใช้ key ใดๆ
+- `create-charge` จำลองว่าจ่ายสำเร็จทันที แล้วตั้ง order เป็น `paid` / `processing`
+- รองรับเฉพาะ flow บัตร (UI ตัด Internet Banking / PromptPay ออกในโหมดสาธิต)
 
 ### 8.3 Payment Security
-- `/api/payment/create-charge`, `/api/payment/create-source`, `/api/payment/check-status`
-  - ต้องผูกกับ owner ของ order หรือ admin
-- `/api/payment/webhook`
-  - ต้อง verify `x-omise-signature`
-  - ถ้าจ่ายไม่สำเร็จและเคย reserve stock ต้องคืน stock กลับ
-- payment utility ที่ใช้ซ้ำได้อยู่ที่ `@/lib/payment.ts`
-  - `toOmiseAmount()` สำหรับแปลงบาทเป็นสตางค์
-  - `verifyOmiseSignature()` สำหรับตรวจ webhook signature
+- `/api/payment/create-charge`, `/api/payment/check-status`
+  - ต้องผูกกับ owner ของ order หรือ admin (เช็คไว้แม้ใน demo)
 
 ### 8.4 Order Lifecycle
 1. Checkout → สร้าง order (`pending`)
-2. Payment success → `paymentStatus = paid`, `status = processing`
+2. Payment success (จำลอง) → `paymentStatus = paid`, `status = processing`
 3. Admin ship order → `status = shipped` + tracking
-4. Customer confirm หรือ cron auto-complete → `status = delivered`
+4. Customer confirm → `status = delivered`
 
 ---
 
@@ -211,7 +199,7 @@ const { items, addToCart, removeFromCart, updateQuantity, clearCart, getCartTota
 
 ### 9.1 Upload Flow
 - Client admin upload file → `POST /api/upload`
-- Server แปลงเป็น base64 แล้วอัปโหลดขึ้น Cloudinary
+- Server แปลงเป็น base64 แล้วอัปโหลดขึ้น Cloudinary คืน `secure_url` กลับมาเก็บใน MongoDB
 - Response:
   ```ts
   { success: true, data: { url: string } }
@@ -255,7 +243,6 @@ const { items, addToCart, removeFromCart, updateQuantity, clearCart, getCartTota
 ### 11.2 Current Test Coverage
 - `tests/auth-session.test.ts` — session token signing/verification
 - `tests/order-access.test.ts` — owner/admin authorization logic
-- `tests/payment.test.ts` — Omise amount conversion + signature verification
 
 ### 11.3 Testing Rules
 - logic ที่ pure และสำคัญด้าน security/business rule ควรถูกแยกออกจาก route เพื่อให้ทดสอบได้ง่าย
@@ -284,7 +271,7 @@ const { items, addToCart, removeFromCart, updateQuantity, clearCart, getCartTota
 
 ## 13. Environment Variables
 
-ต้องมีใน `.env.local`:
+โหมดสาธิต mock payment + email ไว้ แต่ image upload ใช้ Cloudinary จริง — ต้องตั้งใน `.env.local`:
 
 ```env
 # Database
@@ -293,32 +280,14 @@ MONGODB_URI=mongodb://localhost:27017/keyboardth
 # Session
 SESSION_SECRET=replace-with-a-long-random-secret
 
-# Cloudinary
+# Cloudinary (image upload จริง)
 CLOUDINARY_CLOUD_NAME=xxx
 CLOUDINARY_API_KEY=xxx
 CLOUDINARY_API_SECRET=xxx
-
-# Omise
-NEXT_PUBLIC_OMISE_PUBLIC_KEY=pkey_test_xxx
-OMISE_SECRET_KEY=skey_test_xxx
-
-# Email
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=xxx@gmail.com
-SMTP_PASS=xxx
-SMTP_FROM=noreply@keyboardth.com
-
-# App
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-NEXT_PUBLIC_BASE_URL=http://localhost:3000
-
-# Cron
-CRON_SECRET=replace-with-a-long-random-secret
 ```
 
-- ก่อนใช้งานจริงต้องตั้ง `SESSION_SECRET` และ `CRON_SECRET` เป็นค่า random ที่ยาวและเดายาก
-- ในสถานะปัจจุบันของเครื่อง local นี้มีการตั้งค่า 2 ตัวนี้ไว้แล้วใน `.env.local`
+- `SESSION_SECRET` ควรเป็นค่า random ที่ยาวและเดายาก
+- หากจะนำ payment/email ไปใช้งานจริง ให้คืน integration จริงใน `lib/email.ts` และ payment route แล้วเพิ่ม env ที่เกี่ยวข้องกลับมา
 
 ---
 
@@ -339,7 +308,7 @@ CRON_SECRET=replace-with-a-long-random-secret
 - อย่าเก็บ password หรือ secret ใน client
 - อย่าเก็บ auth state ใน `localStorage`
 - อย่าเชื่อ `userId` หรือ `role` จาก client โดยไม่ verify จาก session
-- อย่าเปิด seed/cron endpoint แบบ public ใน production
+- อย่าเปิด seed endpoint แบบ public ใน production
 
 ---
 
@@ -356,12 +325,9 @@ CRON_SECRET=replace-with-a-long-random-secret
 | DB Connection | `lib/mongodb.ts` |
 | Auth Helpers | `lib/auth.ts` |
 | Session Helpers | `lib/auth-session.ts` |
-| Order Helpers | `lib/orders.ts` |
 | Order Access Rules | `lib/order-access.ts` |
-| Payment Helpers | `lib/payment.ts` |
-| Email Service | `lib/email.ts` |
+| Email Service (mocked) | `lib/email.ts` |
 | Cloudinary Config | `lib/cloudinary.ts` |
-| Omise Config | `lib/omise.ts` |
 | Tests | `tests/` |
 | Static Assets | `public/` |
 

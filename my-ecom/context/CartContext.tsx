@@ -22,29 +22,34 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>(() => {
-    if (typeof window === "undefined") {
-      return [];
-    }
+  // Start empty so the server-rendered HTML and the client's first render match
+  // (localStorage isn't available on the server → would cause a hydration mismatch).
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [hydrated, setHydrated] = useState(false);
 
-    const savedCart = localStorage.getItem("cart");
-    if (!savedCart) {
-      return [];
-    }
-
-    try {
-      return JSON.parse(savedCart) as CartItem[];
-    } catch (error) {
-      console.error("Error loading cart:", error);
-      return [];
-    }
-  });
-
+  // Load the saved cart from localStorage after mount (client only).
+  // setState here is intentional — loading persisted state post-mount is the
+  // standard way to avoid an SSR/localStorage hydration mismatch.
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("cart", JSON.stringify(items));
+    /* eslint-disable react-hooks/set-state-in-effect */
+    const savedCart = localStorage.getItem("cart");
+    if (savedCart) {
+      try {
+        setItems(JSON.parse(savedCart) as CartItem[]);
+      } catch (error) {
+        console.error("Error loading cart:", error);
+      }
     }
-  }, [items]);
+    setHydrated(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, []);
+
+  // Persist to localStorage — but only after the initial load, so we don't
+  // overwrite the saved cart with the empty initial state.
+  useEffect(() => {
+    if (!hydrated) return;
+    localStorage.setItem("cart", JSON.stringify(items));
+  }, [items, hydrated]);
 
   const addToCart = (product: Product, quantity: number = 1) => {
     setItems((prevItems) => {

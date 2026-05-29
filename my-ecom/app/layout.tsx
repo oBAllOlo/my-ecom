@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "bootstrap/dist/css/bootstrap.min.css";
+import { Inter, IBM_Plex_Sans_Thai } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
@@ -11,6 +10,14 @@ import { Toaster } from "sonner";
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
+});
+
+const ibmPlexThai = IBM_Plex_Sans_Thai({
+  subsets: ["thai", "latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-thai",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -28,7 +35,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th">
-      <body className={`${inter.variable} antialiased`}>
+      <body className={`${inter.variable} ${ibmPlexThai.variable} antialiased`}>
         <AuthProvider>
           <CartProvider>
             <div className="page-container">
@@ -37,7 +44,16 @@ export default function RootLayout({
             </div>
           </CartProvider>
         </AuthProvider>
-        <Toaster position="top-center" richColors />
+        <Toaster
+          position="top-right"
+          richColors
+          closeButton
+          expand
+          offset={80}
+          gap={10}
+          duration={2500}
+          visibleToasts={3}
+        />
       </body>
     </html>
   );
