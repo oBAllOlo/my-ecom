@@ -56,8 +56,6 @@ skill.md              Internal AI/dev guide for this repo
 - `lib/auth.ts` auth/session helpers ระดับ route
 - `lib/auth-session.ts` low-level session token helpers
 - `lib/order-access.ts` owner/admin access rules
-- `lib/orders.ts` order stock helpers
-- `lib/payment.ts` Omise amount/signature helpers
 
 ## Getting Started
 
@@ -69,42 +67,33 @@ npm install
 
 ### 2. Create `.env.local`
 
+> 🧪 **โหมดสาธิต (Demo Mode):** payment (Omise) และ email/OTP (SMTP) ถูก mock ไว้
+> ส่วน **image upload ใช้ Cloudinary จริง** จึงต้องตั้งค่า Cloudinary เพิ่ม
+
 ```env
-# Database
+# Database (required)
 MONGODB_URI=mongodb://localhost:27017/keyboardth
 
-# Session
+# Session (required)
 SESSION_SECRET=replace-with-a-long-random-secret
 
-# Cloudinary
+# Cloudinary (required สำหรับอัปโหลดรูปสินค้า/parts)
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
-
-# Omise
-OMISE_PUBLIC_KEY=pkey_test_xxxxx
-NEXT_PUBLIC_OMISE_PUBLIC_KEY=pkey_test_xxxxx
-OMISE_SECRET_KEY=skey_test_xxxxx
-
-# Email
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your_email@gmail.com
-SMTP_PASS=your_app_password
-SMTP_FROM=noreply@keyboardth.com
-
-# App
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-NEXT_PUBLIC_BASE_URL=http://localhost:3000
-
-# Cron
-CRON_SECRET=replace-with-a-long-random-secret
 ```
+
+พฤติกรรมในโหมดสาธิต:
+
+- **Payment** — กดยืนยันแล้ว order ถูกตั้งเป็น `paid` ทันที ไม่มีการตัดเงินจริง
+- **OTP** — ไม่ส่งอีเมลจริง รหัส OTP จะถูก log ที่ console และเติมให้อัตโนมัติในหน้า verify
+- **Image upload** — อัปโหลดขึ้น Cloudinary จริง (เก็บเป็นลิงก์ใน MongoDB)
 
 ข้อสำคัญ:
 
-- `SESSION_SECRET` และ `CRON_SECRET` ต้องเป็นค่า random ที่ยาวและเดายากก่อนใช้งานจริง
-- ใน production ควรตั้งค่า env ทั้งหมดผ่าน platform ที่ deploy
+- `SESSION_SECRET` ควรเป็นค่า random ที่ยาวและเดายาก
+- ต้องมี Cloudinary account จริง (ฟรีก็ได้) เพื่อให้การอัปโหลดรูปทำงาน
+- หากต้องการนำ payment/email ไปใช้งานจริง ให้คืนค่า integration จริงใน payment route (Omise) และ `lib/email.ts` (SMTP) พร้อมตั้ง env ที่เกี่ยวข้อง
 
 ### 3. Run development server
 
@@ -138,7 +127,6 @@ coverage ปัจจุบัน:
 
 - `tests/auth-session.test.ts` ทดสอบ session token signing/verification
 - `tests/order-access.test.ts` ทดสอบ owner/admin authorization rules
-- `tests/payment.test.ts` ทดสอบ Omise amount conversion และ webhook signature verification
 
 ## Authentication
 
@@ -158,12 +146,9 @@ flow หลัก:
 
 ## Orders and Payment
 
-- `POST /api/orders` ใช้ user จาก session และ reserve stock ตอนสร้างคำสั่งซื้อ
-- ถ้า flow จ่ายเงินล้มเหลว ระบบต้องคืน stock ที่ reserve ไว้
-- `/api/payment/create-charge`, `/api/payment/create-source`, `/api/payment/check-status`
-  ตรวจ owner/admin ก่อนทำงาน
-- `/api/payment/webhook` ตรวจ `x-omise-signature` ก่อนอัปเดตสถานะ
-- `/api/cron/auto-complete` ใช้ `x-cron-secret` ใน production
+- `POST /api/orders` ใช้ user จาก session และตัด stock ตอนสร้างคำสั่งซื้อ
+- `/api/payment/create-charge` และ `/api/payment/check-status` ตรวจ owner/admin ก่อนทำงาน
+- โหมดสาธิต: `create-charge` จำลองการชำระเงินสำเร็จทันที (ไม่ต่อ Omise)
 
 ## Seed Data
 
@@ -177,7 +162,7 @@ curl -X POST http://localhost:3000/api/seed
 ## Deployment Notes
 
 - `next.config.ts` ใช้ `output: "standalone"`
-- ต้องตั้ง env ให้ครบ โดยเฉพาะ `MONGODB_URI`, `SESSION_SECRET`, `OMISE_SECRET_KEY`, `CRON_SECRET`
+- โหมดสาธิตต้องตั้ง `MONGODB_URI`, `SESSION_SECRET` และ Cloudinary (`CLOUDINARY_*`)
 - ถ้า deploy บน Vercel ให้เพิ่ม env ผ่าน dashboard
 
 ## Related Docs

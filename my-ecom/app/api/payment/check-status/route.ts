@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import Omise from "omise";
 import dbConnect from "@/lib/mongodb";
 import Order from "@/models/Order";
 import { requireAuth } from "@/lib/auth";
 import { canUserAccessOrder } from "@/lib/order-access";
-import { releaseReservedStock } from "@/lib/orders";
 
-const omise = Omise({
-  secretKey: process.env.OMISE_SECRET_KEY!,
-});
+// DEMO MODE: no Omise lookup. Payment status reflects whatever is stored on the
+// order (the mocked charge marks it "paid" immediately at checkout).
 
 export async function GET(request: NextRequest) {
   try {
@@ -68,48 +65,11 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const charge = await omise.charges.retrieve(order.chargeId);
-
-    if (charge.status === "successful") {
-      order.paymentStatus = "paid";
-      order.status = "processing";
-      await order.save();
-
-      return NextResponse.json({
-        success: true,
-        data: {
-          paymentStatus: "paid",
-          orderStatus: "processing",
-          updated: true,
-        },
-      });
-    }
-
-    if (charge.status === "failed") {
-      if (order.stockReserved) {
-        await releaseReservedStock(order);
-        order.stockReserved = false;
-      }
-
-      order.paymentStatus = "failed";
-      order.status = "cancelled";
-      await order.save();
-
-      return NextResponse.json({
-        success: true,
-        data: {
-          paymentStatus: "failed",
-          orderStatus: order.status,
-        },
-      });
-    }
-
     return NextResponse.json({
       success: true,
       data: {
         paymentStatus: order.paymentStatus,
         orderStatus: order.status,
-        chargeStatus: charge.status,
       },
     });
   } catch (error) {

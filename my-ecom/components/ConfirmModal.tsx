@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
 import { createPortal } from "react-dom";
+import { Trash2, AlertTriangle, Info, type LucideIcon } from "lucide-react";
+import { buttonClasses } from "@/components/ui";
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -14,6 +15,15 @@ interface ConfirmModalProps {
   type?: "danger" | "warning" | "info";
 }
 
+const typeConfig: Record<
+  "danger" | "warning" | "info",
+  { icon: LucideIcon; tone: string; confirmVariant: "danger" | "primary" }
+> = {
+  danger: { icon: Trash2, tone: "bg-danger/10 text-danger", confirmVariant: "danger" },
+  warning: { icon: AlertTriangle, tone: "bg-warning/10 text-warning", confirmVariant: "primary" },
+  info: { icon: Info, tone: "bg-info/10 text-info", confirmVariant: "primary" },
+};
+
 export default function ConfirmModal({
   isOpen,
   title,
@@ -24,55 +34,46 @@ export default function ConfirmModal({
   onCancel,
   type = "danger",
 }: ConfirmModalProps) {
-  if (!isOpen) return null;
+  if (!isOpen || typeof window === "undefined") return null;
 
-  const typeStyles = {
-    danger: { btnClass: "bg-red-500 hover:bg-red-600", icon: "🗑️" },
-    warning: { btnClass: "bg-amber-500 hover:bg-amber-600", icon: "⚠️" },
-    info: { btnClass: "bg-blue-500 hover:bg-blue-600", icon: "ℹ️" },
-  };
+  const { icon: Icon, tone, confirmVariant } = typeConfig[type];
 
-  const { btnClass, icon } = typeStyles[type];
-
-  const modal = (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[100001] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-[100001] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm animate-fadeIn"
       onClick={onCancel}
     >
       <div
-        className="bg-gradient-to-b from-slate-800 to-slate-900 border border-white/10 rounded-2xl p-6 max-w-[400px] w-[90%] shadow-2xl animate-scaleIn"
+        className="w-full max-w-sm rounded-xl border border-line bg-surface p-6 shadow-lg animate-scaleIn"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Icon & Title */}
-        <div className="text-center mb-4">
-          <span className="text-5xl">{icon}</span>
-          <h3 className="text-white text-xl font-bold mt-3">{title}</h3>
+        <div className="mb-4 flex flex-col items-center text-center">
+          <span className={`mb-3 flex h-12 w-12 items-center justify-center rounded-full ${tone}`}>
+            <Icon className="h-6 w-6" />
+          </span>
+          <h3 className="text-lg font-semibold text-fg">{title}</h3>
         </div>
 
-        {/* Message */}
-        <p className="text-slate-400 text-center mb-6 leading-relaxed">
+        <p className="mb-6 text-center text-sm leading-relaxed text-fg-muted">
           {message}
         </p>
 
-        {/* Buttons */}
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 py-3 px-5 bg-white/10 border border-white/20 rounded-xl text-white font-semibold cursor-pointer transition-all hover:bg-white/20"
+            className={buttonClasses({ variant: "secondary", className: "flex-1" })}
           >
             {cancelText}
           </button>
           <button
             onClick={onConfirm}
-            className={`flex-1 py-3 px-5 border-none rounded-xl text-white font-semibold cursor-pointer transition-all ${btnClass}`}
+            className={buttonClasses({ variant: confirmVariant, className: "flex-1" })}
           >
             {confirmText}
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
-
-  if (typeof window === "undefined") return null;
-  return createPortal(modal, document.body);
 }

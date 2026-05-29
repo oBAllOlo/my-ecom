@@ -2,11 +2,24 @@
 
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Plus, Search, Pencil, Trash2, Package, X, ImagePlus, Star } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import ConfirmModal from "@/components/ConfirmModal";
+import {
+  PageHeader,
+  Card,
+  Field,
+  Input,
+  Textarea,
+  Select,
+  Button,
+  Badge,
+  EmptyState,
+  Spinner,
+  cn,
+} from "@/components/ui";
 
 interface Product {
   _id: string;
@@ -37,43 +50,46 @@ interface Category {
 export default function AdminProducts() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
-  // const { showToast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<{
-    show: boolean;
-    id: string;
-    name: string;
-  }>({ show: false, id: "", name: "" });
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; id: string; name: string }>({
+    show: false,
+    id: "",
+    name: "",
+  });
 
-  // Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("");
 
-  // Get unique brands from products
   const brands = [...new Set(products.map((p) => p.brand))].sort();
 
   useEffect(() => {
-    if (!isLoading && (!user || user.role !== "admin")) {
-      router.push("/login");
-    }
+    if (!isLoading && (!user || user.role !== "admin")) router.push("/login");
   }, [user, isLoading, router]);
 
   const fetchProducts = async () => {
     try {
       const res = await fetch("/api/products");
       const data = await res.json();
-      if (data.success) {
-        setProducts(data.data);
-      }
+      if (data.success) setProducts(data.data);
     } catch (error) {
       console.error("Error fetching products:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch("/api/categories");
+      const data = await res.json();
+      if (data.success) setCategories(data.data);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
     }
   };
 
@@ -84,26 +100,9 @@ export default function AdminProducts() {
     }
   }, [user]);
 
-  const fetchCategories = async () => {
-    try {
-      const res = await fetch("/api/categories");
-      const data = await res.json();
-      if (data.success) {
-        setCategories(data.data);
-      }
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-    }
-  };
-
-  const handleDeleteClick = (product: Product) => {
-    setDeleteConfirm({ show: true, id: product._id, name: product.name });
-  };
-
   const handleDeleteConfirm = async () => {
     const id = deleteConfirm.id;
     setDeleteConfirm({ show: false, id: "", name: "" });
-
     try {
       const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
       const data = await res.json();
@@ -117,247 +116,113 @@ export default function AdminProducts() {
     }
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("th-TH", {
-      style: "currency",
-      currency: "THB",
-      minimumFractionDigits: 0,
-    }).format(price);
-  };
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat("th-TH", { style: "currency", currency: "THB", minimumFractionDigits: 0 }).format(price);
 
   if (isLoading || loading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-400">กำลังโหลดข้อมูล...</p>
-        </div>
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Spinner className="h-8 w-8" />
       </div>
     );
   }
+  if (!user || user.role !== "admin") return null;
 
-  if (!user || user.role !== "admin") {
-    return null;
-  }
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch =
+      searchQuery === "" ||
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.brand.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === "" || product.category === selectedCategory;
+    const matchesBrand = selectedBrand === "" || product.brand === selectedBrand;
+    return matchesSearch && matchesCategory && matchesBrand;
+  });
 
   return (
-    <div className="min-h-screen bg-slate-900 relative">
-      {/* Admin Header */}
-      <header className="bg-slate-800/50 border-b border-white/5 px-4 md:px-8 py-4 md:py-6">
-        <div className="flex flex-wrap gap-4 md:gap-6 justify-between items-center">
-          <div className="flex flex-wrap items-center gap-4 md:gap-6">
-            <Link
-              href="/admin"
-              className="text-primary-300 no-underline font-medium py-2 px-3 md:px-4 bg-primary-500/10 rounded-lg hover:bg-primary-500/20 transition-all text-sm md:text-base"
-            >
-              ← กลับ
-            </Link>
-            <div className="flex items-center gap-3 md:gap-4">
-              <span className="text-2xl md:text-4xl">📦</span>
-              <div>
-                <h1 className="text-xl md:text-2xl font-extrabold text-slate-50 m-0">
-                  จัดการสินค้า
-                </h1>
-                <p className="text-xs md:text-sm text-slate-500 m-0">
-                  {products.length} สินค้าทั้งหมด
-                </p>
-              </div>
-            </div>
+    <>
+      <PageHeader
+        title="จัดการสินค้า"
+        subtitle={`${products.length} สินค้าทั้งหมด`}
+        actions={
+          <Button variant="primary" onClick={() => setShowAddModal(true)}>
+            <Plus className="h-4 w-4" /> เพิ่มสินค้าใหม่
+          </Button>
+        }
+      />
+
+      <Card className="mb-5 p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative min-w-[200px] flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
+            <Input
+              placeholder="ค้นหาสินค้า..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 py-2 md:py-3 px-4 md:px-6 bg-gradient-to-r from-emerald-500 to-emerald-600 border-none rounded-xl text-white font-semibold cursor-pointer hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/30 transition-all text-sm md:text-base"
-          >
-            <span className="text-lg md:text-xl">+</span>{" "}
-            <span className="hidden sm:inline">เพิ่มสินค้าใหม่</span>
-            <span className="sm:hidden">เพิ่ม</span>
-          </button>
+          <Select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="w-44">
+            <option value="">ทุกหมวดหมู่</option>
+            {categories.map((cat) => (
+              <option key={cat._id} value={cat.name}>{cat.name}</option>
+            ))}
+          </Select>
+          <Select value={selectedBrand} onChange={(e) => setSelectedBrand(e.target.value)} className="w-44">
+            <option value="">ทุกแบรนด์</option>
+            {brands.map((brand) => (
+              <option key={brand} value={brand}>{brand}</option>
+            ))}
+          </Select>
         </div>
-      </header>
+      </Card>
 
-      <main className="p-4 md:p-8">
-        {/* Filters Bar */}
-        <div
-          style={{
-            background: "rgba(30, 41, 59, 0.5)",
-            borderRadius: "16px",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
-            padding: "1.5rem",
-            marginBottom: "1.5rem",
-          }}
-        >
-          <div className="flex flex-wrap gap-4 items-center">
-            {/* Search */}
-            <div className="flex-1 min-w-[200px]">
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
-                <input
-                  type="text"
-                  placeholder="ค้นหาสินค้า..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  style={{
-                    background: "rgba(255, 255, 255, 0.05)",
-                    border: "none",
-                    color: "rgb(148, 163, 184)",
-                  }}
-                  className="w-full py-2.5 pl-10 pr-4 rounded-xl text-sm outline-none focus:ring-1 focus:ring-primary-500/50 transition-all placeholder-slate-500"
-                />
-              </div>
-            </div>
+      <p className="mb-4 text-sm text-fg-muted">
+        แสดง {filteredProducts.length} จาก {products.length} สินค้า
+      </p>
 
-            {/* Category Filter */}
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              style={{
-                background: "rgba(255, 255, 255, 0.05)",
-                border: "none",
-                color: "rgb(148, 163, 184)",
-              }}
-              className="py-2.5 px-4 rounded-xl text-sm outline-none focus:ring-1 focus:ring-primary-500/50 transition-all min-w-[150px] cursor-pointer"
-            >
-              <option value="">ทุกหมวดหมู่</option>
-              {categories.map((cat) => (
-                <option key={cat._id} value={cat.name} className="bg-slate-800 text-slate-200">
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-
-            {/* Brand Filter */}
-            <select
-              value={selectedBrand}
-              onChange={(e) => setSelectedBrand(e.target.value)}
-              style={{
-                background: "rgba(255, 255, 255, 0.05)",
-                border: "none",
-                color: "rgb(148, 163, 184)",
-              }}
-              className="py-2.5 px-4 rounded-xl text-sm outline-none focus:ring-1 focus:ring-primary-500/50 transition-all min-w-[150px] cursor-pointer"
-            >
-              <option value="">ทุกแบรนด์</option>
-              {brands.map((brand) => (
-                <option key={brand} value={brand} className="bg-slate-800 text-slate-200">
-                  {brand}
-                </option>
-              ))}
-            </select>
-
-
-          </div>
-        </div>
-
-        {/* Filtered Products */}
-        {(() => {
-          const filteredProducts = products.filter((product) => {
-            const matchesSearch = searchQuery === "" || 
-              product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              product.brand.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesCategory = selectedCategory === "" || product.category === selectedCategory;
-            const matchesBrand = selectedBrand === "" || product.brand === selectedBrand;
-            return matchesSearch && matchesCategory && matchesBrand;
-          });
-
-          return (
-            <>
-              {/* Results count */}
-              <p className="text-slate-400 text-sm mb-4">
-                แสดง {filteredProducts.length} จาก {products.length} สินค้า
-              </p>
-
-              {/* Products Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 md:gap-6">
-                {filteredProducts.map((product, index) => (
-            <div
-              key={product._id}
-              className="rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary-500/20 animate-fadeInUp"
-              style={{ 
-                animationDelay: `${index * 0.05}s`,
-                background: "rgba(30, 41, 59, 0.5)",
-                border: "1px solid rgba(255, 255, 255, 0.1)"
-              }}
-            >
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                />
-                <div className="absolute top-3 left-3 flex gap-2">
-                  {product.isNewProduct && (
-                    <span className="py-1 px-3 bg-gradient-to-r from-blue-500 to-blue-700 text-white text-xs font-bold rounded-full">
-                      ใหม่
-                    </span>
-                  )}
-                  {product.isFeatured && (
-                    <span className="py-1 px-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs font-bold rounded-full">
-                      แนะนำ
-                    </span>
-                  )}
+      {products.length === 0 ? (
+        <EmptyState icon={Package} title="ยังไม่มีสินค้าในระบบ" />
+      ) : filteredProducts.length === 0 ? (
+        <EmptyState icon={Search} title="ไม่พบสินค้าที่ตรงกับเงื่อนไข" />
+      ) : (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredProducts.map((product) => (
+            <Card key={product._id} className="overflow-hidden">
+              <div className="relative aspect-[4/3] overflow-hidden bg-bg-deep">
+                <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+                <div className="absolute left-3 top-3 flex gap-1.5">
+                  {product.isNewProduct && <Badge tone="brand">ใหม่</Badge>}
+                  {product.isFeatured && <Badge tone="warning">แนะนำ</Badge>}
                 </div>
               </div>
-              <div className="p-5">
-                <span className="text-xs text-primary-300 font-semibold uppercase tracking-wide">
-                  {product.brand}
-                </span>
-                <h3 className="text-lg font-bold text-slate-50 mt-1 mb-3 leading-tight">
-                  {product.name}
-                </h3>
-                <div className="flex justify-between items-center">
-                  <span className="text-xl font-extrabold bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent">
-                    {formatPrice(product.price)}
-                  </span>
-                  <span
-                    className={`text-sm font-semibold py-1 px-3 rounded-full ${
-                      product.stock > 10
-                        ? "bg-emerald-500/20 text-emerald-400"
-                        : product.stock > 0
-                        ? "bg-amber-500/20 text-amber-400"
-                        : "bg-red-500/20 text-red-400"
-                    }`}
-                  >
+              <div className="p-4">
+                <span className="text-xs font-semibold uppercase tracking-wide text-brand">{product.brand}</span>
+                <h3 className="mb-3 mt-1 line-clamp-1 font-semibold text-fg">{product.name}</h3>
+                <div className="flex items-center justify-between">
+                  <span className="text-lg font-bold text-fg">{formatPrice(product.price)}</span>
+                  <Badge tone={product.stock > 10 ? "success" : product.stock > 0 ? "warning" : "danger"}>
                     {product.stock > 0 ? `${product.stock} ชิ้น` : "หมด"}
-                  </span>
+                  </Badge>
                 </div>
               </div>
-              <div className="p-4 border-t border-white/5 flex gap-3">
-                <button
-                  onClick={() => setEditingProduct(product)}
-                  className="flex-1 py-3 bg-blue-500/10 border-none rounded-xl text-blue-400 font-semibold cursor-pointer transition-all hover:bg-blue-500/20 hover:scale-[1.02]"
+              <div className="flex gap-2 border-t border-line p-3">
+                <Button variant="secondary" size="sm" onClick={() => setEditingProduct(product)} className="flex-1">
+                  <Pencil className="h-3.5 w-3.5" /> แก้ไข
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setDeleteConfirm({ show: true, id: product._id, name: product.name })}
+                  className="text-danger hover:bg-danger/10 hover:text-danger"
                 >
-                  ✏️ แก้ไข
-                </button>
-                <button
-                  onClick={() => handleDeleteClick(product)}
-                  className="flex-1 py-3 bg-red-500/10 border-none rounded-xl text-red-400 font-semibold cursor-pointer transition-all hover:bg-red-500/20 hover:scale-[1.02]"
-                >
-                  🗑️ ลบ
-                </button>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
               </div>
-            </div>
-                ))}
-              </div>
+            </Card>
+          ))}
+        </div>
+      )}
 
-              {filteredProducts.length === 0 && (
-                <div className="text-center py-16 text-slate-500 bg-slate-800/20 border border-white/5 rounded-2xl">
-                  <span className="text-4xl block mb-4">🔍</span>
-                  <p>ไม่พบสินค้าที่ตรงกับเงื่อนไข</p>
-                </div>
-              )}
-            </>
-          );
-        })()}
-
-        {products.length === 0 && (
-          <div className="text-center py-16 text-slate-500">
-            <span className="text-6xl block mb-4">📦</span>
-            <p>ยังไม่มีสินค้าในระบบ</p>
-          </div>
-        )}
-      </main>
-
-      {/* Add/Edit Modal - rendered via Portal */}
       {(showAddModal || editingProduct) &&
         typeof window !== "undefined" &&
         createPortal(
@@ -377,7 +242,6 @@ export default function AdminProducts() {
           document.body
         )}
 
-      {/* Delete Confirmation Modal */}
       <ConfirmModal
         isOpen={deleteConfirm.show}
         title="ยืนยันการลบ"
@@ -388,7 +252,7 @@ export default function AdminProducts() {
         onCancel={() => setDeleteConfirm({ show: false, id: "", name: "" })}
         type="danger"
       />
-    </div>
+    </>
   );
 }
 
@@ -399,12 +263,7 @@ interface ProductModalProps {
   onSave: () => void;
 }
 
-function ProductModal({
-  product,
-  categories,
-  onClose,
-  onSave,
-}: ProductModalProps) {
+function ProductModal({ product, categories, onClose, onSave }: ProductModalProps) {
   const [formData, setFormData] = useState({
     name: product?.name || "",
     description: product?.description || "",
@@ -431,7 +290,7 @@ function ProductModal({
 
   const handleImageUpload = async (files: FileList | File[]) => {
     const fileArray = Array.from(files);
-    const validFiles = fileArray.filter(file => {
+    const validFiles = fileArray.filter((file) => {
       if (!file.type.startsWith("image/")) {
         toast.error(`${file.name}: ไม่ใช่ไฟล์รูปภาพ`);
         return false;
@@ -442,7 +301,6 @@ function ProductModal({
       }
       return true;
     });
-
     if (validFiles.length === 0) return;
 
     setUploading(true);
@@ -450,30 +308,17 @@ function ProductModal({
       const uploadPromises = validFiles.map(async (file) => {
         const formDataUpload = new FormData();
         formDataUpload.append("file", file);
-
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          body: formDataUpload,
-        });
-
+        const res = await fetch("/api/upload", { method: "POST", body: formDataUpload });
         const data = await res.json();
-        if (data.success) {
-          return data.data?.url;
-        } else {
-          toast.error(`${file.name}: ${data.error || "อัพโหลดไม่สำเร็จ"}`);
-          return null;
-        }
+        if (data.success) return data.data?.url;
+        toast.error(`${file.name}: ${data.error || "อัพโหลดไม่สำเร็จ"}`);
+        return null;
       });
-
       const uploadedUrls = (await Promise.all(uploadPromises)).filter(Boolean) as string[];
-      
       if (uploadedUrls.length > 0) {
         const newImages = [...formData.images, ...uploadedUrls];
-        if (!formData.image) {
-          setFormData({ ...formData, image: uploadedUrls[0], images: newImages });
-        } else {
-          setFormData({ ...formData, images: newImages });
-        }
+        if (!formData.image) setFormData({ ...formData, image: uploadedUrls[0], images: newImages });
+        else setFormData({ ...formData, images: newImages });
         toast.success(`อัพโหลดสำเร็จ ${uploadedUrls.length} รูป`);
       }
     } catch (error) {
@@ -487,73 +332,49 @@ function ProductModal({
   const removeImage = (indexToRemove: number) => {
     const newImages = formData.images.filter((_, i) => i !== indexToRemove);
     const removedUrl = formData.images[indexToRemove];
-    if (formData.image === removedUrl) {
-      setFormData({
-        ...formData,
-        image: newImages[0] || "",
-        images: newImages,
-      });
-    } else {
-      setFormData({ ...formData, images: newImages });
-    }
+    if (formData.image === removedUrl) setFormData({ ...formData, image: newImages[0] || "", images: newImages });
+    else setFormData({ ...formData, images: newImages });
   };
 
-  const setAsMainImage = (url: string) => {
-    setFormData({ ...formData, image: url });
-  };
+  const setAsMainImage = (url: string) => setFormData({ ...formData, image: url });
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
+    if (e.type === "dragenter" || e.type === "dragover") setDragActive(true);
+    else if (e.type === "dragleave") setDragActive(false);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleImageUpload(e.dataTransfer.files);
-    }
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) handleImageUpload(e.dataTransfer.files);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       handleImageUpload(e.target.files);
-      e.target.value = ""; // Reset input to allow selecting same files again
+      e.target.value = "";
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-
     try {
       const url = product ? `/api/products/${product._id}` : "/api/products";
-      const method = product ? "PUT" : "POST";
-
       const res = await fetch(url, {
-        method,
+        method: product ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          features: formData.features
-            .split(",")
-            .map((f) => f.trim())
-            .filter(Boolean),
+          features: formData.features.split(",").map((f) => f.trim()).filter(Boolean),
         }),
       });
-
       const data = await res.json();
-      if (data.success) {
-        onSave();
-      } else {
-        toast.error(data.error || "เกิดข้อผิดพลาด");
-      }
+      if (data.success) onSave();
+      else toast.error(data.error || "เกิดข้อผิดพลาด");
     } catch (error) {
       console.error("Error saving product:", error);
       toast.error("เกิดข้อผิดพลาด");
@@ -563,220 +384,95 @@ function ProductModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 bg-black/85 flex items-center justify-center z-[99999] p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-gradient-to-br from-slate-800 to-slate-900 border border-primary-500/30 rounded-3xl max-w-xl w-full max-h-[85vh] overflow-y-auto shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex justify-between items-center p-6 border-b border-white/10">
-          <h2 className="text-xl text-slate-50 m-0">
-            {product ? "✏️ แก้ไขสินค้า" : "➕ เพิ่มสินค้าใหม่"}
-          </h2>
-          <button
-            onClick={onClose}
-            className="bg-none border-none text-slate-500 text-2xl cursor-pointer hover:text-white transition-colors"
-          >
-            ✕
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose}>
+      <Card className="max-h-[88vh] w-full max-w-xl overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-line p-5">
+          <h2 className="text-lg font-semibold text-fg">{product ? "แก้ไขสินค้า" : "เพิ่มสินค้าใหม่"}</h2>
+          <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-md text-fg-subtle hover:bg-white/5 hover:text-fg">
+            <X className="h-5 w-5" />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-slate-400 text-sm mb-2">
-                ชื่อสินค้า *
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                className="w-full py-3 px-4 bg-primary-500/10 border border-primary-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-primary-500/60 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.2)] transition-all"
-              />
-            </div>
-            <div>
-              <label className="block text-slate-400 text-sm mb-2">
-                แบรนด์ *
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.brand}
-                onChange={(e) =>
-                  setFormData({ ...formData, brand: e.target.value })
-                }
-                className="w-full py-3 px-4 bg-primary-500/10 border border-primary-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-primary-500/60 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.2)] transition-all"
-              />
-            </div>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="ชื่อสินค้า" required>
+              <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
+            </Field>
+            <Field label="แบรนด์" required>
+              <Input value={formData.brand} onChange={(e) => setFormData({ ...formData, brand: e.target.value })} required />
+            </Field>
           </div>
 
-          <div className="mb-4">
-            <label className="block text-slate-400 text-sm mb-2">
-              รายละเอียด
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              rows={3}
-              className="w-full py-3 px-4 bg-primary-500/10 border border-primary-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-primary-500/60 transition-all resize-none"
-            />
+          <Field label="รายละเอียด">
+            <Textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={3} />
+          </Field>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <Field label="ราคา" required>
+              <Input type="number" min="0" required value={formData.price || ""} onChange={(e) => setFormData({ ...formData, price: e.target.value ? Number(e.target.value) : 0 })} />
+            </Field>
+            <Field label="ราคาเดิม">
+              <Input type="number" min="0" value={formData.originalPrice || ""} onChange={(e) => setFormData({ ...formData, originalPrice: e.target.value ? Number(e.target.value) : 0 })} />
+            </Field>
+            <Field label="สต็อก" required>
+              <Input type="number" min="0" required value={formData.stock || ""} onChange={(e) => setFormData({ ...formData, stock: e.target.value ? Number(e.target.value) : 0 })} />
+            </Field>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-            <div>
-              <label className="block text-slate-400 text-sm mb-2">
-                ราคา *
-              </label>
-              <input
-                type="number"
-                required
-                min="0"
-                value={formData.price || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    price: e.target.value ? Number(e.target.value) : 0,
-                  })
-                }
-                className="w-full py-3 px-4 bg-primary-500/10 border border-primary-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-primary-500/60 transition-all"
-              />
-            </div>
-            <div>
-              <label className="block text-slate-400 text-sm mb-2">
-                ราคาเดิม
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={formData.originalPrice || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    originalPrice: e.target.value ? Number(e.target.value) : 0,
-                  })
-                }
-                className="w-full py-3 px-4 bg-primary-500/10 border border-primary-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-primary-500/60 transition-all"
-              />
-            </div>
-            <div>
-              <label className="block text-slate-400 text-sm mb-2">
-                สต็อก *
-              </label>
-              <input
-                type="number"
-                required
-                min="0"
-                value={formData.stock || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    stock: e.target.value ? Number(e.target.value) : 0,
-                  })
-                }
-                className="w-full py-3 px-4 bg-primary-500/10 border border-primary-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-primary-500/60 transition-all"
-              />
-            </div>
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-slate-400 text-sm mb-2">
-              หมวดหมู่ *
-            </label>
-            <select
-              required
-              value={formData.category}
-              onChange={(e) =>
-                setFormData({ ...formData, category: e.target.value })
-              }
-              className="w-full py-3 px-4 bg-primary-500/10 border border-primary-500/30 rounded-xl text-slate-50 text-base outline-none focus:border-primary-500/60 transition-all"
-            >
-              <option value="" className="bg-slate-800">
-                เลือกหมวดหมู่
-              </option>
+          <Field label="หมวดหมู่" required>
+            <Select required value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })}>
+              <option value="">เลือกหมวดหมู่</option>
               {categories.map((cat) => (
-                <option key={cat._id} value={cat.name} className="bg-slate-800">
-                  {cat.name}
-                </option>
+                <option key={cat._id} value={cat.name}>{cat.name}</option>
               ))}
-            </select>
-          </div>
+            </Select>
+          </Field>
 
-          {/* Image Upload Zone */}
-          <div className="mb-4">
-            <label className="block text-slate-400 text-sm mb-2">
-              รูปภาพสินค้า * (สามารถเพิ่มได้หลายรูป)
-            </label>
+          <Field label="รูปภาพสินค้า (เพิ่มได้หลายรูป)">
             <div
-              className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all min-h-[150px] flex items-center justify-center ${
-                dragActive
-                  ? "border-primary-500 bg-primary-500/10"
-                  : "border-primary-500/40 bg-primary-500/5 hover:border-primary-500 hover:bg-primary-500/10"
-              } ${uploading ? "pointer-events-none opacity-70" : ""}`}
+              className={cn(
+                "flex min-h-[140px] cursor-pointer items-center justify-center rounded-md border-2 border-dashed p-6 text-center transition-colors",
+                dragActive ? "border-brand bg-brand-subtle" : "border-line bg-bg-deep hover:border-brand/50",
+                uploading && "pointer-events-none opacity-70"
+              )}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
             >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleFileSelect}
-                className="hidden"
-              />
+              <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleFileSelect} className="hidden" />
               {uploading ? (
-                <div className="flex flex-col items-center gap-4">
-                  <div className="w-10 h-10 border-3 border-primary-500/20 border-t-primary-500 rounded-full animate-spin"></div>
-                  <p className="text-primary-300 m-0">กำลังอัพโหลด...</p>
+                <div className="flex flex-col items-center gap-3">
+                  <Spinner className="h-8 w-8" />
+                  <p className="text-sm text-fg-muted">กำลังอัพโหลด...</p>
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-2">
-                  <span className="text-5xl">📷</span>
-                  <p className="text-slate-50 font-medium m-0">
-                    คลิกหรือลากไฟล์มาวางที่นี่
-                  </p>
-                  <span className="text-slate-500 text-sm">
-                    รองรับ JPG, PNG, WEBP (สูงสุด 5MB ต่อรูป)
-                  </span>
+                <div className="flex flex-col items-center gap-2 text-fg-muted">
+                  <ImagePlus className="h-8 w-8 text-fg-subtle" />
+                  <p className="text-sm font-medium text-fg">คลิกหรือลากไฟล์มาวางที่นี่</p>
+                  <span className="text-xs text-fg-subtle">รองรับ JPG, PNG, WEBP (สูงสุด 5MB ต่อรูป)</span>
                 </div>
               )}
             </div>
 
-            {/* Image Gallery */}
             {formData.images.length > 0 && (
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-3 mt-4">
+              <div className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(90px,1fr))] gap-3">
                 {formData.images.map((img, index) => (
                   <div
                     key={index}
-                    className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer ${
-                      formData.image === img
-                        ? "ring-3 ring-primary-500"
-                        : "border border-white/10"
-                    }`}
                     onClick={() => setPreviewImage(img)}
-                  >
-                    <img
-                      src={img}
-                      alt={`Product ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                    {formData.image === img && (
-                      <div className="absolute top-1 left-1 bg-primary-500 text-white text-[10px] py-0.5 px-1.5 rounded font-semibold">
-                        หลัก
-                      </div>
+                    className={cn(
+                      "relative aspect-square cursor-pointer overflow-hidden rounded-md",
+                      formData.image === img ? "ring-2 ring-brand" : "border border-line"
                     )}
-                    <div className="absolute top-1 right-1 bg-black/60 text-white text-xs py-0.5 px-1.5 rounded">
-                      🔍
-                    </div>
-                    <div className="absolute bottom-0 left-0 right-0 flex gap-0.5">
+                  >
+                        <img src={img} alt={`Product ${index + 1}`} className="h-full w-full object-cover" />
+                    {formData.image === img && (
+                      <span className="absolute left-1 top-1 flex items-center gap-0.5 rounded bg-brand px-1 py-0.5 text-[10px] font-semibold text-white">
+                        <Star className="h-2.5 w-2.5" /> หลัก
+                      </span>
+                    )}
+                    <div className="absolute bottom-0 left-0 right-0 flex">
                       {formData.image !== img && (
                         <button
                           type="button"
@@ -784,7 +480,7 @@ function ProductModal({
                             e.stopPropagation();
                             setAsMainImage(img);
                           }}
-                          className="flex-1 py-1 bg-primary-500/90 border-none text-white text-[10px] cursor-pointer"
+                          className="flex-1 bg-brand/90 py-1 text-[10px] text-white"
                         >
                           ตั้งเป็นหลัก
                         </button>
@@ -795,9 +491,7 @@ function ProductModal({
                           e.stopPropagation();
                           removeImage(index);
                         }}
-                        className={`py-1 bg-red-500/90 border-none text-white text-[10px] cursor-pointer ${
-                          formData.image === img ? "flex-1" : "flex-[0.5]"
-                        }`}
+                        className="flex-1 bg-danger/90 py-1 text-[10px] text-white"
                       >
                         ลบ
                       </button>
@@ -806,53 +500,27 @@ function ProductModal({
                 ))}
               </div>
             )}
+          </Field>
 
-          </div>
-
-
-          <div className="flex gap-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 p-4 bg-slate-500/20 border border-slate-500/30 rounded-xl text-slate-400 font-semibold cursor-pointer hover:bg-slate-500/30 transition-all"
-            >
+          <div className="flex gap-3">
+            <Button type="button" variant="secondary" onClick={onClose} className="flex-1">
               ยกเลิก
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className={`flex-1 p-4 bg-gradient-to-r from-emerald-500 to-emerald-600 border-none rounded-xl text-white font-semibold transition-all ${
-                saving
-                  ? "opacity-60 cursor-not-allowed"
-                  : "cursor-pointer hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-500/30"
-              }`}
-            >
-              {saving ? "กำลังบันทึก..." : "💾 บันทึก"}
-            </button>
+            </Button>
+            <Button type="submit" variant="primary" disabled={saving} className="flex-1">
+              {saving ? "กำลังบันทึก..." : "บันทึก"}
+            </Button>
           </div>
         </form>
 
-        {/* Image Preview Lightbox */}
         {previewImage && (
-          <div
-            className="fixed inset-0 bg-black/95 flex items-center justify-center z-[100001] p-8"
-            onClick={() => setPreviewImage(null)}
-          >
-            <button
-              onClick={() => setPreviewImage(null)}
-              className="absolute top-5 right-5 bg-white/20 border-none text-white text-3xl w-12 h-12 rounded-full cursor-pointer flex items-center justify-center"
-            >
-              ✕
+          <div className="fixed inset-0 z-[100001] flex items-center justify-center bg-black/95 p-8" onClick={() => setPreviewImage(null)}>
+            <button onClick={() => setPreviewImage(null)} className="absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20">
+              <X className="h-5 w-5" />
             </button>
-            <img
-              src={previewImage}
-              alt="Preview"
-              className="max-w-[90%] max-h-[90%] object-contain rounded-xl"
-              onClick={(e) => e.stopPropagation()}
-            />
+            <img src={previewImage} alt="Preview" className="max-h-[90%] max-w-[90%] rounded-lg object-contain" onClick={(e) => e.stopPropagation()} />
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

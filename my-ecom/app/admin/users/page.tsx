@@ -1,10 +1,19 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Trash2, ShieldCheck, Users as UsersIcon } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import {
+  PageHeader,
+  Card,
+  Badge,
+  Select,
+  Button,
+  EmptyState,
+  Spinner,
+} from "@/components/ui";
 
 interface User {
   _id: string;
@@ -21,18 +30,14 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isLoading && (!user || user.role !== "admin")) {
-      router.push("/login");
-    }
+    if (!isLoading && (!user || user.role !== "admin")) router.push("/login");
   }, [user, isLoading, router]);
 
   const fetchUsers = async () => {
     try {
       const res = await fetch("/api/users");
       const data = await res.json();
-      if (data.success) {
-        setUsers(data.data);
-      }
+      if (data.success) setUsers(data.data);
     } catch (error) {
       console.error("Error fetching users:", error);
     } finally {
@@ -41,9 +46,7 @@ export default function AdminUsers() {
   };
 
   useEffect(() => {
-    if (user?.role === "admin") {
-      fetchUsers();
-    }
+    if (user?.role === "admin") fetchUsers();
   }, [user]);
 
   const handleRoleChange = async (userId: string, newRole: string) => {
@@ -55,11 +58,7 @@ export default function AdminUsers() {
       });
       const data = await res.json();
       if (data.success) {
-        setUsers(
-          users.map((u) =>
-            u._id === userId ? { ...u, role: newRole as "user" | "admin" } : u
-          )
-        );
+        setUsers(users.map((u) => (u._id === userId ? { ...u, role: newRole as "user" | "admin" } : u)));
         toast.success(`เปลี่ยนบทบาทเป็น ${newRole === "admin" ? "ผู้ดูแลระบบ" : "ผู้ใช้ทั่วไป"} สำเร็จ`);
       } else {
         toast.error(data.error || "ไม่สามารถเปลี่ยนบทบาทได้");
@@ -72,7 +71,6 @@ export default function AdminUsers() {
 
   const handleDelete = async (userId: string) => {
     if (!confirm("ต้องการลบผู้ใช้นี้หรือไม่?")) return;
-
     try {
       const res = await fetch(`/api/users/${userId}`, { method: "DELETE" });
       const data = await res.json();
@@ -88,124 +86,68 @@ export default function AdminUsers() {
     }
   };
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("th-TH", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
+  const formatDate = (dateStr: string) =>
+    new Date(dateStr).toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" });
 
   if (isLoading || loading) {
     return (
-      <div className="admin-loading flex items-center justify-center min-h-screen bg-slate-900">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-400">กำลังโหลดข้อมูล...</p>
-        </div>
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <Spinner className="h-8 w-8" />
       </div>
     );
   }
-
-  if (!user || user.role !== "admin") {
-    return null;
-  }
+  if (!user || user.role !== "admin") return null;
 
   return (
-    <div className="admin-dashboard min-h-screen bg-slate-900 relative">
-      {/* Admin Header */}
-      <header className="admin-header bg-slate-800/50 border-b border-white/5 px-4 md:px-8 py-4 md:py-6">
-        <div className="flex flex-wrap items-center gap-4 md:gap-6">
-          <Link
-            href="/admin"
-            className="text-primary-300 no-underline font-medium py-2 px-3 md:px-4 bg-primary-500/10 rounded-lg hover:bg-primary-500/20 transition-all text-sm md:text-base"
-          >
-            ← กลับ
-          </Link>
-          <div className="flex items-center gap-3 md:gap-4">
-            <span className="text-2xl md:text-4xl">👥</span>
-            <div>
-              <h1 className="text-xl md:text-2xl font-extrabold text-slate-50 m-0">
-                จัดการผู้ใช้
-              </h1>
-              <p className="text-xs md:text-sm text-slate-500 m-0">
-                {users.length} ผู้ใช้ทั้งหมด
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
+    <>
+      <PageHeader title="จัดการผู้ใช้" subtitle={`${users.length} ผู้ใช้ทั้งหมด`} />
 
-      <main className="p-4 md:p-8">
-        {/* Users Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4 md:gap-6">
-          {users.map((u, index) => (
-            <div
-              key={u._id}
-              className="rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary-500/20 animate-fadeInUp"
-              style={{ 
-                animationDelay: `${index * 0.1}s`,
-                background: "rgba(30, 41, 59, 0.5)",
-                border: "1px solid rgba(255, 255, 255, 0.1)"
-              }}
-            >
-              <div className="bg-gradient-to-br from-primary-500/30 to-primary-500/20 p-8 flex flex-col items-center gap-4">
-                <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-500 rounded-full flex items-center justify-center text-4xl font-extrabold text-white shadow-lg shadow-primary-500/40">
-                  {u.name.charAt(0).toUpperCase()}
-                </div>
-                <div
-                  className={`py-2 px-4 rounded-full text-sm font-semibold ${
-                    u.role === "admin"
-                      ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white"
-                      : "bg-white/10 text-slate-400"
-                  }`}
-                >
-                  {u.role === "admin" ? "👑 Admin" : "👤 User"}
-                </div>
+      {users.length === 0 ? (
+        <EmptyState icon={UsersIcon} title="ยังไม่มีผู้ใช้" />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {users.map((u) => (
+            <Card key={u._id} className="flex flex-col items-center p-6 text-center">
+              <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-brand text-2xl font-bold text-white">
+                {u.name.charAt(0).toUpperCase()}
               </div>
-              <div className="p-6 text-center">
-                <h3 className="text-xl font-bold text-slate-50 mb-2">
-                  {u.name}
-                </h3>
-                <p className="text-slate-500 text-sm mb-2">{u.email}</p>
-                <p className="text-slate-600 text-xs">
-                  สมัครเมื่อ {formatDate(u.createdAt)}
-                </p>
-              </div>
-              <div className="p-6 border-t border-white/5 flex gap-3">
-                <select
+              {u.role === "admin" ? (
+                <Badge tone="warning" className="mb-3">
+                  <ShieldCheck className="h-3.5 w-3.5" /> Admin
+                </Badge>
+              ) : (
+                <Badge tone="neutral" className="mb-3">User</Badge>
+              )}
+              <h3 className="font-semibold text-fg">{u.name}</h3>
+              <p className="text-sm text-fg-muted">{u.email}</p>
+              <p className="mt-1 text-xs text-fg-subtle">สมัครเมื่อ {formatDate(u.createdAt)}</p>
+
+              <div className="mt-5 flex w-full gap-2 border-t border-line pt-4">
+                <Select
                   value={u.role}
                   onChange={(e) => handleRoleChange(u._id, e.target.value)}
                   disabled={u._id === user._id}
-                  className="flex-1 py-3 px-4 bg-primary-500/10 border-none rounded-xl text-slate-50 font-medium cursor-pointer transition-all hover:bg-primary-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1"
                 >
-                  <option value="user" className="bg-slate-800">
-                    ผู้ใช้ทั่วไป
-                  </option>
-                  <option value="admin" className="bg-slate-800">
-                    ผู้ดูแลระบบ
-                  </option>
-                </select>
+                  <option value="user">ผู้ใช้ทั่วไป</option>
+                  <option value="admin">ผู้ดูแลระบบ</option>
+                </Select>
                 {u._id !== user._id && (
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => handleDelete(u._id)}
-                    className="py-3 px-4 bg-red-500/10 border-none rounded-xl text-red-400 font-semibold cursor-pointer transition-all hover:bg-red-500/20 hover:scale-105"
+                    className="text-danger hover:bg-danger/10 hover:text-danger"
+                    aria-label="ลบผู้ใช้"
                   >
-                    🗑️ ลบ
-                  </button>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 )}
               </div>
-            </div>
+            </Card>
           ))}
         </div>
-
-        {users.length === 0 && (
-          <div className="text-center py-16 text-slate-500">
-            <span className="text-6xl block mb-4">👥</span>
-            <p>ยังไม่มีผู้ใช้</p>
-          </div>
-        )}
-      </main>
-    </div>
+      )}
+    </>
   );
 }

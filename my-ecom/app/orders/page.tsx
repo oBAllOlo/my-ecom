@@ -1,26 +1,52 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import {
+  Package,
+  CheckCircle2,
+  Clock,
+  Truck,
+  XCircle,
+  Wrench,
+  ShoppingCart,
+  Wallet,
+  Search,
+  X,
+  MapPin,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Inbox,
+  type LucideIcon,
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import {
+  PageContainer,
+  PageHeader,
+  Card,
+  Badge,
+  Button,
+  Select,
+  Input,
+  Table,
+  THead,
+  TBody,
+  TR,
+  TH,
+  TD,
+  EmptyState,
+  Spinner,
+  cn,
+} from "@/components/ui";
 
 interface Order {
   _id: string;
-  userId: {
-    _id: string;
-    name: string;
-    email: string;
-  };
+  userId: { _id: string; name: string; email: string };
   items: Array<{
-    productId:
-      | string
-      | {
-          _id: string;
-          name: string;
-          image: string;
-        };
+    productId: string | { _id: string; name: string; image: string };
     name: string;
     description?: string;
     price: number;
@@ -54,50 +80,45 @@ interface Order {
   createdAt: string;
 }
 
-const carriers = [
-  { id: "kerry", name: "Kerry Express", icon: "🟠" },
-  { id: "flash", name: "Flash Express", icon: "🟡" },
-  { id: "jt", name: "J&T Express", icon: "🔴" },
-  { id: "thaipost", name: "ไปรษณีย์ไทย", icon: "🟤" },
-  { id: "scg", name: "SCG Express", icon: "🟢" },
-  { id: "other", name: "อื่นๆ", icon: "⚪" },
-];
-
-const statusConfig: Record<
-  string,
-  { label: string; bgClass: string; textClass: string; icon: string }
-> = {
-  pending: {
-    label: "รอดำเนินการ",
-    bgClass: "bg-amber-500/20",
-    textClass: "text-amber-400",
-    icon: "⏳",
-  },
-  processing: {
-    label: "กำลังจัดส่ง",
-    bgClass: "bg-blue-500/20",
-    textClass: "text-blue-400",
-    icon: "📦",
-  },
-  shipped: {
-    label: "จัดส่งแล้ว",
-    bgClass: "bg-primary-500/20",
-    textClass: "text-primary-400",
-    icon: "🚚",
-  },
-  delivered: {
-    label: "ส่งสำเร็จ",
-    bgClass: "bg-emerald-500/20",
-    textClass: "text-emerald-400",
-    icon: "✅",
-  },
-  cancelled: {
-    label: "ยกเลิก",
-    bgClass: "bg-red-500/20",
-    textClass: "text-red-400",
-    icon: "❌",
-  },
+const carrierNames: Record<string, string> = {
+  kerry: "Kerry Express",
+  flash: "Flash Express",
+  jt: "J&T Express",
+  thaipost: "ไปรษณีย์ไทย",
+  scg: "SCG Express",
+  other: "อื่นๆ",
 };
+
+type Tone = "warning" | "info" | "brand" | "success" | "danger";
+const statusConfig: Record<
+  Order["status"],
+  { label: string; tone: Tone; icon: LucideIcon }
+> = {
+  pending: { label: "รอดำเนินการ", tone: "warning", icon: Clock },
+  processing: { label: "กำลังจัดเตรียม", tone: "info", icon: Package },
+  shipped: { label: "จัดส่งแล้ว", tone: "brand", icon: Truck },
+  delivered: { label: "ส่งสำเร็จ", tone: "success", icon: CheckCircle2 },
+  cancelled: { label: "ยกเลิก", tone: "danger", icon: XCircle },
+};
+
+const partLabels: Record<string, string> = {
+  base: "เคส",
+  switch: "สวิตช์",
+  keycapBase: "คีย์แคปหลัก",
+  keycapAdd1: "คีย์แคปเสริม 1",
+  keycapAdd2: "คีย์แคปเสริม 2",
+  wire: "สาย",
+};
+
+function StatusBadge({ status }: { status: Order["status"] }) {
+  const cfg = statusConfig[status];
+  const Icon = cfg.icon;
+  return (
+    <Badge tone={cfg.tone}>
+      <Icon className="h-3.5 w-3.5" /> {cfg.label}
+    </Badge>
+  );
+}
 
 export default function OrdersPage() {
   const router = useRouter();
@@ -105,61 +126,42 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [categoryFilter, setCategoryFilter] = useState<
-    "all" | "custom" | "regular"
-  >("all");
+  const [categoryFilter, setCategoryFilter] = useState<"all" | "custom" | "regular">("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
 
-  // Check if order contains custom products
-  const isCustomOrder = (order: Order) => {
-    return order.items.some((item) => {
-      const productId =
-        typeof item.productId === "string"
-          ? item.productId
-          : item.productId?._id;
+  const isCustomOrder = (order: Order) =>
+    order.items.some((item) => {
+      const productId = typeof item.productId === "string" ? item.productId : item.productId?._id;
       return productId?.startsWith("custom-") || !!item.customParts;
     });
-  };
 
-  // Filter orders based on category, status, and search
   const filteredOrders = orders.filter((order) => {
-    // Category filter
     let categoryMatch = true;
     if (categoryFilter === "custom") categoryMatch = isCustomOrder(order);
-    else if (categoryFilter === "regular")
-      categoryMatch = !isCustomOrder(order);
+    else if (categoryFilter === "regular") categoryMatch = !isCustomOrder(order);
 
-    // Status filter
     let statusMatch = true;
-    if (statusFilter !== "all") {
-      statusMatch = order.status === statusFilter;
-    }
+    if (statusFilter !== "all") statusMatch = order.status === statusFilter;
 
-    // Search filter
     let searchMatch = true;
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      const orderIdMatch = order._id.toLowerCase().includes(query);
-      const productNameMatch = order.items.some((item) =>
-        item.name.toLowerCase().includes(query)
-      );
-      searchMatch = orderIdMatch || productNameMatch;
+      searchMatch =
+        order._id.toLowerCase().includes(query) ||
+        order.items.some((item) => item.name.toLowerCase().includes(query));
     }
-
     return categoryMatch && statusMatch && searchMatch;
   });
 
-  // Pagination
   const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE);
   const paginatedOrders = filteredOrders.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
 
-  // Reset to page 1 when filter changes
   const handleCategoryChange = (category: "all" | "custom" | "regular") => {
     setCategoryFilter(category);
     setCurrentPage(1);
@@ -169,9 +171,7 @@ export default function OrdersPage() {
   const regularOrdersCount = orders.length - customOrdersCount;
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push("/login");
-    }
+    if (!isLoading && !isAuthenticated) router.push("/login");
   }, [isLoading, isAuthenticated, router]);
 
   useEffect(() => {
@@ -180,11 +180,8 @@ export default function OrdersPage() {
         try {
           const res = await fetch("/api/orders");
           const data = await res.json();
-          if (data.success) {
-            setOrders(data.data);
-          } else {
-            toast.error("โหลดข้อมูลล้มเหลว");
-          }
+          if (data.success) setOrders(data.data);
+          else toast.error("โหลดข้อมูลล้มเหลว");
         } catch (err) {
           console.error("Error fetching orders:", err);
           toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
@@ -193,846 +190,382 @@ export default function OrdersPage() {
         }
       }
     };
-
-    if (user) {
-      fetchOrders();
-    }
+    if (user) fetchOrders();
   }, [user]);
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("th-TH", {
-      style: "currency",
-      currency: "THB",
-      minimumFractionDigits: 0,
-    }).format(price);
-  };
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("th-TH", {
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat("th-TH", { style: "currency", currency: "THB", minimumFractionDigits: 0 }).format(price);
+  const formatDate = (dateStr: string) =>
+    new Date(dateStr).toLocaleDateString("th-TH", {
       year: "numeric",
       month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
     });
-  };
 
   if (isLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0a1628 0%, #050d18 50%, #0f2854 100%)" }}>
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-400">กำลังโหลดข้อมูล...</p>
+      <PageContainer>
+        <div className="flex min-h-[50vh] items-center justify-center">
+          <Spinner className="h-8 w-8" />
         </div>
-      </div>
+      </PageContainer>
     );
   }
-
   if (!user) return null;
 
+  const tabs: { key: "all" | "custom" | "regular"; label: string; count: number }[] = [
+    { key: "all", label: "ทั้งหมด", count: orders.length },
+    { key: "custom", label: "Custom Build", count: customOrdersCount },
+    { key: "regular", label: "สินค้าทั่วไป", count: regularOrdersCount },
+  ];
+
+  const stats = [
+    { icon: Package, tone: "brand" as const, value: orders.length, label: "คำสั่งซื้อ" },
+    {
+      icon: CheckCircle2,
+      tone: "success" as const,
+      value: orders.filter((o) => o.status === "delivered").length,
+      label: "สำเร็จ",
+    },
+    {
+      icon: Clock,
+      tone: "warning" as const,
+      value: orders.filter((o) => o.status === "pending" || o.status === "processing").length,
+      label: "รอดำเนินการ",
+    },
+    {
+      icon: Wallet,
+      tone: "info" as const,
+      value: formatPrice(orders.reduce((sum, o) => sum + o.total, 0)),
+      label: "ยอดรวม",
+    },
+  ];
+  const toneBg: Record<string, string> = {
+    brand: "bg-brand-subtle text-brand",
+    success: "bg-success/10 text-success",
+    warning: "bg-warning/10 text-warning",
+    info: "bg-info/10 text-info",
+  };
+
   return (
-    <div className="min-h-screen bg-slate-900 relative">
-      {/* Header */}
-      <header className="bg-slate-800/50 border-b border-white/5 px-4 md:px-8 py-4 md:py-6">
-        <div className="flex flex-wrap items-center gap-4 md:gap-6">
-          <Link
-            href="/"
-            className="text-primary-400 no-underline font-medium py-2 px-3 md:px-4 bg-primary-500/10 rounded-lg hover:bg-primary-500/20 transition-all text-sm md:text-base"
-          >
-            ← กลับ
-          </Link>
-          <div className="flex items-center gap-3 md:gap-4">
-            <span className="text-2xl md:text-4xl">🛒</span>
-            <div>
-              <h1 className="text-xl md:text-2xl font-extrabold text-slate-50 m-0">
-                ประวัติการสั่งซื้อ
-              </h1>
-              <p className="text-xs md:text-sm text-slate-500 m-0">
-                {orders.length} คำสั่งซื้อทั้งหมด
-              </p>
-            </div>
-          </div>
-        </div>
-      </header>
+    <PageContainer>
+      <PageHeader title="ประวัติการสั่งซื้อ" subtitle={`${orders.length} คำสั่งซื้อทั้งหมด`} />
 
-      <main className="p-4 md:p-8">
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-4 md:mb-6">
-          <div className="rounded-xl p-3 flex items-center gap-3 shadow-lg" style={{ background: "var(--gradient-primary)", boxShadow: "0 10px 30px rgba(28, 77, 141, 0.3)" }}>
-            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-base">
-              📦
-            </div>
-            <div>
-              <p className="text-white text-lg font-bold m-0 leading-tight">
-                {orders.length}
-              </p>
-              <p className="text-xs m-0" style={{ color: "rgba(255, 255, 255, 0.8)" }}>คำสั่งซื้อ</p>
-            </div>
-          </div>
+      {/* Stats */}
+      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {stats.map((s) => {
+          const Icon = s.icon;
+          return (
+            <Card key={s.label} className="flex items-center gap-3 p-4">
+              <span className={cn("flex h-10 w-10 items-center justify-center rounded-md", toneBg[s.tone])}>
+                <Icon className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-lg font-bold text-fg">{s.value}</p>
+                <p className="text-xs text-fg-subtle">{s.label}</p>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
 
-          <div className="rounded-xl p-3 flex items-center gap-3 shadow-lg" style={{ background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", boxShadow: "0 10px 30px rgba(16, 185, 129, 0.3)" }}>
-            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-base">
-              ✅
-            </div>
-            <div>
-              <p className="text-white text-lg font-bold m-0 leading-tight">
-                {orders.filter((o) => o.status === "delivered").length}
-              </p>
-              <p className="text-xs m-0" style={{ color: "rgba(255, 255, 255, 0.8)" }}>สำเร็จ</p>
-            </div>
-          </div>
-
-          <div className="rounded-xl p-3 flex items-center gap-3 shadow-lg" style={{ background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", boxShadow: "0 10px 30px rgba(245, 158, 11, 0.3)" }}>
-            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-base">
-              ⏳
-            </div>
-            <div>
-              <p className="text-white text-lg font-bold m-0 leading-tight">
-                {
-                  orders.filter(
-                    (o) => o.status === "pending" || o.status === "processing"
-                  ).length
-                }
-              </p>
-              <p className="text-xs m-0" style={{ color: "rgba(255, 255, 255, 0.8)" }}>รอดำเนินการ</p>
-            </div>
-          </div>
-
-          <div className="rounded-xl p-3 flex items-center gap-3 shadow-lg" style={{ background: "var(--gradient-primary)", boxShadow: "0 10px 30px rgba(28, 77, 141, 0.3)" }}>
-            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-base">
-              💰
-            </div>
-            <div>
-              <p className="text-white text-base md:text-lg font-bold m-0 leading-tight break-all">
-                {new Intl.NumberFormat("th-TH", {
-                  style: "currency",
-                  currency: "THB",
-                  notation: "compact",
-                  maximumFractionDigits: 1,
-                }).format(orders.reduce((sum, order) => sum + order.total, 0))}
-              </p>
-              <p className="text-xs m-0" style={{ color: "rgba(255, 255, 255, 0.8)" }}>ยอดรวม</p>
-            </div>
-          </div>
-        </div>
-        {/* Category Filter Tabs */}
-        <div className="flex gap-2 md:gap-3 mb-6 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
+      {/* Tabs */}
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+        {tabs.map((tab) => (
           <button
-            onClick={() => handleCategoryChange("all")}
-            className={`px-3 md:px-5 py-2 md:py-2.5 rounded-xl font-semibold transition-all flex items-center gap-1 md:gap-2 whitespace-nowrap text-sm md:text-base ${
-              categoryFilter === "all"
-                ? "bg-primary-500 text-white shadow-lg shadow-primary-500/30"
-                : "bg-slate-800/50 text-slate-400 hover:bg-slate-700/50"
-            }`}
+            key={tab.key}
+            onClick={() => handleCategoryChange(tab.key)}
+            className={cn(
+              "flex items-center gap-2 whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium transition-colors",
+              categoryFilter === tab.key
+                ? "bg-brand text-white"
+                : "bg-surface text-fg-muted hover:bg-surface-raised"
+            )}
           >
-            📦 ทั้งหมด
+            {tab.label}
             <span
-              className={`text-xs px-2 py-0.5 rounded-full ${
-                categoryFilter === "all" ? "bg-white/20" : "bg-slate-600"
-              }`}
+              className={cn(
+                "rounded-full px-1.5 py-0.5 text-xs",
+                categoryFilter === tab.key ? "bg-white/20" : "bg-white/10"
+              )}
             >
-              {orders.length}
+              {tab.count}
             </span>
           </button>
-          <button
-            onClick={() => handleCategoryChange("custom")}
-            className={`px-5 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 ${
-              categoryFilter === "custom"
-                ? "bg-primary-500 text-white shadow-lg shadow-primary-500/30"
-                : "bg-slate-800/50 text-slate-400 hover:bg-slate-700/50"
-            }`}
-          >
-            🛠️ Custom Build
-            <span
-              className={`text-xs px-2 py-0.5 rounded-full ${
-                categoryFilter === "custom" ? "bg-white/20" : "bg-slate-600"
-              }`}
-            >
-              {customOrdersCount}
-            </span>
-          </button>
-          <button
-            onClick={() => handleCategoryChange("regular")}
-            className={`px-5 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 ${
-              categoryFilter === "regular"
-                ? "text-white shadow-lg"
-                : "bg-slate-800/50 text-slate-400 hover:bg-slate-700/50"
-            }`}
-            style={categoryFilter === "regular" ? { background: "var(--gradient-primary)", boxShadow: "0 10px 30px rgba(28, 77, 141, 0.3)" } : {}}
-          >
-            🛒 สินค้าทั่วไป
-            <span
-              className={`text-xs px-2 py-0.5 rounded-full ${
-                categoryFilter === "regular" ? "bg-white/20" : "bg-slate-600"
-              }`}
-            >
-              {regularOrdersCount}
-            </span>
-          </button>
-        </div>
+        ))}
+      </div>
 
-        {/* Status Filter Dropdown & Search */}
-        <div className="flex flex-col md:flex-row gap-3 mb-4">
-          <select
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-            style={{
-              background: "rgba(15, 23, 42, 0.5)",
-              border: "1px solid rgba(255, 255, 255, 0.1)"
-            }}
-            className="text-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-primary-500 transition-all cursor-pointer"
-          >
-            <option value="all" className="bg-slate-900 text-slate-200">📋 สถานะทั้งหมด</option>
-            <option value="pending" className="bg-slate-900 text-slate-200">⏳ รอดำเนินการ</option>
-            <option value="processing" className="bg-slate-900 text-slate-200">📦 กำลังจัดเตรียม</option>
-            <option value="shipped" className="bg-slate-900 text-slate-200">🚚 จัดส่งแล้ว</option>
-            <option value="delivered" className="bg-slate-900 text-slate-200">✅ ส่งสำเร็จ</option>
-            <option value="cancelled" className="bg-slate-900 text-slate-200">❌ ยกเลิก</option>
-          </select>
-
-          <input
-            type="text"
-            placeholder="🔍 ค้นหารหัสคำสั่งซื้อ หรือชื่อสินค้า..."
+      {/* Filters */}
+      <div className="mb-5 flex flex-col gap-3 md:flex-row">
+        <Select
+          value={statusFilter}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="md:w-56"
+        >
+          <option value="all">สถานะทั้งหมด</option>
+          <option value="pending">รอดำเนินการ</option>
+          <option value="processing">กำลังจัดเตรียม</option>
+          <option value="shipped">จัดส่งแล้ว</option>
+          <option value="delivered">ส่งสำเร็จ</option>
+          <option value="cancelled">ยกเลิก</option>
+        </Select>
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
+          <Input
+            placeholder="ค้นหารหัสคำสั่งซื้อ หรือชื่อสินค้า..."
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
               setCurrentPage(1);
             }}
-            style={{
-              background: "rgba(15, 23, 42, 0.5)",
-              border: "1px solid rgba(255, 255, 255, 0.1)"
-            }}
-            className="flex-1 text-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-primary-500 transition-all placeholder:text-slate-500"
+            className="pl-10"
           />
         </div>
-        {/* Orders - Mobile Cards (visible on mobile) */}
-        <div className="lg:hidden flex flex-col gap-3 mb-4">
-          {paginatedOrders.map((order) => {
-            const status = statusConfig[order.status];
-            const isCustom = isCustomOrder(order);
-            const firstItem = order.items[0];
-            const orderIdFormatted = order._id.slice(-8).toUpperCase();
+      </div>
 
-            // Handle displaying first item's image and name
-            // For custom orders, items might be complex, simplified for display
+      {filteredOrders.length === 0 ? (
+        <EmptyState icon={Inbox} title="ยังไม่มีคำสั่งซื้อ" description="คำสั่งซื้อของคุณจะแสดงที่นี่" />
+      ) : (
+        <>
+          {/* Mobile cards */}
+          <div className="flex flex-col gap-3 lg:hidden">
+            {paginatedOrders.map((order) => {
+              const isCustom = isCustomOrder(order);
+              const firstItem = order.items[0];
+              return (
+                <Card key={order._id} className="cursor-pointer p-4" onClick={() => setSelectedOrder(order)}>
+                  <div className="mb-3 flex items-start justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-sm font-semibold text-fg">
+                        #{order._id.slice(-8).toUpperCase()}
+                      </span>
+                      <Badge tone={isCustom ? "brand" : "info"}>
+                        {isCustom ? <Wrench className="h-3 w-3" /> : <ShoppingCart className="h-3 w-3" />}
+                      </Badge>
+                    </div>
+                    <StatusBadge status={order.status} />
+                  </div>
+                  <div className="mb-3 flex items-center gap-3 border-b border-line pb-3">
+                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-bg-deep">
+                      {firstItem?.images && firstItem.images.length > 1 ? (
+                        firstItem.images.map((img, imgIdx) => (
+                          <img key={imgIdx} src={img} alt="" className="absolute inset-0 h-full w-full object-contain" style={{ zIndex: imgIdx + 1 }} />
+                        ))
+                      ) : (
+                        <img src={firstItem?.image || "/placeholder.png"} alt={firstItem?.name || ""} className="h-full w-full object-cover" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-fg">{firstItem?.name || "ไม่ระบุ"}</p>
+                      <p className="text-xs text-fg-subtle">{order.items.length} รายการ</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-fg-subtle">{formatDate(order.createdAt)}</span>
+                    <span className="font-bold text-fg">{formatPrice(order.total)}</span>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
 
-            return (
-              <div
-                key={order._id}
-                style={{
-                  background: "rgba(15, 23, 42, 0.5)",
-                  border: "1px solid rgba(255, 255, 255, 0.1)"
-                }}
-                className="bg-transparent rounded-xl p-4"
-                onClick={() => setSelectedOrder(order)}
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <span className="font-mono text-slate-50 font-semibold text-sm">
-                      #{orderIdFormatted}
-                    </span>
-                    {isCustom ? (
-                      <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary-500/20 text-primary-400">
-                        🛠️
-                      </span>
-                    ) : (
-                      <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400">
-                        🛒
-                      </span>
-                    )}
-                  </div>
-                  <span
-                    className={`inline-flex items-center gap-1 py-1 px-2 rounded-full text-xs font-semibold ${status.bgClass} ${status.textClass}`}
-                  >
-                    {status.icon} {status.label}
-                  </span>
-                </div>
-                {/* Product preview */}
-                <div className="flex items-center gap-3 mb-3 pb-3 border-b border-white/5">
-                  <div className="relative w-14 h-14 flex-shrink-0">
-                    {/* Check if first item is custom with multiple images */}
-                    {firstItem?.images && firstItem.images.length > 1 ? (
-                      <div className="relative w-full h-full rounded-lg overflow-hidden bg-slate-700">
-                        {firstItem.images.map((img: string, imgIdx: number) => (
-                          <img
-                            key={imgIdx}
-                            src={img}
-                            alt={`${firstItem?.name} layer ${imgIdx + 1}`}
-                            className="absolute inset-0 w-full h-full object-contain"
-                            style={{ zIndex: imgIdx + 1 }}
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <img
-                        src={firstItem?.image || "/placeholder.png"}
-                        alt={firstItem?.name || "Product"}
-                        className="w-full h-full rounded-lg object-cover bg-slate-700"
-                      />
-                    )}
-                    {order.items.length > 1 && (
-                      <span className="absolute -top-1 -right-1 bg-primary-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold z-10">
-                        +{order.items.length - 1}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-slate-50 text-sm font-medium m-0 truncate">
-                      {firstItem?.name || "ไม่ระบุ"}
-                    </p>
-                    <p className="text-slate-500 text-xs m-0">
-                      {order.items.length} รายการ
-                    </p>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center mb-3">
-                  <div>
-                    <p className="text-slate-50 font-medium text-sm m-0">
-                      ยอดรวม
-                    </p>
-                  </div>
-                  <span className="text-emerald-400 font-bold">
-                    {formatPrice(order.total)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center pt-3 border-t border-white/10">
-                  <span className="text-slate-500 text-xs">
-                    {formatDate(order.createdAt)}
-                  </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedOrder(order);
-                    }}
-                    className="py-2 px-4 text-white rounded-lg font-semibold text-sm border-none cursor-pointer"
-                    style={{ background: "var(--gradient-primary)" }}
-                  >
-                    ดูรายละเอียด
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-          {orders.length === 0 && (
-            <div className="text-center py-16 text-slate-500">
-              <span className="text-6xl block mb-4">📭</span>
-              <p>ยังไม่มีคำสั่งซื้อ</p>
-            </div>
-          )}
-        </div>
-
-        {/* Orders Table - Desktop only */}
-        <div 
-          className="hidden lg:block rounded-2xl overflow-hidden"
-          style={{
-            background: "rgba(15, 23, 42, 0.5)",
-            border: "1px solid rgba(255, 255, 255, 0.1)"
-          }}
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr>
-                  <th className="text-left p-4 bg-primary-500/10 text-primary-400 font-semibold text-sm uppercase tracking-wide">
-                    รหัสคำสั่งซื้อ
-                  </th>
-                  <th className="text-left p-4 bg-primary-500/10 text-primary-400 font-semibold text-sm uppercase tracking-wide">
-                    สินค้า
-                  </th>
-                  <th className="text-left p-4 bg-primary-500/10 text-primary-400 font-semibold text-sm uppercase tracking-wide">
-                    ยอดรวม
-                  </th>
-                  <th className="text-left p-4 bg-primary-500/10 text-primary-400 font-semibold text-sm uppercase tracking-wide">
-                    สถานะ
-                  </th>
-                  <th className="text-left p-4 bg-primary-500/10 text-primary-400 font-semibold text-sm uppercase tracking-wide">
-                    วันที่
-                  </th>
-                  <th className="text-left p-4 bg-primary-500/10 text-primary-400 font-semibold text-sm uppercase tracking-wide">
-                    จัดการ
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
+          {/* Desktop table */}
+          <div className="hidden lg:block">
+            <Table>
+              <THead>
+                <TR>
+                  <TH>รหัสคำสั่งซื้อ</TH>
+                  <TH>สินค้า</TH>
+                  <TH>ยอดรวม</TH>
+                  <TH>สถานะ</TH>
+                  <TH>วันที่</TH>
+                  <TH>จัดการ</TH>
+                </TR>
+              </THead>
+              <TBody>
                 {paginatedOrders.map((order) => {
-                  const status = statusConfig[order.status];
                   const isCustom = isCustomOrder(order);
                   const firstItem = order.items[0];
-
                   return (
-                    <tr
-                      key={order._id}
-                      className="hover:bg-primary-500/5 transition-colors"
-                    >
-                      <td className="p-4 border-b border-white/5">
+                    <TR key={order._id} className="hover:bg-white/[0.02]">
+                      <TD>
                         <div className="flex flex-col gap-1">
-                          <span className="font-mono text-slate-50 font-semibold">
-                            #{order._id.slice(-8).toUpperCase()}
-                          </span>
-                          {isCustom ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary-500/20 text-primary-400 w-fit">
-                              🛠️ Custom
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 w-fit">
-                              🛒 ปกติ
-                            </span>
-                          )}
+                          <span className="font-mono font-semibold">#{order._id.slice(-8).toUpperCase()}</span>
+                          <Badge tone={isCustom ? "brand" : "info"} className="w-fit">
+                            {isCustom ? "Custom" : "ปกติ"}
+                          </Badge>
                         </div>
-                      </td>
-                      <td className="p-4 border-b border-white/5">
+                      </TD>
+                      <TD>
                         <div className="flex items-center gap-2">
-                          <div className="relative w-12 h-12 flex-shrink-0">
-                            {/* Check if first item is custom with multiple images */}
-                            {firstItem?.images &&
-                            firstItem.images.length > 1 ? (
-                              <div className="relative w-full h-full rounded-lg overflow-hidden bg-slate-700">
-                                {firstItem.images.map(
-                                  (img: string, imgIdx: number) => (
-                                    <img
-                                      key={imgIdx}
-                                      src={img}
-                                      alt={`${firstItem?.name} layer ${
-                                        imgIdx + 1
-                                      }`}
-                                      className="absolute inset-0 w-full h-full object-contain"
-                                      style={{ zIndex: imgIdx + 1 }}
-                                    />
-                                  )
-                                )}
-                              </div>
+                          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md bg-bg-deep">
+                            {firstItem?.images && firstItem.images.length > 1 ? (
+                              firstItem.images.map((img, imgIdx) => (
+                                <img key={imgIdx} src={img} alt="" className="absolute inset-0 h-full w-full object-contain" style={{ zIndex: imgIdx + 1 }} />
+                              ))
                             ) : (
-                              <img
-                                src={firstItem?.image || "/placeholder.png"}
-                                alt={firstItem?.name || "Product"}
-                                className="w-full h-full rounded-lg object-cover bg-slate-700"
-                              />
-                            )}
-                            {order.items.length > 1 && (
-                              <span className="absolute -top-1 -right-1 bg-primary-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold z-10">
-                                +{order.items.length - 1}
-                              </span>
+                              <img src={firstItem?.image || "/placeholder.png"} alt={firstItem?.name || ""} className="h-full w-full object-cover" />
                             )}
                           </div>
                           <div className="flex flex-col">
-                            <span className="text-slate-50 text-sm font-medium truncate max-w-[150px]">
-                              {firstItem?.name || "ไม่ระบุ"}
-                            </span>
-                            <span className="text-slate-500 text-xs">
-                              {order.items.length} รายการ
-                            </span>
+                            <span className="max-w-[160px] truncate text-sm font-medium">{firstItem?.name || "ไม่ระบุ"}</span>
+                            <span className="text-xs text-fg-subtle">{order.items.length} รายการ</span>
                           </div>
                         </div>
-                      </td>
-                      <td className="p-4 border-b border-white/5">
-                        <span className="text-emerald-400 font-bold text-lg">
-                          {formatPrice(order.total)}
-                        </span>
-                      </td>
-                      <td className="p-4 border-b border-white/5">
-                        <span
-                          className={`inline-flex items-center gap-2 py-2 px-4 rounded-full text-sm font-semibold ${status.bgClass} ${status.textClass}`}
-                        >
-                          {status.icon} {status.label}
-                        </span>
-                      </td>
-                      <td className="p-4 border-b border-white/5">
-                        <span className="text-slate-400 text-sm">
-                          {formatDate(order.createdAt)}
-                        </span>
-                      </td>
-                      <td className="p-4 border-b border-white/5">
-                        <button
-                          onClick={() => setSelectedOrder(order)}
-                          className="py-2 px-4 text-white rounded-lg font-semibold border-none cursor-pointer hover:-translate-y-0.5 transition-all"
-                          style={{ background: "var(--gradient-primary)", boxShadow: "0 10px 30px rgba(28, 77, 141, 0.3)" }}
-                        >
+                      </TD>
+                      <TD className="font-bold">{formatPrice(order.total)}</TD>
+                      <TD><StatusBadge status={order.status} /></TD>
+                      <TD className="text-fg-muted">{formatDate(order.createdAt)}</TD>
+                      <TD>
+                        <Button variant="secondary" size="sm" onClick={() => setSelectedOrder(order)}>
                           ดูรายละเอียด
-                        </button>
-                      </td>
-                    </tr>
+                        </Button>
+                      </TD>
+                    </TR>
                   );
                 })}
-              </tbody>
-            </table>
+              </TBody>
+            </Table>
           </div>
 
-          {orders.length === 0 && (
-            <div className="text-center py-16 text-slate-500">
-              <span className="text-6xl block mb-4">📭</span>
-              <p>ยังไม่มีคำสั่งซื้อ</p>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-5 flex flex-col items-center justify-between gap-3 rounded-xl border border-line bg-surface p-3 md:flex-row">
+              <p className="text-sm text-fg-subtle">
+                แสดง {(currentPage - 1) * ITEMS_PER_PAGE + 1} -{" "}
+                {Math.min(currentPage * ITEMS_PER_PAGE, filteredOrders.length)} จาก {filteredOrders.length} รายการ
+              </p>
+              <div className="flex items-center gap-1">
+                <Button variant="secondary" size="icon" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>
+                  <ChevronsLeft className="h-4 w-4" />
+                </Button>
+                <Button variant="secondary" size="icon" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="px-3 text-sm text-fg-muted">{currentPage}/{totalPages}</span>
+                <Button variant="secondary" size="icon" onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button variant="secondary" size="icon" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>
+                  <ChevronsRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           )}
-        </div>
+        </>
+      )}
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div 
-            className="flex flex-col md:flex-row items-center justify-between gap-4 mt-6 rounded-xl p-4"
-            style={{
-              background: "rgba(15, 23, 42, 0.5)",
-              border: "1px solid rgba(255, 255, 255, 0.1)"
-            }}
-          >
-            <div className="text-slate-400 text-xs md:text-sm text-center md:text-left">
-              แสดง {(currentPage - 1) * ITEMS_PER_PAGE + 1} -{" "}
-              {Math.min(currentPage * ITEMS_PER_PAGE, filteredOrders.length)}{" "}
-              จาก {filteredOrders.length} รายการ
-            </div>
-            <div className="flex items-center gap-1 md:gap-2 flex-wrap justify-center">
-              <button
-                onClick={() => setCurrentPage(1)}
-                disabled={currentPage === 1}
-                className={`px-2 md:px-3 py-2 rounded-lg font-medium transition-all text-sm ${
-                  currentPage === 1
-                    ? "bg-slate-700/50 text-slate-500 cursor-not-allowed"
-                    : "bg-slate-700 text-slate-200 hover:bg-slate-600"
-                }`}
-              >
-                ⏮️
-              </button>
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className={`px-2 md:px-4 py-2 rounded-lg font-medium transition-all text-sm ${
-                  currentPage === 1
-                    ? "bg-slate-700/50 text-slate-500 cursor-not-allowed"
-                    : "bg-slate-700 text-slate-200 hover:bg-slate-600"
-                }`}
-              >
-                <span className="hidden md:inline">← ก่อนหน้า</span>
-                <span className="md:hidden">←</span>
-              </button>
-
-              {/* Page numbers - show only on md+ */}
-              <div className="hidden md:flex items-center gap-1 px-2">
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  let pageNum: number;
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (currentPage <= 3) {
-                    pageNum = i + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
-                  } else {
-                    pageNum = currentPage - 2 + i;
-                  }
-                  return (
-                    <button
-                      key={pageNum}
-                      onClick={() => setCurrentPage(pageNum)}
-                      className={`w-10 h-10 rounded-lg font-semibold transition-all ${
-                        currentPage === pageNum
-                          ? "bg-primary-500 text-white shadow-lg shadow-primary-500/30"
-                          : "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                      }`}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Mobile page indicator */}
-              <span className="md:hidden text-slate-400 text-sm px-2">
-                {currentPage}/{totalPages}
-              </span>
-
-              <button
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, p + 1))
-                }
-                disabled={currentPage === totalPages}
-                className={`px-2 md:px-4 py-2 rounded-lg font-medium transition-all text-sm ${
-                  currentPage === totalPages
-                    ? "bg-slate-700/50 text-slate-500 cursor-not-allowed"
-                    : "bg-slate-700 text-slate-200 hover:bg-slate-600"
-                }`}
-              >
-                <span className="hidden md:inline">ถัดไป →</span>
-                <span className="md:hidden">→</span>
-              </button>
-              <button
-                onClick={() => setCurrentPage(totalPages)}
-                disabled={currentPage === totalPages}
-                className={`px-2 md:px-3 py-2 rounded-lg font-medium transition-all text-sm ${
-                  currentPage === totalPages
-                    ? "bg-slate-700/50 text-slate-500 cursor-not-allowed"
-                    : "bg-slate-700 text-slate-200 hover:bg-slate-600"
-                }`}
-              >
-                ⏭️
-              </button>
-            </div>
-          </div>
-        )}
-      </main>
-
-      {/* Order Detail Modal */}
+      {/* Detail modal */}
       {selectedOrder && (
         <div
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-[1000] p-2 md:p-8"
+          className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 p-3 backdrop-blur-sm md:p-8"
           onClick={() => setSelectedOrder(null)}
         >
-          <div
-            className="rounded-2xl md:rounded-3xl max-w-xl w-full max-h-[95vh] overflow-y-auto"
-            style={{ background: "var(--bg-card)", border: "1px solid var(--border-hover)" }}
+          <Card
+            className="max-h-[92vh] w-full max-w-xl overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-center p-4 md:p-6 border-b border-white/10">
-              <h2 className="text-base md:text-xl text-slate-50 m-0">
+            <div className="flex items-center justify-between border-b border-line p-5">
+              <h2 className="font-semibold text-fg">
                 คำสั่งซื้อ #{selectedOrder._id.slice(-8).toUpperCase()}
               </h2>
               <button
                 onClick={() => setSelectedOrder(null)}
-                className="bg-none border-none text-slate-500 text-xl md:text-2xl cursor-pointer hover:text-white transition-colors"
+                className="flex h-8 w-8 items-center justify-center rounded-md text-fg-subtle hover:bg-white/5 hover:text-fg"
               >
-                ✕
+                <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="p-4 md:p-6">
-              {/* Order Items */}
-              <div className="mb-8">
-                <h3 className="text-slate-50 text-sm md:text-base mb-3 md:mb-4">
-                  📦 รายการสินค้า
-                </h3>
-                <div className="flex flex-col gap-3">
-                  {selectedOrder.items.map((item, idx) => {
-                    const productId =
-                      typeof item.productId === "string"
-                        ? item.productId
-                        : item.productId?._id;
-                    const isCustomProduct = productId?.startsWith("custom-") || !!item.customParts;
 
-                    return (
-                      <div key={idx} className="p-4 bg-white/5 rounded-xl">
-                        <div className="flex items-start gap-4">
-                          {/* Image - Stack for custom products */}
-                          <div
-                            className={`relative flex-shrink-0 bg-slate-700 rounded-xl overflow-hidden ${
-                              isCustomProduct ? "w-24 h-24" : "w-16 h-16"
-                            }`}
-                          >
-                            {isCustomProduct &&
-                            item.images &&
-                            item.images.length > 1 ? (
-                              <>
-                                {item.images.map((img, imgIdx) => (
-                                  <img
-                                    key={imgIdx}
-                                    src={img}
-                                    alt={`${item.name} layer ${imgIdx + 1}`}
-                                    className="absolute inset-0 w-full h-full object-contain"
-                                    style={{ zIndex: imgIdx + 1 }}
-                                  />
-                                ))}
-                              </>
-                            ) : (
-                              <img
-                                src={item.image}
-                                alt={item.name}
-                                className="w-full h-full object-cover"
-                              />
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-slate-50 m-0 font-semibold">
-                              {item.name}
-                            </p>
-                            <p className="text-slate-500 text-sm m-0">
-                              x{item.quantity}
-                            </p>
-
-                            {/* Custom Product Details */}
-                            {isCustomProduct && (
-                              <div className="mt-2 text-xs space-y-1">
-                                <p className="m-0 font-medium" style={{ color: "var(--primary-light)" }}>
-                                  🛠️ ชิ้นส่วนที่เลือก:
-                                </p>
-                                {item.customParts ? (
-                                  <div className="bg-primary-500/10 rounded-lg p-3 mt-2 space-y-2">
-                                    {item.customParts.base?.name && (
-                                      <div className="flex items-center gap-2">
-                                        {item.customParts.base.image && (
-                                          <img
-                                            src={item.customParts.base.image}
-                                            alt="Base"
-                                            className="w-16 h-16 rounded object-contain bg-slate-700"
-                                          />
-                                        )}
-                                        <span className="text-slate-300">
-                                          🖥️ Base:
-                                        </span>
-                                        <span className="text-white">
-                                          {item.customParts.base.name}
-                                        </span>
-                                      </div>
-                                    )}
-                                    {item.customParts.switch?.name && (
-                                      <div className="flex items-center gap-2">
-                                        {item.customParts.switch.image && (
-                                          <img
-                                            src={item.customParts.switch.image}
-                                            alt="Switch"
-                                            className="w-16 h-16 rounded object-contain bg-slate-700"
-                                          />
-                                        )}
-                                        <span className="text-slate-300">
-                                          🔘 Switch:
-                                        </span>
-                                        <span className="text-white">
-                                          {item.customParts.switch.name}
-                                        </span>
-                                      </div>
-                                    )}
-                                    {item.customParts.keycapBase?.name && (
-                                      <div className="flex items-center gap-2">
-                                        {item.customParts.keycapBase.image && (
-                                          <img
-                                            src={
-                                              item.customParts.keycapBase.image
-                                            }
-                                            alt="Keycap"
-                                            className="w-16 h-16 rounded object-contain bg-slate-700"
-                                          />
-                                        )}
-                                        <span className="text-slate-300">
-                                          ⌨️ Keycap:
-                                        </span>
-                                        <span className="text-white">
-                                          {item.customParts.keycapBase.name}
-                                        </span>
-                                      </div>
-                                    )}
-                                    {item.customParts.keycapAdd1?.name && (
-                                      <div className="flex items-center gap-2">
-                                        {item.customParts.keycapAdd1.image && (
-                                          <img
-                                            src={
-                                              item.customParts.keycapAdd1.image
-                                            }
-                                            alt="Add-on 1"
-                                            className="w-16 h-16 rounded object-contain bg-slate-700"
-                                          />
-                                        )}
-                                        <span className="text-slate-300">
-                                          🔠 Add-on 1:
-                                        </span>
-                                        <span className="text-white">
-                                          {item.customParts.keycapAdd1.name}
-                                        </span>
-                                      </div>
-                                    )}
-                                    {item.customParts.keycapAdd2?.name && (
-                                      <div className="flex items-center gap-2">
-                                        {item.customParts.keycapAdd2.image && (
-                                          <img
-                                            src={
-                                              item.customParts.keycapAdd2.image
-                                            }
-                                            alt="Add-on 2"
-                                            className="w-16 h-16 rounded object-contain bg-slate-700"
-                                          />
-                                        )}
-                                        <span className="text-slate-300">
-                                          🔣 Add-on 2:
-                                        </span>
-                                        <span className="text-white">
-                                          {item.customParts.keycapAdd2.name}
-                                        </span>
-                                      </div>
-                                    )}
-                                    {item.customParts.wire?.name && (
-                                      <div className="flex items-center gap-2">
-                                        {item.customParts.wire.image && (
-                                          <img
-                                            src={item.customParts.wire.image}
-                                            alt="Wire"
-                                            className="w-16 h-16 rounded object-contain bg-slate-700"
-                                          />
-                                        )}
-                                        <span className="text-slate-300">
-                                          🔌 Wire:
-                                        </span>
-                                        <span className="text-white">
-                                          {item.customParts.wire.name}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <p className="m-0 text-slate-500 italic">
-                                    ไม่พบข้อมูลชิ้นส่วน
-                                  </p>
+            <div className="p-5">
+              <h3 className="mb-3 text-sm font-medium text-fg-muted">รายการสินค้า</h3>
+              <div className="flex flex-col gap-3">
+                {selectedOrder.items.map((item, idx) => {
+                  const productId = typeof item.productId === "string" ? item.productId : item.productId?._id;
+                  const isCustomProduct = productId?.startsWith("custom-") || !!item.customParts;
+                  return (
+                    <div key={idx} className="rounded-lg border border-line bg-white/[0.02] p-3">
+                      <div className="flex items-start gap-3">
+                        <div className={cn("relative shrink-0 overflow-hidden rounded-md bg-bg-deep", isCustomProduct ? "h-20 w-20" : "h-14 w-14")}>
+                          {isCustomProduct && item.images && item.images.length > 1 ? (
+                            item.images.map((img, imgIdx) => (
+                              <img key={imgIdx} src={img} alt="" className="absolute inset-0 h-full w-full object-contain" style={{ zIndex: imgIdx + 1 }} />
+                            ))
+                          ) : (
+                            <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-fg">{item.name}</p>
+                          <p className="text-xs text-fg-subtle">x{item.quantity}</p>
+                          {isCustomProduct && item.customParts && (
+                            <div className="mt-2 rounded-md bg-brand-subtle p-2.5 text-xs">
+                              <p className="mb-1.5 font-medium text-brand">ชิ้นส่วนที่เลือก</p>
+                              <div className="flex flex-col gap-1.5">
+                                {(
+                                  Object.entries(item.customParts) as [string, { name?: string; image?: string } | undefined][]
+                                ).map(([key, part]) =>
+                                  part?.name ? (
+                                    <div key={key} className="flex items-center gap-2">
+                                      {part.image && (
+                                        <img src={part.image} alt={key} className="h-8 w-8 rounded bg-surface-raised object-contain" />
+                                      )}
+                                      <span className="text-fg-subtle">{partLabels[key] ?? key}:</span>
+                                      <span className="text-fg">{part.name}</span>
+                                    </div>
+                                  ) : null
                                 )}
                               </div>
-                            )}
-                          </div>
-                          <p className="text-emerald-400 font-semibold m-0 ml-auto">
-                            {formatPrice(item.price * item.quantity)}
-                          </p>
+                            </div>
+                          )}
                         </div>
+                        <p className="whitespace-nowrap text-sm font-semibold text-fg">
+                          {formatPrice(item.price * item.quantity)}
+                        </p>
                       </div>
-                    );
-                  })}
-                </div>
-                <div className="flex justify-between pt-3 md:pt-4 mt-3 md:mt-4 border-t border-white/10 text-slate-400">
-                  <span className="text-sm md:text-base">ยอดรวม</span>
-                  <span className="text-lg md:text-2xl font-extrabold text-emerald-400">
-                    {formatPrice(selectedOrder.total)}
-                  </span>
-                </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-4 flex justify-between border-t border-line pt-4">
+                <span className="text-fg-muted">ยอดรวม</span>
+                <span className="text-xl font-bold text-fg">{formatPrice(selectedOrder.total)}</span>
               </div>
 
-              {/* Shipping Address */}
-              <div className="mb-8">
-                <h3 className="text-slate-50 text-sm md:text-base mb-3 md:mb-4">
-                  📍 ที่อยู่จัดส่ง
-                </h3>
-                <div className="bg-white/5 p-4 rounded-xl text-slate-400">
-                  <p className="text-slate-50 font-semibold mb-2">
-                    {selectedOrder.shippingAddress.fullName}
-                  </p>
-                  <p>{selectedOrder.shippingAddress.phone}</p>
-                  <p>{selectedOrder.shippingAddress.street}</p>
-                  <p>
-                    เขต/อำเภอ: {selectedOrder.shippingAddress.district}
-                  </p>
-                  {selectedOrder.shippingAddress.subDistrict && (
-                    <p>
-                      แขวง/ตำบล: {selectedOrder.shippingAddress.subDistrict}
-                    </p>
-                  )}
-                  <p>
-                    {selectedOrder.shippingAddress.province}{" "}
-                    {selectedOrder.shippingAddress.postalCode}
-                  </p>
-                </div>
+              <h3 className="mb-2 mt-6 flex items-center gap-1.5 text-sm font-medium text-fg-muted">
+                <MapPin className="h-4 w-4" /> ที่อยู่จัดส่ง
+              </h3>
+              <div className="rounded-lg border border-line bg-white/[0.02] p-4 text-sm text-fg-muted">
+                <p className="font-semibold text-fg">{selectedOrder.shippingAddress.fullName}</p>
+                <p>{selectedOrder.shippingAddress.phone}</p>
+                <p>{selectedOrder.shippingAddress.street}</p>
+                <p>เขต/อำเภอ: {selectedOrder.shippingAddress.district}</p>
+                {selectedOrder.shippingAddress.subDistrict && (
+                  <p>แขวง/ตำบล: {selectedOrder.shippingAddress.subDistrict}</p>
+                )}
+                <p>
+                  {selectedOrder.shippingAddress.province} {selectedOrder.shippingAddress.postalCode}
+                </p>
               </div>
 
-              {/* Tracking Info if available */}
               {selectedOrder.trackingNumber && (
-                  <div className="rounded-xl p-4" style={{ background: "rgba(28, 77, 141, 0.15)", border: "1px solid var(--border-hover)" }}>
-                    <p className="m-0 mb-1 text-sm" style={{ color: "var(--primary-light)" }}>
-                      📦 หมายเลขพัสดุ
-                    </p>
-                  <p className="text-white m-0 text-lg font-bold tracking-wider">
-                    {selectedOrder.trackingNumber}
-                  </p>
-                  <p className="text-slate-500 mt-2 mb-0 text-sm">
-                    🏢{" "}
-                    {carriers.find((c) => c.id === selectedOrder.carrier)
-                      ?.name || selectedOrder.carrier}
+                <div className="mt-4 rounded-lg border border-line bg-brand-subtle p-4">
+                  <p className="mb-1 text-sm text-brand">หมายเลขพัสดุ</p>
+                  <p className="text-lg font-bold tracking-wider text-fg">{selectedOrder.trackingNumber}</p>
+                  <p className="mt-2 text-sm text-fg-subtle">
+                    {carrierNames[selectedOrder.carrier || "other"] || selectedOrder.carrier}
                   </p>
                 </div>
               )}
             </div>
-          </div>
+          </Card>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

@@ -72,6 +72,8 @@ export async function POST(request: Request) {
         message: "สมัครสมาชิกสำเร็จ กรุณาตรวจสอบอีเมลเพื่อยืนยัน OTP",
         requireVerification: true,
         email: normalizedEmail,
+        // DEMO MODE: email is mocked, so the OTP is returned here for convenience.
+        devOtp: otpCode,
       },
       { status: 201 }
     );

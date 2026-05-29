@@ -3,11 +3,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { Star, ShoppingCart } from "lucide-react";
 import { Product } from "@/lib/types";
 import { formatPrice } from "@/lib/mockData";
 import { useCart } from "@/context/CartContext";
-import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
+import { Badge, Button } from "@/components/ui";
 
 interface ProductCardProps {
   product: Product;
@@ -22,9 +24,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     e.preventDefault();
     e.stopPropagation();
 
-    // ต้อง login ก่อนถึงจะเพิ่มสินค้าลงตะกร้าได้
     if (!user) {
-      // ใช้ toast.id เพื่อป้องกันการแสดง toast ซ้ำ
       toast.error("กรุณาเข้าสู่ระบบก่อนเพิ่มสินค้าลงตะกร้า", {
         id: "product-add-to-cart-auth",
       });
@@ -42,79 +42,89 @@ export default function ProductCard({ product }: ProductCardProps) {
       )
     : 0;
 
-  return (
-    <div className="product-card">
-      {/* Badges */}
-      <div className="product-badges">
-        {product.isNewProduct && <span className="badge badge-new">ใหม่</span>}
-        {discount > 0 && <span className="badge badge-sale">-{discount}%</span>}
-      </div>
+  const rounded = Math.round(product.rating);
+  const stockTone =
+    product.stock > 10 ? "success" : product.stock > 0 ? "warning" : "danger";
+  const stockLabel =
+    product.stock > 10
+      ? "มีสินค้า"
+      : product.stock > 0
+      ? `เหลือ ${product.stock} ชิ้น`
+      : "สินค้าหมด";
 
-      {/* Image - Clickable Link */}
-      <Link href={`/products/${product._id}`} className="product-image-link">
-        <div className="product-image-container">
+  return (
+    <div className="group flex flex-col overflow-hidden rounded-xl border border-line bg-surface transition-colors hover:border-line-strong">
+      <Link href={`/products/${product._id}`} className="relative block">
+        <div className="absolute left-3 top-3 z-10 flex flex-col gap-1.5">
+          {product.isNewProduct && <Badge tone="brand">ใหม่</Badge>}
+          {discount > 0 && <Badge tone="danger">-{discount}%</Badge>}
+        </div>
+        <div className="aspect-[4/3] overflow-hidden bg-bg-deep">
           <Image
             src={product.image}
             alt={product.name}
             width={400}
             height={300}
-            className="product-image"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         </div>
       </Link>
 
-      {/* Info */}
-      <div className="product-info">
-        <Link href={`/products/${product._id}`} className="product-info-link">
-          <span className="product-brand">{product.brand}</span>
-          <h3 className="product-name">{product.name}</h3>
+      <div className="flex flex-1 flex-col gap-2 p-4">
+        <Link href={`/products/${product._id}`} className="flex flex-1 flex-col gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wide text-brand">
+            {product.brand}
+          </span>
+          <h3 className="line-clamp-2 font-semibold leading-snug text-fg">
+            {product.name}
+          </h3>
 
-          {/* Rating */}
-          <div className="product-rating">
-            <span className="stars">
-              {"★".repeat(Math.round(product.rating))}
-              {"☆".repeat(5 - Math.round(product.rating))}
-            </span>
-            <span className="rating-text">({product.reviews})</span>
+          <div className="flex items-center gap-1.5">
+            <div className="flex">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star
+                  key={i}
+                  className={
+                    i < rounded
+                      ? "h-3.5 w-3.5 fill-warning text-warning"
+                      : "h-3.5 w-3.5 text-fg-subtle"
+                  }
+                />
+              ))}
+            </div>
+            <span className="text-xs text-fg-subtle">({product.reviews})</span>
           </div>
 
-          {/* Switch Type */}
           {product.switchType && (
-            <p className="product-switch">🔘 {product.switchType}</p>
+            <p className="text-sm text-fg-muted">{product.switchType}</p>
           )}
 
-          {/* Price */}
-          <div className="product-price-container">
-            <span className="product-price">{formatPrice(product.price)}</span>
+          <div className="mt-auto flex items-baseline gap-2 pt-1">
+            <span className="text-xl font-bold text-fg">
+              {formatPrice(product.price)}
+            </span>
             {product.originalPrice && product.originalPrice > product.price && (
-              <span className="product-original-price">
+              <span className="text-sm text-fg-subtle line-through">
                 {formatPrice(product.originalPrice)}
               </span>
             )}
           </div>
 
-          {/* Stock */}
-          <div
-            className={`stock-status ${
-              product.stock > 10
-                ? "in-stock"
-                : product.stock > 0
-                ? "low-stock"
-                : "out-of-stock"
-            }`}
-          >
-            {product.stock > 10
-              ? "✓ มีสินค้า"
-              : product.stock > 0
-              ? `เหลือ ${product.stock} ชิ้น`
-              : "สินค้าหมด"}
-          </div>
+          <Badge tone={stockTone} className="w-fit">
+            {stockLabel}
+          </Badge>
         </Link>
 
-        {/* Add to Cart Button */}
-        <button className="quick-add-button" onClick={handleAddToCart}>
-          🛒 เพิ่มลงตะกร้า
-        </button>
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={handleAddToCart}
+          disabled={product.stock === 0}
+          className="mt-2 w-full"
+        >
+          <ShoppingCart className="h-4 w-4" />
+          เพิ่มลงตะกร้า
+        </Button>
       </div>
     </div>
   );

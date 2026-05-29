@@ -4,10 +4,38 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Star,
+  Check,
+  ShoppingCart,
+  Minus,
+  Plus,
+  X,
+  PenLine,
+  MessageSquare,
+  Cpu,
+  Cable,
+  Package,
+} from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import ProductCard from "@/components/ProductCard";
+import {
+  PageContainer,
+  Card,
+  Badge,
+  Button,
+  Field,
+  Input,
+  Textarea,
+  EmptyState,
+  Spinner,
+  buttonClasses,
+  cn,
+} from "@/components/ui";
 
 interface Product {
   _id: string;
@@ -39,13 +67,29 @@ interface Review {
   createdAt: string;
 }
 
-const formatPrice = (price: number) => {
-  return new Intl.NumberFormat("th-TH", {
+const formatPrice = (price: number) =>
+  new Intl.NumberFormat("th-TH", {
     style: "currency",
     currency: "THB",
     minimumFractionDigits: 0,
   }).format(price);
-};
+
+function Stars({ value, className }: { value: number; className?: string }) {
+  return (
+    <div className={cn("flex", className)}>
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Star
+          key={i}
+          className={
+            i < Math.round(value)
+              ? "h-4 w-4 fill-warning text-warning"
+              : "h-4 w-4 text-fg-subtle"
+          }
+        />
+      ))}
+    </div>
+  );
+}
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -61,22 +105,15 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
 
-  // Review form state
   const [showReviewForm, setShowReviewForm] = useState(false);
-  const [reviewForm, setReviewForm] = useState({
-    rating: 5,
-    title: "",
-    comment: "",
-  });
+  const [reviewForm, setReviewForm] = useState({ rating: 5, title: "", comment: "" });
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewError, setReviewError] = useState("");
   const [reviewSuccess, setReviewSuccess] = useState(false);
 
-  // Image gallery state
   const [selectedImage, setSelectedImage] = useState<string>("");
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
-  // Fetch product
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -84,10 +121,7 @@ export default function ProductDetailPage() {
         const data = await res.json();
         if (data.success) {
           setProduct(data.data);
-          // Fetch related products
-          const relatedRes = await fetch(
-            `/api/products?category=${data.data.category}`
-          );
+          const relatedRes = await fetch(`/api/products?category=${data.data.category}`);
           const relatedData = await relatedRes.json();
           if (relatedData.success) {
             setRelatedProducts(
@@ -106,22 +140,16 @@ export default function ProductDetailPage() {
     fetchProduct();
   }, [productId]);
 
-  // Set initial selected image when product loads
   useEffect(() => {
-    if (product) {
-      setSelectedImage(product.image);
-    }
+    if (product) setSelectedImage(product.image);
   }, [product]);
 
-  // Fetch reviews
   useEffect(() => {
     const fetchReviews = async () => {
       try {
         const res = await fetch(`/api/reviews?productId=${productId}`);
         const data = await res.json();
-        if (data.success) {
-          setReviews(data.data);
-        }
+        if (data.success) setReviews(data.data);
       } catch (error) {
         console.error("Error fetching reviews:", error);
       }
@@ -131,17 +159,13 @@ export default function ProductDetailPage() {
 
   const handleAddToCart = () => {
     if (!product) return;
-
-    // ต้อง login ก่อนถึงจะเพิ่มสินค้าลงตะกร้าได้
     if (!user) {
-      // ใช้ toast.id เพื่อป้องกันการแสดง toast ซ้ำ
       toast.error("กรุณาเข้าสู่ระบบก่อนเพิ่มสินค้าลงตะกร้า", {
         id: "product-detail-add-to-cart-auth",
       });
       router.push("/login");
       return;
     }
-
     addToCart(product, quantity);
     toast.success(`เพิ่ม "${product.name}" ลงตะกร้าแล้ว`);
     setAddedToCart(true);
@@ -151,10 +175,8 @@ export default function ProductDetailPage() {
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-
     setSubmittingReview(true);
     setReviewError("");
-
     try {
       const res = await fetch("/api/reviews", {
         method: "POST",
@@ -168,19 +190,14 @@ export default function ProductDetailPage() {
           comment: reviewForm.comment,
         }),
       });
-
       const data = await res.json();
-
       if (data.success) {
         setReviewSuccess(true);
         setShowReviewForm(false);
         setReviewForm({ rating: 5, title: "", comment: "" });
-        // Refresh product to get updated rating
         const productRes = await fetch(`/api/products/${productId}`);
         const productData = await productRes.json();
-        if (productData.success) {
-          setProduct(productData.data);
-        }
+        if (productData.success) setProduct(productData.data);
       } else {
         setReviewError(data.error || "เกิดข้อผิดพลาด");
       }
@@ -196,762 +213,352 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div
-        className="product-detail"
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "50vh",
-        }}
-      >
-        <div className="admin-loading-spinner"></div>
-      </div>
+      <PageContainer>
+        <div className="flex min-h-[50vh] items-center justify-center">
+          <Spinner className="h-8 w-8" />
+        </div>
+      </PageContainer>
     );
   }
 
   if (!product) {
     return (
-      <div className="product-detail">
-        <div className="cart-empty">
-          <div className="cart-empty-icon">😕</div>
-          <h3 className="cart-empty-title">ไม่พบสินค้า</h3>
-          <p className="cart-empty-text">
-            สินค้าที่คุณกำลังมองหาอาจถูกลบหรือไม่มีอยู่ในระบบ
-          </p>
-          <Link href="/products" className="btn btn-primary">
-            กลับไปหน้าสินค้า
-          </Link>
-        </div>
-      </div>
+      <PageContainer>
+        <EmptyState
+          icon={Package}
+          title="ไม่พบสินค้า"
+          description="สินค้าที่คุณกำลังมองหาอาจถูกลบหรือไม่มีอยู่ในระบบ"
+          action={
+            <Link href="/products" className={buttonClasses({ variant: "primary" })}>
+              กลับไปหน้าสินค้า
+            </Link>
+          }
+        />
+      </PageContainer>
     );
   }
 
   const discount = product.originalPrice
-    ? Math.round(
-        ((product.originalPrice - product.price) / product.originalPrice) * 100
-      )
+    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
+  const stockTone = product.stock > 10 ? "text-success" : product.stock > 0 ? "text-warning" : "text-danger";
 
   return (
-    <div className="product-detail">
-      {/* Back Button */}
-      <div style={{ marginBottom: "1.5rem" }}>
-        <Link
-          href="/products"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            padding: "0.75rem 1.5rem",
-            background: "var(--gradient-card)",
-            border: "1px solid var(--border-color)",
-            borderRadius: "var(--radius-full)",
-            color: "var(--text-primary)",
-            textDecoration: "none",
-            fontWeight: 600,
-            fontSize: "0.9rem",
-            transition: "all 0.3s ease",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "var(--gradient-primary)";
-            e.currentTarget.style.color = "white";
-            e.currentTarget.style.transform = "translateX(-4px)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "var(--gradient-card)";
-            e.currentTarget.style.color = "var(--text-primary)";
-            e.currentTarget.style.transform = "translateX(0)";
-          }}
-        >
-          ← ย้อนกลับ
-        </Link>
-      </div>
-
-      {/* Breadcrumb */}
-      <nav style={{ marginBottom: "2rem", color: "var(--text-muted)" }}>
-        <Link
-          href="/"
-          style={{ color: "var(--text-muted)", textDecoration: "none" }}
-        >
-          หน้าแรก
-        </Link>
-        {" / "}
-        <Link
-          href="/products"
-          style={{ color: "var(--text-muted)", textDecoration: "none" }}
-        >
-          สินค้า
-        </Link>
-        {" / "}
-        <span style={{ color: "var(--text-primary)" }}>{product.name}</span>
+    <PageContainer>
+      {/* Back + breadcrumb */}
+      <Link
+        href="/products"
+        className="mb-4 inline-flex items-center gap-1 text-sm text-fg-muted transition-colors hover:text-fg"
+      >
+        <ChevronLeft className="h-4 w-4" /> ย้อนกลับ
+      </Link>
+      <nav className="mb-6 text-sm text-fg-subtle">
+        <Link href="/" className="hover:text-fg">หน้าแรก</Link>
+        <span className="px-1.5">/</span>
+        <Link href="/products" className="hover:text-fg">สินค้า</Link>
+        <span className="px-1.5">/</span>
+        <span className="text-fg">{product.name}</span>
       </nav>
 
-      <div className="product-detail-grid">
-        {/* Product Gallery */}
-        <div className="product-gallery">
-          {/* Main Image */}
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        {/* Gallery */}
+        <div className="flex flex-col gap-4">
           <div
-            className="product-main-image"
             onClick={() => setLightboxOpen(true)}
-            style={{ cursor: "zoom-in", position: "relative" }}
+            className="relative aspect-square cursor-zoom-in overflow-hidden rounded-xl border border-line bg-bg-deep"
           >
             <img
               src={selectedImage || product.image}
               alt={product.name}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "contain",
-                borderRadius: "16px",
-              }}
+              className="h-full w-full object-contain"
             />
-            <div
-              style={{
-                position: "absolute",
-                bottom: "12px",
-                right: "12px",
-                background: "rgba(0,0,0,0.6)",
-                color: "white",
-                padding: "6px 12px",
-                borderRadius: "8px",
-                fontSize: "0.85rem",
-              }}
-            >
-              🔍 คลิกเพื่อขยาย
-            </div>
           </div>
-
-          {/* Thumbnails */}
           {product.images && product.images.length > 0 && (
-            <div
-              style={{
-                display: "flex",
-                gap: "0.75rem",
-                marginTop: "1rem",
-                flexWrap: "wrap",
-              }}
-            >
+            <div className="flex flex-wrap gap-3">
               {product.images.map((img, index) => (
-                <div
+                <button
                   key={index}
                   onClick={() => setSelectedImage(img)}
-                  style={{
-                    width: "80px",
-                    height: "80px",
-                    borderRadius: "12px",
-                    overflow: "hidden",
-                    cursor: "pointer",
-                    border:
-                      selectedImage === img
-                        ? "3px solid var(--primary)"
-                        : "2px solid var(--border-color)",
-                    transition: "all 0.2s ease",
-                  }}
+                  className={cn(
+                    "h-20 w-20 overflow-hidden rounded-lg border-2 transition-colors",
+                    selectedImage === img ? "border-brand" : "border-line hover:border-line-strong"
+                  )}
                 >
-                  <img
-                    src={img}
-                    alt={`${product.name} ${index + 1}`}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
-                  />
-                </div>
+                  <img src={img} alt={`${product.name} ${index + 1}`} className="h-full w-full object-cover" />
+                </button>
               ))}
             </div>
           )}
         </div>
 
-        {/* Lightbox */}
-        {lightboxOpen && (
-          <div
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: "rgba(0,0,0,0.95)",
-              zIndex: 10000,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "2rem",
-            }}
-            onClick={() => setLightboxOpen(false)}
-          >
-            <button
-              onClick={() => setLightboxOpen(false)}
-              style={{
-                position: "absolute",
-                top: "20px",
-                right: "20px",
-                background: "rgba(255,255,255,0.2)",
-                border: "none",
-                color: "white",
-                fontSize: "2rem",
-                width: "50px",
-                height: "50px",
-                borderRadius: "50%",
-                cursor: "pointer",
-              }}
-            >
-              ✕
-            </button>
-            <img
-              src={selectedImage || product.image}
-              alt={product.name}
-              style={{
-                maxWidth: "90%",
-                maxHeight: "90%",
-                objectFit: "contain",
-                borderRadius: "12px",
-              }}
-              onClick={(e) => e.stopPropagation()}
-            />
-            {/* Lightbox Thumbnails */}
-            {product.images && product.images.length > 1 && (
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: "20px",
-                  display: "flex",
-                  gap: "0.5rem",
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {product.images.map((img, index) => (
-                  <div
-                    key={index}
-                    onClick={() => setSelectedImage(img)}
-                    style={{
-                      width: "60px",
-                      height: "60px",
-                      borderRadius: "8px",
-                      overflow: "hidden",
-                      cursor: "pointer",
-                      border:
-                        selectedImage === img
-                          ? "2px solid var(--primary)"
-                          : "2px solid var(--border-color)",
-                    }}
-                  >
-                    <img
-                      src={img}
-                      alt={`${product.name} ${index + 1}`}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Product Info */}
-        <div className="product-detail-info">
-          {/* Badges */}
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            {product.isNewProduct && (
-              <span className="badge badge-new">ใหม่</span>
-            )}
-            {discount > 0 && (
-              <span className="badge badge-sale">ลด {discount}%</span>
-            )}
+        {/* Info */}
+        <div className="flex flex-col gap-4">
+          <div className="flex gap-2">
+            {product.isNewProduct && <Badge tone="brand">ใหม่</Badge>}
+            {discount > 0 && <Badge tone="danger">ลด {discount}%</Badge>}
           </div>
 
-          <span className="product-detail-brand">{product.brand}</span>
-          <h1 className="product-detail-name">{product.name}</h1>
+          <span className="text-sm font-semibold uppercase tracking-wide text-brand">
+            {product.brand}
+          </span>
+          <h1 className="text-2xl font-bold tracking-tight text-fg sm:text-3xl">
+            {product.name}
+          </h1>
 
-          {/* Rating */}
-          <div className="product-detail-rating">
-            <span className="stars" style={{ fontSize: "1.25rem" }}>
-              {"★".repeat(Math.round(product.rating))}
-              {"☆".repeat(5 - Math.round(product.rating))}
-            </span>
-            <span style={{ color: "var(--text-secondary)" }}>
+          <div className="flex items-center gap-2">
+            <Stars value={product.rating} />
+            <span className="text-sm text-fg-muted">
               {product.rating} ({product.reviews} รีวิว)
             </span>
           </div>
 
-          {/* Price */}
-          <div className="product-detail-price">
-            <span className="detail-price">{formatPrice(product.price)}</span>
+          <div className="flex items-baseline gap-3">
+            <span className="text-3xl font-bold text-fg">{formatPrice(product.price)}</span>
             {product.originalPrice && product.originalPrice > product.price && (
-              <span className="detail-original-price">
+              <span className="text-lg text-fg-subtle line-through">
                 {formatPrice(product.originalPrice)}
               </span>
             )}
           </div>
 
-          {/* Description */}
-          <p className="product-detail-description">{product.description}</p>
+          <p className="leading-relaxed text-fg-muted">{product.description}</p>
 
-          {/* Features */}
           {product.features && product.features.length > 0 && (
-            <div className="product-features">
+            <div className="flex flex-wrap gap-2">
               {product.features.map((feature, index) => (
-                <span key={index} className="feature-tag">
-                  {feature}
-                </span>
+                <Badge key={index} tone="brand">{feature}</Badge>
               ))}
             </div>
           )}
 
-          {/* Specs */}
-          <div className="product-specs">
+          <Card className="flex flex-col divide-y divide-line">
             {product.switchType && (
-              <div className="spec-item">
-                <span className="spec-label">🔘 สวิตช์</span>
-                <span className="spec-value">{product.switchType}</span>
+              <div className="flex items-center justify-between px-4 py-3 text-sm">
+                <span className="flex items-center gap-2 text-fg-muted">
+                  <Cpu className="h-4 w-4" /> สวิตช์
+                </span>
+                <span className="font-medium text-fg">{product.switchType}</span>
               </div>
             )}
             {product.connectivity && (
-              <div className="spec-item">
-                <span className="spec-label">🔌 การเชื่อมต่อ</span>
-                <span className="spec-value">{product.connectivity}</span>
+              <div className="flex items-center justify-between px-4 py-3 text-sm">
+                <span className="flex items-center gap-2 text-fg-muted">
+                  <Cable className="h-4 w-4" /> การเชื่อมต่อ
+                </span>
+                <span className="font-medium text-fg">{product.connectivity}</span>
               </div>
             )}
-            <div className="spec-item">
-              <span className="spec-label">📦 สต็อก</span>
-              <span
-                className="spec-value"
-                style={{
-                  color:
-                    product.stock > 10
-                      ? "#22c55e"
-                      : product.stock > 0
-                      ? "#f59e0b"
-                      : "#ef4444",
-                }}
-              >
-                {product.stock > 0
-                  ? `มีสินค้า ${product.stock} ชิ้น`
-                  : "สินค้าหมด"}
+            <div className="flex items-center justify-between px-4 py-3 text-sm">
+              <span className="flex items-center gap-2 text-fg-muted">
+                <Package className="h-4 w-4" /> สต็อก
+              </span>
+              <span className={cn("font-medium", stockTone)}>
+                {product.stock > 0 ? `มีสินค้า ${product.stock} ชิ้น` : "สินค้าหมด"}
               </span>
             </div>
-          </div>
+          </Card>
 
-          {/* Quantity Selector */}
-          <div className="quantity-selector">
-            <span className="quantity-selector-label">จำนวน:</span>
-            <div className="quantity-selector-controls">
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium text-fg-muted">จำนวน</span>
+            <div className="flex items-center gap-1 rounded-md border border-line bg-bg-deep p-1">
               <button
-                className="qty-btn"
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                 disabled={quantity <= 1}
+                className="flex h-8 w-8 items-center justify-center rounded text-fg-muted hover:bg-white/5 hover:text-fg disabled:opacity-40"
               >
-                −
+                <Minus className="h-4 w-4" />
               </button>
-              <span className="qty-value">{quantity}</span>
+              <span className="w-10 text-center font-semibold text-fg">{quantity}</span>
               <button
-                className="qty-btn"
-                onClick={() =>
-                  setQuantity((q) => Math.min(product.stock, q + 1))
-                }
+                onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
                 disabled={quantity >= product.stock}
+                className="flex h-8 w-8 items-center justify-center rounded text-fg-muted hover:bg-white/5 hover:text-fg disabled:opacity-40"
               >
-                +
+                <Plus className="h-4 w-4" />
               </button>
             </div>
           </div>
 
-          {/* Add to Cart */}
-          <div className="add-to-cart-section">
-            <button
-              className="btn btn-primary btn-add-to-cart"
-              onClick={handleAddToCart}
-              disabled={product.stock === 0}
-            >
-              {addedToCart ? "✓ เพิ่มแล้ว!" : "🛒 เพิ่มลงตะกร้า"}
-            </button>
-          </div>
-
-
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={handleAddToCart}
+            disabled={product.stock === 0}
+            className="w-full sm:w-auto"
+          >
+            {addedToCart ? <Check className="h-5 w-5" /> : <ShoppingCart className="h-5 w-5" />}
+            {addedToCart ? "เพิ่มแล้ว!" : "เพิ่มลงตะกร้า"}
+          </Button>
         </div>
       </div>
 
-      {/* Reviews Section */}
-      <section style={{ marginTop: "4rem" }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "2rem",
-          }}
-        >
-          <h2 style={{ color: "white", fontSize: "1.5rem", fontWeight: 700 }}>
-            ⭐ รีวิวจากลูกค้า ({reviews.length})
+      {/* Reviews */}
+      <section className="mt-16">
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-fg">
+            รีวิวจากลูกค้า ({reviews.length})
           </h2>
           {user && !hasUserReviewed && !showReviewForm && (
-            <button
-              onClick={() => setShowReviewForm(true)}
-              style={{
-                padding: "0.75rem 1.5rem",
-                background: "var(--gradient-primary)",
-                border: "none",
-                borderRadius: "12px",
-                color: "white",
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
-              ✍️ เขียนรีวิว
-            </button>
+            <Button variant="secondary" onClick={() => setShowReviewForm(true)}>
+              <PenLine className="h-4 w-4" /> เขียนรีวิว
+            </Button>
           )}
         </div>
 
-        {/* Review Form */}
         {showReviewForm && (
-          <div
-            style={{
-              background: "rgba(30, 41, 59, 0.5)",
-              borderRadius: "16px",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-              padding: "2rem",
-              marginBottom: "2rem",
-            }}
-          >
-            <h3 style={{ color: "white", marginBottom: "1.5rem" }}>
-              เขียนรีวิว
-            </h3>
-
+          <Card className="mb-6 p-6">
+            <h3 className="mb-4 font-semibold text-fg">เขียนรีวิว</h3>
             {reviewError && (
-              <div
-                style={{
-                  padding: "1rem",
-                  background: "rgba(239, 68, 68, 0.15)",
-                  border: "1px solid rgba(239, 68, 68, 0.3)",
-                  borderRadius: "12px",
-                  color: "#ef4444",
-                  marginBottom: "1rem",
-                }}
-              >
+              <div className="mb-4 rounded-md bg-danger/10 px-4 py-2.5 text-sm text-danger">
                 {reviewError}
               </div>
             )}
-
-            <form onSubmit={handleSubmitReview}>
-              {/* Rating */}
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label
-                  style={{
-                    display: "block",
-                    color: "var(--text-secondary)",
-                    fontSize: "0.875rem",
-                    marginBottom: "0.5rem",
-                  }}
-                >
-                  คะแนน
-                </label>
-                <div style={{ display: "flex", gap: "0.5rem" }}>
+            <form onSubmit={handleSubmitReview} className="flex flex-col gap-4">
+              <Field label="คะแนน">
+                <div className="flex gap-1">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
                       key={star}
                       type="button"
-                      onClick={() =>
-                        setReviewForm({ ...reviewForm, rating: star })
-                      }
-                      style={{
-                        background: "none",
-                        border: "none",
-                        fontSize: "2rem",
-                        cursor: "pointer",
-                      color:
-                        star <= reviewForm.rating ? "#fbbf24" : "var(--text-muted)",
-                      }}
+                      onClick={() => setReviewForm({ ...reviewForm, rating: star })}
                     >
-                      ★
+                      <Star
+                        className={
+                          star <= reviewForm.rating
+                            ? "h-7 w-7 fill-warning text-warning"
+                            : "h-7 w-7 text-fg-subtle"
+                        }
+                      />
                     </button>
                   ))}
                 </div>
-              </div>
-
-              {/* Title */}
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label
-                  style={{
-                    display: "block",
-                    color: "var(--text-secondary)",
-                    fontSize: "0.875rem",
-                    marginBottom: "0.5rem",
-                  }}
-                >
-                  หัวข้อรีวิว
-                </label>
-                <input
-                  type="text"
+              </Field>
+              <Field label="หัวข้อรีวิว" required>
+                <Input
                   value={reviewForm.title}
-                  onChange={(e) =>
-                    setReviewForm({ ...reviewForm, title: e.target.value })
-                  }
+                  onChange={(e) => setReviewForm({ ...reviewForm, title: e.target.value })}
                   required
-                  style={{
-                    width: "100%",
-                    padding: "0.875rem 1rem",
-                    background: "var(--bg-dark)",
-                    border: "1px solid var(--border-color)",
-                    borderRadius: "12px",
-                    color: "var(--text-primary)",
-                    fontSize: "1rem",
-                    outline: "none",
-                  }}
                   placeholder="เช่น คุณภาพดีมาก"
                 />
-              </div>
-
-              {/* Comment */}
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label
-                  style={{
-                    display: "block",
-                    color: "var(--text-secondary)",
-                    fontSize: "0.875rem",
-                    marginBottom: "0.5rem",
-                  }}
-                >
-                  รายละเอียด
-                </label>
-                <textarea
+              </Field>
+              <Field label="รายละเอียด" required>
+                <Textarea
                   value={reviewForm.comment}
-                  onChange={(e) =>
-                    setReviewForm({ ...reviewForm, comment: e.target.value })
-                  }
+                  onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
                   required
                   rows={4}
-                  style={{
-                    width: "100%",
-                    padding: "0.875rem 1rem",
-                    background: "var(--bg-dark)",
-                    border: "1px solid var(--border-color)",
-                    borderRadius: "12px",
-                    color: "var(--text-primary)",
-                    fontSize: "1rem",
-                    outline: "none",
-                    resize: "vertical",
-                  }}
                   placeholder="แชร์ประสบการณ์การใช้งานของคุณ..."
                 />
-              </div>
-
-              <div style={{ display: "flex", gap: "1rem" }}>
-                <button
+              </Field>
+              <div className="flex gap-3">
+                <Button
                   type="button"
+                  variant="secondary"
                   onClick={() => setShowReviewForm(false)}
-                  style={{
-                    flex: 1,
-                    padding: "0.875rem",
-                    background: "rgba(255, 255, 255, 0.05)",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                    borderRadius: "12px",
-                    color: "white",
-                    fontWeight: 500,
-                    cursor: "pointer",
-                  }}
+                  className="flex-1"
                 >
                   ยกเลิก
-                </button>
-                <button
-                  type="submit"
-                  disabled={submittingReview}
-                  style={{
-                    flex: 1,
-                    padding: "0.875rem",
-                    background: "var(--gradient-primary)",
-                    border: "none",
-                    borderRadius: "12px",
-                    color: "white",
-                    fontWeight: 600,
-                    cursor: submittingReview ? "not-allowed" : "pointer",
-                    opacity: submittingReview ? 0.5 : 1,
-                  }}
-                >
+                </Button>
+                <Button type="submit" variant="primary" disabled={submittingReview} className="flex-1">
                   {submittingReview ? "กำลังส่ง..." : "ส่งรีวิว"}
-                </button>
+                </Button>
               </div>
             </form>
-          </div>
+          </Card>
         )}
 
-        {/* Success Message */}
         {reviewSuccess && (
-          <div
-            style={{
-              padding: "1rem",
-              background: "rgba(16, 185, 129, 0.15)",
-              border: "1px solid rgba(16, 185, 129, 0.3)",
-              borderRadius: "12px",
-              color: "#10b981",
-              marginBottom: "2rem",
-              textAlign: "center",
-            }}
-          >
-            ✅ ส่งรีวิวสำเร็จ! ขอบคุณสำหรับความคิดเห็นของคุณ
+          <div className="mb-6 rounded-md bg-success/10 px-4 py-3 text-center text-sm text-success">
+            ส่งรีวิวสำเร็จ! ขอบคุณสำหรับความคิดเห็นของคุณ
           </div>
         )}
 
-        {/* Reviews List */}
         {reviews.length === 0 ? (
-          <div
-            style={{
-              background: "rgba(30, 41, 59, 0.5)",
-              borderRadius: "16px",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-              padding: "3rem",
-              textAlign: "center",
-            }}
-          >
-            <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>💬</div>
-            <p style={{ color: "#64748b" }}>ยังไม่มีรีวิวสำหรับสินค้านี้</p>
-            {user && !hasUserReviewed && (
-              <button
-                onClick={() => setShowReviewForm(true)}
-                style={{
-                  marginTop: "1rem",
-                  padding: "0.75rem 1.5rem",
-                  background:
-                    "linear-gradient(135deg, #1C4D8D 0%, #4988C4 100%)",
-                  border: "none",
-                  borderRadius: "12px",
-                  color: "white",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
-                เขียนรีวิวแรก
-              </button>
-            )}
-            {!user && (
-              <p
-                style={{
-                  color: "#64748b",
-                  marginTop: "1rem",
-                  fontSize: "0.875rem",
-                }}
-              >
-                <Link href="/login" style={{ color: "var(--primary-light)" }}>
-                  เข้าสู่ระบบ
-                </Link>{" "}
-                เพื่อเขียนรีวิว
-              </p>
-            )}
-          </div>
+          <EmptyState
+            icon={MessageSquare}
+            title="ยังไม่มีรีวิวสำหรับสินค้านี้"
+            action={
+              user && !hasUserReviewed ? (
+                <Button variant="primary" onClick={() => setShowReviewForm(true)}>
+                  เขียนรีวิวแรก
+                </Button>
+              ) : !user ? (
+                <Link href="/login" className={buttonClasses({ variant: "secondary" })}>
+                  เข้าสู่ระบบเพื่อเขียนรีวิว
+                </Link>
+              ) : undefined
+            }
+          />
         ) : (
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
-          >
+          <div className="flex flex-col gap-3">
             {reviews.map((review) => (
-              <div
-                key={review._id}
-                style={{
-                  background: "rgba(30, 41, 59, 0.5)",
-                  borderRadius: "16px",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                  padding: "1.5rem",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                    marginBottom: "1rem",
-                  }}
-                >
-                  <div>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.75rem",
-                        marginBottom: "0.5rem",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: "40px",
-                          height: "40px",
-                          borderRadius: "50%",
-                          background: "var(--gradient-primary)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: "white",
-                          fontWeight: 600,
-                        }}
-                      >
-                        {review.userName.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <p
-                          style={{
-                            color: "white",
-                            fontWeight: 600,
-                            fontSize: "0.875rem",
-                          }}
-                        >
-                          {review.userName}
-                        </p>
-                        <p style={{ color: "#64748b", fontSize: "0.75rem" }}>
-                          {new Date(review.createdAt).toLocaleDateString(
-                            "th-TH",
-                            { day: "numeric", month: "short", year: "numeric" }
-                          )}
-                        </p>
-                      </div>
+              <Card key={review._id} className="p-5">
+                <div className="mb-3 flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand font-semibold text-white">
+                      {review.userName.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-fg">{review.userName}</p>
+                      <p className="text-xs text-fg-subtle">
+                        {new Date(review.createdAt).toLocaleDateString("th-TH", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </p>
                     </div>
                   </div>
-                  <div style={{ color: "#fbbf24", fontSize: "1rem" }}>
-                    {"★".repeat(review.rating)}
-                    {"☆".repeat(5 - review.rating)}
-                  </div>
+                  <Stars value={review.rating} />
                 </div>
-                <h4
-                  style={{
-                    color: "white",
-                    fontWeight: 600,
-                    marginBottom: "0.5rem",
-                  }}
-                >
-                  {review.title}
-                </h4>
-                <p style={{ color: "#94a3b8", lineHeight: 1.6 }}>
-                  {review.comment}
-                </p>
-              </div>
+                <h4 className="mb-1 font-semibold text-fg">{review.title}</h4>
+                <p className="leading-relaxed text-fg-muted">{review.comment}</p>
+              </Card>
             ))}
           </div>
         )}
       </section>
 
-      {/* Related Products */}
+      {/* Related */}
       {relatedProducts.length > 0 && (
-        <section className="section" style={{ padding: "3rem 0" }}>
-          <div className="section-header">
-            <h2 className="section-title">
-              สินค้า<span>ที่เกี่ยวข้อง</span>
-            </h2>
+        <section className="mt-16">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-fg">สินค้าที่เกี่ยวข้อง</h2>
             <Link
               href={`/products?category=${product.category}`}
-              className="view-all-link"
+              className="inline-flex items-center gap-1 text-sm font-medium text-brand hover:text-brand-hover"
             >
-              ดูทั้งหมด →
+              ดูทั้งหมด <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="products-grid">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {relatedProducts.map((p) => (
               <ProductCard key={p._id} product={p} />
             ))}
           </div>
         </section>
       )}
-    </div>
+
+      {/* Lightbox */}
+      {lightboxOpen && (
+        <div
+          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/95 p-4"
+          onClick={() => setLightboxOpen(false)}
+        >
+          <button
+            onClick={() => setLightboxOpen(false)}
+            className="absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <img
+            src={selectedImage || product.image}
+            alt={product.name}
+            className="max-h-[90%] max-w-[90%] object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+    </PageContainer>
   );
 }
