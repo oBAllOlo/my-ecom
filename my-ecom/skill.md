@@ -7,8 +7,8 @@
 ## 1. Overview
 
 - **ชื่อระบบ:** Custom Keyboard System — E-commerce + Custom Keyboard Builder
-- **Stack:** Next.js 16 (App Router) + React 19 + TypeScript + MongoDB/Mongoose + Tailwind CSS + Bootstrap CSS
-- **Pattern:** Server Components เป็นหลัก ฝั่ง Client ใช้ React Context สำหรับ Auth/Cart โดย **Auth ใช้ server session ผ่าน `httpOnly` cookie** และ Cart ใช้ `localStorage`
+- **Stack:** Next.js 16 (App Router) + React 19 + TypeScript + MongoDB/Mongoose + Tailwind CSS
+- **Pattern:** หน้าเว็บส่วนใหญ่เป็น Client Component ที่ fetch ข้อมูลผ่าน API routes; Auth/Cart ใช้ React Context โดย **Auth อ้างอิง server session ผ่าน `httpOnly` cookie** และ Cart ใช้ `localStorage`
 - **Path alias:** `@/*` ชี้ไปที่ root ของโปรเจกต์ (ดู `tsconfig.json`)
 
 ---
@@ -17,19 +17,19 @@
 
 | Layer | Tech | Version / Note |
 |-------|------|--------------|
-| Framework | Next.js | 16.0.10 — App Router, standalone output |
+| Framework | Next.js | 16.0.10 — App Router, Turbopack, standalone output |
 | UI Library | React | 19.2.1 |
 | Language | TypeScript | ^5 — `strict: true` |
 | Styling | Tailwind CSS | ^3.4.19 |
-| Styling | Bootstrap | ^5.3.8 |
 | DB | MongoDB | — |
 | ODM | Mongoose | ^9.0.2 |
 | Auth | bcryptjs | ^3.0.3 — salt rounds = 10 |
+| Email | Nodemailer | ^8.0.10 — Gmail SMTP, มี demo fallback |
 | Payment | (mocked) | demo mode — ไม่ต่อ gateway จริง |
-| Email | (mocked) | demo mode — log แทนการส่งจริง |
 | Upload | Cloudinary | ^2.8.0 — ใช้งานจริง |
 | Toast | Sonner | ^2.0.7 |
 | Charts | Recharts | ^3.6.0 |
+| Icons | lucide-react | ^0.469.0 |
 
 ---
 
@@ -44,8 +44,9 @@
 
 ### 3.2 Server vs Client Components
 - ค่าเริ่มต้นทุก component คือ Server Component
+- ในทางปฏิบัติ หน้าส่วนใหญ่ของโปรเจกต์เป็น `'use client'` แล้ว fetch ข้อมูลผ่าน API routes (เช่น `/products`, หน้า admin)
 - ใส่ `'use client'` เมื่อจำเป็นจริง เช่น ใช้ React hooks, Context, event handlers, browser APIs
-- ถ้าหน้าเป็น data fetching เป็นหลัก ให้คงเป็น Server Component และแยก interactive logic ออกเป็น component ย่อย
+- ถ้าหน้าเป็น Server Component ที่ **fetch จาก MongoDB ตอน render** (เช่น `app/custom/page.tsx`) ต้องตั้ง `export const dynamic = "force-dynamic"` เพื่อไม่ให้ Next.js พยายาม prerender ตอน build แล้วล้มเพราะต่อ DB ไม่ได้
 
 ### 3.3 API Response Pattern
 - ทุก API ควรตอบรูปแบบหลักนี้:
@@ -68,7 +69,7 @@
 ### 3.4 State Management
 - **ไม่ใช้ Redux / Zustand**
 - ใช้ React Context 2 ตัว:
-  - `AuthContext` — login/register/verify/logout และโหลด current user จาก `/api/auth/me`
+  - `AuthContext` — login/register/verifyOTP/logout และโหลด current user จาก `/api/auth/me`
   - `CartContext` — จัดการ cart และเก็บใน `localStorage`
 
 ---
@@ -78,7 +79,7 @@
 ### 4.1 Connection Pattern
 - ทุก API route ต้องเรียก `await dbConnect()`
 - `dbConnect` อยู่ที่ `@/lib/mongodb.ts`
-- ใช้ connection caching สำหรับ development
+- ใช้ connection caching (global) สำหรับ development
 
 ### 4.2 Models หลัก
 
@@ -89,7 +90,7 @@
 | Order | `models/Order.ts` | userId, items, total, shippingAddress, status, paymentMethod, paymentStatus, chargeId, trackingNumber, carrier, stockReserved |
 | Category | `models/Category.ts` | name, slug, icon, productCount |
 | CustomPart | `models/CustomPart.ts` | category, name, price, image, stock, isActive |
-| OTP | `models/OTP.ts` | email, otp, expiresAt |
+| OTP | `models/OTP.ts` | email, otp, purpose (`verify`\|`reset`), attempts, createdAt (TTL 5 นาที) |
 | Review | `models/Review.ts` | productId, userId, rating, comment |
 | Settings | `models/Settings.ts` | key, value |
 
@@ -97,6 +98,7 @@
 - ใช้ pattern กัน hot-reload เช่น `mongoose.models.X || mongoose.model(...)`
 - ใช้ `timestamps: true`
 - ใช้ `.lean()` ใน list/query ที่ไม่ต้องแก้ document ต่อ
+- `models/OTP.ts` export ค่าคงที่ `MAX_OTP_ATTEMPTS` (= 5) และ `OTP_RESEND_COOLDOWN_SECONDS` (= 60) ให้ route นำไปใช้
 
 ---
 
@@ -115,23 +117,42 @@
   - `createSessionToken()`
   - `verifySessionToken()`
 
-### 5.2 Auth Flow
-1. `POST /api/auth/register` → สร้าง user ด้วย `role: "user"` และ `isVerified: false`
-2. ส่ง OTP ทาง email
-3. `POST /api/auth/verify` → mark verified + set session cookie + return user
-4. `POST /api/auth/login` → ตรวจ password + ต้อง `isVerified === true` + set session cookie
-5. `GET /api/auth/me` → คืน current authenticated user หรือ `null`
-6. `POST /api/auth/logout` → clear session cookie
+### 5.2 Auth Flow & Endpoints
 
-### 5.3 AuthContext
+| Method | Endpoint | หน้าที่ |
+|--------|----------|---------|
+| POST | `/api/auth/register` | สร้าง user (`role: "user"`, `isVerified: false`) + ส่ง OTP `verify` |
+| POST | `/api/auth/verify` | ตรวจ OTP `verify` → mark verified + set session + return user |
+| POST | `/api/auth/resend-otp` | ขอ OTP `verify` ใหม่ (cooldown 60 วิ) |
+| POST | `/api/auth/login` | ตรวจ password + ต้อง `isVerified === true` + set session |
+| GET | `/api/auth/me` | คืน current authenticated user หรือ `null` |
+| POST | `/api/auth/logout` | clear session cookie |
+| POST | `/api/auth/change-password` | เปลี่ยนรหัสผ่าน (ต้อง login, ตรวจรหัสเดิม) |
+| POST | `/api/auth/forgot-password` | ส่ง OTP `reset` (cooldown 60 วิ) |
+| POST | `/api/auth/reset-password` | ตรวจ OTP `reset` + ตั้งรหัสผ่านใหม่ (set `isVerified: true`) |
+
+### 5.3 OTP & Email Rules
+- OTP เก็บใน `models/OTP.ts` รหัส 6 หลัก หมดอายุ **5 นาที** ผ่าน MongoDB TTL index (`createdAt` + `expires: 300`)
+- **แยกตาม `purpose`** — OTP `verify` กับ `reset` ใช้ข้ามกันไม่ได้ (query ต้องระบุ purpose เสมอ)
+- **Brute-force guard:** กรอกผิดได้สูงสุด `MAX_OTP_ATTEMPTS` (5) ครั้งต่อรหัส เกินนั้น **ไม่ลบ** record แต่ล็อกและตอบ HTTP 429 — ผู้ใช้ต้องขอรหัสใหม่ (cooldown ยังบังคับใช้)
+  - การ verify ต้อง `findOne({ email, purpose })` แล้วเทียบ `otp` เอง + เพิ่ม `attempts` เพื่อให้นับครั้งผิดได้ (อย่า query ด้วย `otp` ตรงๆ เพราะจะนับไม่ได้)
+- **Resend cooldown:** ขอ OTP ใหม่ได้ทุก `OTP_RESEND_COOLDOWN_SECONDS` (60) วิ — เช็คจาก `createdAt` ของ OTP ล่าสุด ตอบ 429 พร้อม `retryAfter` (วินาที)
+- **ส่งอีเมลผ่าน `lib/email.ts` (Nodemailer / Gmail SMTP):**
+  - ตั้ง `EMAIL_USER` + `EMAIL_PASS` → ส่งจริง และ **ห้ามคืน `devOtp`** (เช็คด้วย `isEmailConfigured`)
+  - ไม่ตั้ง → demo mode: log OTP ที่ console + คืน `devOtp` ใน response (เฉพาะ dev/demo)
+  - `sendOTPEmail(to, otp, purpose)` รองรับ purpose `verify`/`reset` (ข้อความ/หัวเรื่องต่างกัน); มี `sendShippingEmail(...)` สำหรับแจ้งจัดส่ง
+  - ทุกอีเมลใช้ layout กลาง `emailShell()` (header gradient + footer แบรนด์)
+
+### 5.4 AuthContext
 ```ts
 const { user, isLoading, login, register, verifyOTP, logout, isAuthenticated } = useAuth();
 ```
 - `user` ถูกโหลดจาก `/api/auth/me`
 - **ไม่เก็บ auth user ใน `localStorage`**
 - ฝั่ง client ใช้ `user?.role === "admin"` เพื่อ render UI ได้ แต่ **สิทธิ์จริงต้อง enforce ที่ API เท่านั้น**
+- หน้า forgot-password / reset-password **เรียก API ตรงด้วย `fetch`** (ไม่ผ่าน AuthContext)
 
-### 5.4 Authorization Rules
+### 5.5 Authorization Rules
 - Endpoint ที่เป็นข้อมูลของ user เอง ต้องผูกกับ session user ไม่เชื่อ `userId` จาก client ตรงๆ
 - Endpoint admin เช่น create/update/delete product, category, custom part, user management, shipping config, upload ต้องใช้ `requireAdmin()`
 - ห้ามให้ client กำหนด role ตอนสมัครสมาชิก
@@ -149,9 +170,13 @@ const { user, isLoading, login, register, verifyOTP, logout, isAuthenticated } =
 
 ### 6.2 Sensitive Routes
 - `/api/seed` และ `/api/custom-parts/seed`
-  - ใช้ได้เฉพาะ non-production
+  - ใช้ได้เฉพาะ non-production (`NODE_ENV === "production"` → ตอบ 403)
 - `/api/upload`
   - admin only
+- `/api/auth/verify`, `/api/auth/reset-password`
+  - มี brute-force guard (จำกัด 5 ครั้ง/รหัส)
+- `/api/auth/resend-otp`, `/api/auth/forgot-password`
+  - มี cooldown 60 วิ; **ต้อง gate `devOtp` ด้วย `isEmailConfigured`** (อย่าคืนรหัสเมื่อส่งอีเมลจริง)
 
 ---
 
@@ -190,7 +215,7 @@ const { items, addToCart, removeFromCart, updateQuantity, clearCart, getCartTota
 ### 8.4 Order Lifecycle
 1. Checkout → สร้าง order (`pending`)
 2. Payment success (จำลอง) → `paymentStatus = paid`, `status = processing`
-3. Admin ship order → `status = shipped` + tracking
+3. Admin ship order → `status = shipped` + tracking + **ส่งอีเมลแจ้งลูกค้า** (`sendShippingEmail`)
 4. Customer confirm → `status = delivered`
 
 ---
@@ -209,18 +234,18 @@ const { items, addToCart, removeFromCart, updateQuantity, clearCart, getCartTota
 - รับเฉพาะไฟล์ภาพ
 - จำกัดขนาดไฟล์ไม่เกิน 5MB
 - Route นี้เป็น admin only
+- `next.config.ts` อนุญาตโดเมนรูป: `images.unsplash.com`, `res.cloudinary.com`
 
 ---
 
 ## 10. Styling Guide
 
 ### 10.1 CSS Strategy
-- Primary: Tailwind CSS
-- Secondary: Bootstrap CSS
+- ใช้ **Tailwind CSS** เป็นหลัก
 - Global styles: `app/globals.css`
 
 ### 10.2 Tailwind Config
-- มี custom color `primary`
+- ใช้ design system โทน Indigo/Slate (ดู custom colors เช่น `brand`, `fg`, `bg-deep`, `line`, `surface-raised` ใน `tailwind.config` / `globals.css`)
 - มี custom animations เช่น `fadeIn`, `fadeInUp`, `scaleIn`, `shimmer`
 
 ### 10.3 Image Usage
@@ -253,7 +278,7 @@ const { items, addToCart, removeFromCart, updateQuantity, clearCart, getCartTota
 
 ## 12. Custom Keyboard Builder
 
-### 11.1 Parts Category
+### 12.1 Parts Category
 - `base`
 - `switch`
 - `keycapBase`
@@ -261,8 +286,8 @@ const { items, addToCart, removeFromCart, updateQuantity, clearCart, getCartTota
 - `keycapAdd2`
 - `wire`
 
-### 11.2 Data Flow
-1. `GET /api/custom-parts`
+### 12.2 Data Flow
+1. `app/custom/page.tsx` (Server Component, `force-dynamic`) โหลด parts ผ่าน `dbConnect()` แล้วส่งเป็น `initialParts`
 2. เลือก parts แต่ละ category
 3. คำนวณราคาแบบ real-time
 4. แปลงเป็น custom product แล้วใส่ cart
@@ -271,23 +296,33 @@ const { items, addToCart, removeFromCart, updateQuantity, clearCart, getCartTota
 
 ## 13. Environment Variables
 
-โหมดสาธิต mock payment + email ไว้ แต่ image upload ใช้ Cloudinary จริง — ต้องตั้งใน `.env.local`:
+โหมดสาธิต mock payment ไว้, image upload ใช้ Cloudinary จริง, ส่วน email/OTP จะส่งจริงเมื่อตั้ง `EMAIL_*` — ตั้งใน `.env.local`:
 
 ```env
-# Database
+# Database (required)
 MONGODB_URI=mongodb://localhost:27017/keyboardth
 
-# Session
+# Session (required)
 SESSION_SECRET=replace-with-a-long-random-secret
 
-# Cloudinary (image upload จริง)
+# Cloudinary (image upload จริง — required)
 CLOUDINARY_CLOUD_NAME=xxx
 CLOUDINARY_API_KEY=xxx
 CLOUDINARY_API_SECRET=xxx
+
+# Email / OTP (optional) — ตั้งทั้งคู่เพื่อส่งอีเมลจริงผ่าน Gmail SMTP
+# EMAIL_PASS = Gmail App Password (ไม่ใช่รหัสผ่านปกติ)
+EMAIL_USER=your_gmail@gmail.com
+EMAIL_PASS=your_gmail_app_password
+
+# Cron (optional)
+CRON_SECRET=replace-with-a-random-secret
 ```
 
 - `SESSION_SECRET` ควรเป็นค่า random ที่ยาวและเดายาก
-- หากจะนำ payment/email ไปใช้งานจริง ให้คืน integration จริงใน `lib/email.ts` และ payment route แล้วเพิ่ม env ที่เกี่ยวข้องกลับมา
+- **บน production ควรตั้ง `EMAIL_USER`/`EMAIL_PASS` เสมอ** — ถ้าไม่ตั้ง ระบบจะตกไปโหมดสาธิตและคืน `devOtp` ออกมา (รหัสรั่ว)
+- MongoDB Atlas: เปิด Network Access `0.0.0.0/0` สำหรับ serverless/Vercel (IP เป็น dynamic) ไม่งั้นต่อ DB ล้มทั้งตอน build และ runtime
+- หากจะนำ payment ไปใช้งานจริง ให้คืน integration จริงใน payment route แล้วเพิ่ม env ที่เกี่ยวข้อง
 
 ---
 
@@ -301,14 +336,16 @@ CLOUDINARY_API_SECRET=xxx
 - ใช้ `useRouter` จาก `next/navigation`
 - ใช้ `Link` จาก `next/link`
 - เก็บ data พิเศษใต้ `data` ใน API response
+- gate `devOtp` ด้วย `isEmailConfigured` เสมอ และ query OTP ด้วย `purpose`
 
 ### ❌ Don't
 - อย่าใช้ `any` โดยไม่จำเป็น
-- อย่า import model ตรงใน UI page แทน API
+- อย่า import model ตรงใน UI page แทน API (ยกเว้น Server Component ที่ตั้ง `force-dynamic` แล้ว เช่น `app/custom/page.tsx`)
 - อย่าเก็บ password หรือ secret ใน client
 - อย่าเก็บ auth state ใน `localStorage`
 - อย่าเชื่อ `userId` หรือ `role` จาก client โดยไม่ verify จาก session
 - อย่าเปิด seed endpoint แบบ public ใน production
+- อย่าคืน `devOtp` เมื่อ `isEmailConfigured === true`
 
 ---
 
@@ -326,7 +363,7 @@ CLOUDINARY_API_SECRET=xxx
 | Auth Helpers | `lib/auth.ts` |
 | Session Helpers | `lib/auth-session.ts` |
 | Order Access Rules | `lib/order-access.ts` |
-| Email Service (mocked) | `lib/email.ts` |
+| Email Service (Nodemailer + demo fallback) | `lib/email.ts` |
 | Cloudinary Config | `lib/cloudinary.ts` |
 | Tests | `tests/` |
 | Static Assets | `public/` |
@@ -360,14 +397,23 @@ if (auth.response) {
 return NextResponse.json({ success: true, data: result });
 ```
 
-### Upload Response
+### Send OTP Email (with demo-safe devOtp gating)
 ```ts
+import { generateOTP, sendOTPEmail, isEmailConfigured } from "@/lib/email";
+import OTP from "@/models/OTP";
+
+const otpCode = generateOTP();
+await OTP.deleteMany({ email, purpose: "reset" });
+await OTP.create({ email, otp: otpCode, purpose: "reset" });
+await sendOTPEmail(email, otpCode, "reset");
+
 return NextResponse.json({
   success: true,
-  data: { url: imageUrl },
+  // คืน devOtp เฉพาะ demo mode เท่านั้น
+  ...(isEmailConfigured ? {} : { devOtp: otpCode }),
 });
 ```
 
 ---
 
-*Last updated: May 9, 2026*
+*Last updated: May 30, 2026*
