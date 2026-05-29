@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { Plus, Search, Pencil, Trash2, Package, X, ImagePlus, Star } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, Package, X, ImagePlus, Star, Sparkles } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import ConfirmModal from "@/components/ConfirmModal";
@@ -117,7 +117,7 @@ export default function AdminProducts() {
   };
 
   const formatPrice = (price: number) =>
-    new Intl.NumberFormat("th-TH", { style: "currency", currency: "THB", minimumFractionDigits: 0 }).format(price);
+    `${new Intl.NumberFormat("th-TH", { maximumFractionDigits: 0 }).format(price)} บาท`;
 
   if (isLoading || loading) {
     return (
@@ -256,6 +256,37 @@ export default function AdminProducts() {
   );
 }
 
+// Upload via XHR (not fetch) so we can report upload progress to the UI.
+function uploadFileWithProgress(
+  file: File,
+  onProgress: (loaded: number, total: number) => void
+): Promise<string | null> {
+  return new Promise((resolve) => {
+    const xhr = new XMLHttpRequest();
+    const fd = new FormData();
+    fd.append("file", file);
+    xhr.open("POST", "/api/upload");
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress(e.loaded, e.total);
+    };
+    xhr.onload = () => {
+      try {
+        const data = JSON.parse(xhr.responseText);
+        if (data.success) {
+          resolve(data.data?.url ?? null);
+        } else {
+          toast.error(`${file.name}: ${data.error || "อัพโหลดไม่สำเร็จ"}`);
+          resolve(null);
+        }
+      } catch {
+        resolve(null);
+      }
+    };
+    xhr.onerror = () => resolve(null);
+    xhr.send(fd);
+  });
+}
+
 interface ProductModalProps {
   product: Product | null;
   categories: Category[];
@@ -284,6 +315,7 @@ function ProductModal({ product, categories, onClose, onSave }: ProductModalProp
   });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [dragActive, setDragActive] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -304,17 +336,29 @@ function ProductModal({ product, categories, onClose, onSave }: ProductModalProp
     if (validFiles.length === 0) return;
 
     setUploading(true);
+    setUploadProgress(0);
     try {
-      const uploadPromises = validFiles.map(async (file) => {
-        const formDataUpload = new FormData();
-        formDataUpload.append("file", file);
-        const res = await fetch("/api/upload", { method: "POST", body: formDataUpload });
-        const data = await res.json();
-        if (data.success) return data.data?.url;
-        toast.error(`${file.name}: ${data.error || "อัพโหลดไม่สำเร็จ"}`);
-        return null;
-      });
-      const uploadedUrls = (await Promise.all(uploadPromises)).filter(Boolean) as string[];
+      const loaded = new Array(validFiles.length).fill(0);
+      const totals = validFiles.map((f) => f.size);
+      const updateProgress = () => {
+        const totalBytes = totals.reduce((a, b) => a + b, 0);
+        const loadedBytes = loaded.reduce((a, b) => a + b, 0);
+        setUploadProgress(
+          totalBytes > 0 ? Math.round((loadedBytes / totalBytes) * 100) : 0
+        );
+      };
+
+      const uploadedUrls = (
+        await Promise.all(
+          validFiles.map((file, i) =>
+            uploadFileWithProgress(file, (l, t) => {
+              loaded[i] = l;
+              totals[i] = t;
+              updateProgress();
+            })
+          )
+        )
+      ).filter(Boolean) as string[];
       if (uploadedUrls.length > 0) {
         const newImages = [...formData.images, ...uploadedUrls];
         if (!formData.image) setFormData({ ...formData, image: uploadedUrls[0], images: newImages });
@@ -326,6 +370,7 @@ function ProductModal({ product, categories, onClose, onSave }: ProductModalProp
       toast.error("เกิดข้อผิดพลาดในการอัพโหลด");
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -442,9 +487,17 @@ function ProductModal({ product, categories, onClose, onSave }: ProductModalProp
             >
               <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleFileSelect} className="hidden" />
               {uploading ? (
-                <div className="flex flex-col items-center gap-3">
-                  <Spinner className="h-8 w-8" />
-                  <p className="text-sm text-fg-muted">กำลังอัพโหลด...</p>
+                <div className="flex w-full max-w-[220px] flex-col items-center gap-3">
+                  <Spinner className="h-7 w-7" />
+                  <p className="text-sm font-medium text-fg">
+                    กำลังอัพโหลด... {uploadProgress}%
+                  </p>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-raised">
+                    <div
+                      className="h-full rounded-full bg-brand transition-all duration-200"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-2 text-fg-muted">
@@ -500,6 +553,31 @@ function ProductModal({ product, categories, onClose, onSave }: ProductModalProp
                 ))}
               </div>
             )}
+          </Field>
+
+          <Field label="การแสดงผลหน้าแรก">
+            <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
+              <label className="flex flex-1 cursor-pointer items-center gap-2.5 rounded-md border border-line bg-bg-deep px-3 py-2.5 text-sm">
+                <input
+                  type="checkbox"
+                  checked={formData.isFeatured}
+                  onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+                  className="accent-brand"
+                />
+                <Star className="h-4 w-4 text-warning" />
+                <span className="text-fg">สินค้าแนะนำ</span>
+              </label>
+              <label className="flex flex-1 cursor-pointer items-center gap-2.5 rounded-md border border-line bg-bg-deep px-3 py-2.5 text-sm">
+                <input
+                  type="checkbox"
+                  checked={formData.isNewProduct}
+                  onChange={(e) => setFormData({ ...formData, isNewProduct: e.target.checked })}
+                  className="accent-brand"
+                />
+                <Sparkles className="h-4 w-4 text-brand" />
+                <span className="text-fg">สินค้ามาใหม่</span>
+              </label>
+            </div>
           </Field>
 
           <div className="flex gap-3">

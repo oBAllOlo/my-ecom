@@ -48,32 +48,20 @@ export async function POST() {
       }))
     );
 
-    const adminEmail = "admin@keyboardth.com";
-    let adminUser = await User.findOne({ email: adminEmail });
+    // Demo accounts — upserted so re-running seed always applies the latest
+    // credentials even if the accounts already exist.
+    const demoAccounts = [
+      { email: "admin@keyboardth.com", name: "Admin", password: "Admin123!", role: "admin" as const },
+      { email: "user@keyboardth.com", name: "Test User", password: "User1234!", role: "user" as const },
+    ];
 
-    if (!adminUser) {
-      const hashedAdminPassword = await hashPassword("admin123");
-      adminUser = await User.create({
-        name: "Admin",
-        email: adminEmail,
-        password: hashedAdminPassword,
-        role: "admin",
-        isVerified: true,
-      });
-    }
-
-    const testEmail = "user@keyboardth.com";
-    let testUser = await User.findOne({ email: testEmail });
-
-    if (!testUser) {
-      const hashedUserPassword = await hashPassword("user123");
-      testUser = await User.create({
-        name: "Test User",
-        email: testEmail,
-        password: hashedUserPassword,
-        role: "user",
-        isVerified: true,
-      });
+    for (const acc of demoAccounts) {
+      const hashed = await hashPassword(acc.password);
+      await User.findOneAndUpdate(
+        { email: acc.email },
+        { name: acc.name, email: acc.email, password: hashed, role: acc.role, isVerified: true },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
     }
 
     return NextResponse.json({

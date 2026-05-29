@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ShoppingCart, Wrench, Trash2, CreditCard, Truck, ChevronLeft } from "lucide-react";
 import { useCart } from "@/context/CartContext";
-import { useAuth } from "@/context/AuthContext";
+import { useRequireAuth } from "@/lib/useRequireAuth";
 import CartItemComponent from "@/components/CartItem";
 import { formatPrice } from "@/lib/mockData";
 import { toast } from "sonner";
@@ -15,22 +13,13 @@ import {
   Card,
   EmptyState,
   Button,
+  Spinner,
   buttonClasses,
 } from "@/components/ui";
 
 export default function CartPage() {
-  const router = useRouter();
   const { items, getCartTotal, clearCart } = useCart();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
-
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      toast.error("กรุณาเข้าสู่ระบบก่อนใช้งานตะกร้าสินค้า", {
-        id: "cart-auth-required",
-      });
-      router.push("/login");
-    }
-  }, [isAuthenticated, authLoading, router]);
+  const { authorized } = useRequireAuth();
 
   const subtotal = getCartTotal();
   const shipping = subtotal >= 1500 ? 0 : 50;
@@ -38,6 +27,14 @@ export default function CartPage() {
 
   const customItems = items.filter((i) => i.product.category === "custom");
   const regularItems = items.filter((i) => i.product.category !== "custom");
+
+  if (!authorized) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Spinner className="h-8 w-8" />
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (

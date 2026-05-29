@@ -8,9 +8,8 @@ import {
   Wrench,
   Volume2,
   Keyboard,
-  Cpu,
+  CircuitBoard,
   CircleDot,
-  Type,
   Cable,
   Check,
   ChevronDown,
@@ -19,6 +18,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
+import { Spinner } from "@/components/ui";
 import type { Product } from "@/lib/types";
 import {
   categoryLabels,
@@ -30,11 +30,11 @@ import {
 } from "@/lib/custom-parts";
 
 const categoryIconMap: Record<CategoryType, LucideIcon> = {
-  base: Cpu,
+  base: CircuitBoard,
   switch: CircleDot,
   keycapBase: Keyboard,
-  keycapAdd1: Type,
-  keycapAdd2: Type,
+  keycapAdd1: Keyboard,
+  keycapAdd2: Keyboard,
   wire: Cable,
 };
 
@@ -188,7 +188,7 @@ const PartOptionButton = memo(function PartOptionButton({
       <div className="flex-1 min-w-0">
         <p className="text-white text-sm font-medium truncate">{part.name}</p>
         <p className="text-success text-sm font-bold">
-          ฿{formatPrice(part.price)}
+          {formatPrice(part.price)} บาท
         </p>
       </div>
       {isSelected && <Check className="h-4 w-4 text-brand" />}
@@ -382,12 +382,13 @@ const PartsSelector = memo(function PartsSelector({
         <div className="px-3 py-2 bg-slate-800/50 flex justify-between items-center">
           <span className="text-slate-400 text-sm">ราคารวม</span>
           <span className="text-xl font-bold text-success">
-            ฿{formatPrice(
+            {formatPrice(
               Object.values(selectedParts).reduce(
                 (sum, part) => sum + (part?.price || 0),
                 0
               )
-            )}
+            )}{" "}
+            บาท
           </span>
         </div>
 
@@ -507,19 +508,22 @@ export default function CustomKeyboardBuilder({
     : null;
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     const visibleOptions = openCategory ? partsByCategory[openCategory] : [];
     preloadImages(
       visibleOptions
         .slice(0, 8)
         .map((part) => getThumbnailSrc(part.image))
     );
-  }, [openCategory, partsByCategory]);
+  }, [openCategory, partsByCategory, isAuthenticated]);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     preloadImages(previewImages.map((image) => image.src));
-  }, [previewImages]);
+  }, [previewImages, isAuthenticated]);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     const lastSelectedCategory = [...categoryOrder]
       .reverse()
       .find((category) => selectedParts[category]);
@@ -538,7 +542,7 @@ export default function CustomKeyboardBuilder({
         .slice(0, 10)
         .map((part) => getThumbnailSrc(part.image))
     );
-  }, [partsByCategory, selectedParts]);
+  }, [partsByCategory, selectedParts, isAuthenticated]);
 
   const playSound = (audioPath: string) => {
     const audio = new Audio(audioPath);
@@ -651,6 +655,16 @@ export default function CustomKeyboardBuilder({
     addToCart(customProduct);
     toast.success("เพิ่มสินค้าลงตะกร้าแล้ว");
   };
+
+  // Block render (and image preloads above are gated) until auth resolves —
+  // unauthenticated users are redirected to /login without loading the builder.
+  if (authLoading || !isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-bg">
+        <Spinner className="h-8 w-8" />
+      </div>
+    );
+  }
 
   return (
     <div

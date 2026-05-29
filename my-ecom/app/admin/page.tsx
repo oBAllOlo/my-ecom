@@ -141,8 +141,8 @@ function ShippingSettingsSection() {
             </Field>
           </div>
           <div className="mt-4 rounded-md bg-brand-subtle px-4 py-3 text-sm text-fg-muted">
-            ค่าจัดส่ง: <strong className="text-success">฿{shippingCost.toLocaleString()}</strong> | ส่งฟรีเมื่อสั่งขั้นต่ำ:{" "}
-            <strong className="text-warning">฿{freeShippingThreshold.toLocaleString()}</strong>
+            ค่าจัดส่ง: <strong className="text-success">{shippingCost.toLocaleString()} บาท</strong> | ส่งฟรีเมื่อสั่งขั้นต่ำ:{" "}
+            <strong className="text-warning">{freeShippingThreshold.toLocaleString()} บาท</strong>
           </div>
           <div className="mt-4 flex items-center gap-3">
             <Button variant="primary" onClick={handleSave} disabled={isSaving}>
@@ -192,7 +192,7 @@ export default function AdminDashboard() {
       try {
         const [productsRes, ordersRes, usersRes] = await Promise.all([
           fetch("/api/products"),
-          fetch("/api/orders"),
+          fetch("/api/orders?scope=all"),
           fetch("/api/users"),
         ]);
         const products = await productsRes.json();
@@ -316,7 +316,7 @@ export default function AdminDashboard() {
             <p key={index} className="text-sm text-fg-muted">
               {entry.dataKey === "revenue" ? "รายได้: " : "ออเดอร์: "}
               <span className="font-semibold text-fg">
-                {entry.dataKey === "revenue" ? `฿${entry.value.toLocaleString()}` : entry.value}
+                {entry.dataKey === "revenue" ? `${entry.value.toLocaleString()} บาท` : entry.value}
               </span>
             </p>
           ))}
@@ -356,7 +356,7 @@ export default function AdminDashboard() {
           <p className="flex items-center gap-1.5 text-sm text-fg-muted">
             <Wallet className="h-4 w-4" /> รายได้รวมทั้งหมด
           </p>
-          <p className="mt-1 text-3xl font-bold text-fg">฿{stats.totalRevenue.toLocaleString()}</p>
+          <p className="mt-1 text-3xl font-bold text-fg">{stats.totalRevenue.toLocaleString()} บาท</p>
           <p className="mt-1 text-sm text-fg-subtle">จากคำสั่งซื้อทั้งหมด {stats.totalOrders} รายการ</p>
         </div>
         <span className="flex h-14 w-14 items-center justify-center rounded-full bg-success/10 text-success">
@@ -372,7 +372,7 @@ export default function AdminDashboard() {
               <TrendingUp className="h-5 w-5 text-brand" /> สรุปยอดขาย
             </h3>
             <p className="mt-1 text-sm text-fg-subtle">
-              รายได้ ฿{filteredStats.totalRevenue.toLocaleString()} | {filteredStats.totalOrders} ออเดอร์
+              รายได้ {filteredStats.totalRevenue.toLocaleString()} บาท | {filteredStats.totalOrders} ออเดอร์
             </p>
           </div>
           <div className="flex gap-1.5">
@@ -409,7 +409,7 @@ export default function AdminDashboard() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.12)" />
                 <XAxis dataKey="name" stroke="#64748b" fontSize={9} interval="preserveStartEnd" angle={-45} textAnchor="end" height={50} tick={{ fill: "#64748b" }} />
-                <YAxis stroke="#64748b" fontSize={11} tickFormatter={(value) => (value >= 1000 ? `฿${(value / 1000).toFixed(0)}k` : `฿${value}`)} />
+                <YAxis stroke="#64748b" fontSize={11} tickFormatter={(value) => (value >= 1000 ? `${(value / 1000).toFixed(0)}k` : `${value}`)} />
                 <Tooltip content={<CustomTooltip />} />
                 <Area type="monotone" dataKey="revenue" stroke="#6366f1" strokeWidth={2.5} fillOpacity={1} fill="url(#colorRevenue)" />
               </AreaChart>
@@ -498,7 +498,7 @@ export default function AdminDashboard() {
                       <p className="text-xs text-fg-subtle">{formatOrderDate(order.createdAt)}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-fg">฿{order.total.toLocaleString()}</p>
+                      <p className="font-bold text-fg">{order.total.toLocaleString()} บาท</p>
                       <Badge tone={meta.tone}>{meta.label}</Badge>
                     </div>
                   </Link>
@@ -535,7 +535,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-fg">{product.name}</p>
-                    <p className="text-xs text-fg-subtle">฿{product.price.toLocaleString()}</p>
+                    <p className="text-xs text-fg-subtle">{product.price.toLocaleString()} บาท</p>
                   </div>
                   <Badge tone={product.stock <= 3 ? "danger" : "warning"}>เหลือ {product.stock}</Badge>
                 </Link>

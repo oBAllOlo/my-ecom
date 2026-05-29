@@ -44,7 +44,16 @@ export default function RootLayout({
             </div>
           </CartProvider>
         </AuthProvider>
-        <Toaster position="top-center" richColors />
+        <Toaster
+          position="top-right"
+          richColors
+          closeButton
+          expand
+          offset={80}
+          gap={10}
+          duration={2500}
+          visibleToasts={3}
+        />
       </body>
     </html>
   );

@@ -3,10 +3,10 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogIn } from "lucide-react";
+import { LogIn, ShieldCheck, User } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { Card, Field, Input, Button } from "@/components/ui";
+import { Card, Field, Input, PasswordInput, Button } from "@/components/ui";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -62,8 +62,7 @@ export default function LoginPage() {
             />
           </Field>
           <Field label="รหัสผ่าน">
-            <Input
-              type="password"
+            <PasswordInput
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -75,6 +74,43 @@ export default function LoginPage() {
             {isLoading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
           </Button>
         </form>
+
+        {/* Demo accounts (run POST /api/seed to create them) */}
+        <div className="mt-6 rounded-lg border border-line bg-bg-deep p-3">
+          <p className="mb-2 text-center text-xs font-medium text-fg-subtle">
+            บัญชีทดสอบ (โหมดสาธิต) — คลิกเพื่อกรอกอัตโนมัติ
+          </p>
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setEmail("admin@keyboardth.com");
+                setPassword("Admin123!");
+              }}
+              className="flex items-center gap-2 rounded-md bg-surface-raised px-3 py-2 text-left text-sm transition-colors hover:bg-white/5"
+            >
+              <ShieldCheck className="h-4 w-4 text-brand" />
+              <span className="font-medium text-fg">Admin</span>
+              <span className="ml-auto font-mono text-xs text-fg-subtle">
+                admin@keyboardth.com · Admin123!
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail("user@keyboardth.com");
+                setPassword("User1234!");
+              }}
+              className="flex items-center gap-2 rounded-md bg-surface-raised px-3 py-2 text-left text-sm transition-colors hover:bg-white/5"
+            >
+              <User className="h-4 w-4 text-fg-muted" />
+              <span className="font-medium text-fg">User</span>
+              <span className="ml-auto font-mono text-xs text-fg-subtle">
+                user@keyboardth.com · User1234!
+              </span>
+            </button>
+          </div>
+        </div>
 
         <p className="mt-6 text-center text-sm text-fg-muted">
           ยังไม่มีบัญชี?{" "}

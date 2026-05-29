@@ -3,6 +3,7 @@ export * from "./Button";
 export * from "./Card";
 export * from "./Badge";
 export * from "./Input";
+export * from "./PasswordInput";
 export * from "./PageContainer";
 export * from "./PageHeader";
 export * from "./EmptyState";

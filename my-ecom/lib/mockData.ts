@@ -285,9 +285,7 @@ export const featuredProducts = products.filter((p) => p.isFeatured);
 export const newProducts = products.filter((p) => p.isNewProduct);
 
 export const formatPrice = (price: number): string => {
-  return new Intl.NumberFormat("th-TH", {
-    style: "currency",
-    currency: "THB",
-    minimumFractionDigits: 0,
-  }).format(price);
+  return `${new Intl.NumberFormat("th-TH", {
+    maximumFractionDigits: 0,
+  }).format(price)} บาท`;
 };

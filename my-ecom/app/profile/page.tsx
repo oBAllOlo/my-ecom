@@ -11,6 +11,7 @@ import {
   Card,
   Field,
   Input,
+  PasswordInput,
   Textarea,
   Button,
   Badge,
@@ -291,16 +292,14 @@ export default function ProfilePage() {
             </div>
             <form onSubmit={handlePasswordChange} className="flex flex-col gap-4">
               <Field label="รหัสผ่านปัจจุบัน">
-                <Input
-                  type="password"
+                <PasswordInput
                   value={passwordData.currentPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
                   required
                 />
               </Field>
               <Field label="รหัสผ่านใหม่">
-                <Input
-                  type="password"
+                <PasswordInput
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                   required
@@ -309,8 +308,7 @@ export default function ProfilePage() {
                 />
               </Field>
               <Field label="ยืนยันรหัสผ่านใหม่">
-                <Input
-                  type="password"
+                <PasswordInput
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                   required

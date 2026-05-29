@@ -142,7 +142,7 @@ export default function AdminCustomPartsPage() {
     }
   };
 
-  const formatPrice = (price: number) => price.toLocaleString("th-TH") + " ฿";
+  const formatPrice = (price: number) => price.toLocaleString("th-TH") + " บาท";
 
   const groupedParts = parts.reduce((acc, part) => {
     if (!acc[part.category]) acc[part.category] = [];
@@ -259,7 +259,7 @@ export default function AdminCustomPartsPage() {
                 />
               </Field>
               <div className="grid grid-cols-2 gap-4">
-                <Field label="ราคา (฿)" required>
+                <Field label="ราคา (บาท)" required>
                   <Input
                     type="number"
                     value={formData.price}

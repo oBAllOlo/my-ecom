@@ -68,11 +68,7 @@ interface Review {
 }
 
 const formatPrice = (price: number) =>
-  new Intl.NumberFormat("th-TH", {
-    style: "currency",
-    currency: "THB",
-    minimumFractionDigits: 0,
-  }).format(price);
+  `${new Intl.NumberFormat("th-TH", { maximumFractionDigits: 0 }).format(price)} บาท`;
 
 function Stars({ value, className }: { value: number; className?: string }) {
   return (
@@ -265,12 +261,12 @@ export default function ProductDetailPage() {
         <div className="flex flex-col gap-4">
           <div
             onClick={() => setLightboxOpen(true)}
-            className="relative aspect-square cursor-zoom-in overflow-hidden rounded-xl border border-line bg-bg-deep"
+            className="cursor-zoom-in overflow-hidden rounded-xl border border-line bg-bg-deep"
           >
             <img
               src={selectedImage || product.image}
               alt={product.name}
-              className="h-full w-full object-contain"
+              className="block h-auto w-full object-contain"
             />
           </div>
           {product.images && product.images.length > 0 && (

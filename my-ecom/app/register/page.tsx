@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { UserPlus, Check, Circle } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { Card, Field, Input, Button, cn } from "@/components/ui";
+import { Card, Field, Input, PasswordInput, Button, cn } from "@/components/ui";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -96,8 +96,7 @@ export default function RegisterPage() {
             />
           </Field>
           <Field label="รหัสผ่าน">
-            <Input
-              type="password"
+            <PasswordInput
               placeholder="สร้างรหัสผ่านที่ปลอดภัย"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -126,8 +125,7 @@ export default function RegisterPage() {
             )}
           </Field>
           <Field label="ยืนยันรหัสผ่าน">
-            <Input
-              type="password"
+            <PasswordInput
               placeholder="กรอกรหัสผ่านอีกครั้ง"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}

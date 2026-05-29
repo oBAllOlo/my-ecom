@@ -91,7 +91,7 @@ export default function Home() {
       <section className="mb-12 overflow-hidden rounded-2xl border border-line bg-surface px-6 py-14 text-center sm:px-12">
         <span className="mb-6 inline-flex items-center gap-2 rounded-full bg-brand-subtle px-4 py-1.5 text-sm font-medium text-brand">
           <Truck className="h-4 w-4" />
-          ส่งฟรีทั่วประเทศ เมื่อสั่งซื้อครบ ฿1,500
+          ส่งฟรีทั่วประเทศ เมื่อสั่งซื้อครบ 1,500 บาท
         </span>
         <h1 className="mx-auto max-w-2xl text-4xl font-bold leading-tight tracking-tight text-fg sm:text-5xl">
           คีย์บอร์ดคุณภาพ สำหรับทุกสไตล์การใช้งาน

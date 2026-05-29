@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ShoppingCart, CheckCircle2, Truck, ChevronLeft, FlaskConical } from "lucide-react";
 import { useCart } from "@/context/CartContext";
-import { useAuth } from "@/context/AuthContext";
+import { useRequireAuth } from "@/lib/useRequireAuth";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/mockData";
 import {
@@ -17,52 +17,40 @@ import {
   Input,
   Button,
   EmptyState,
+  Spinner,
   buttonClasses,
 } from "@/components/ui";
 
 type PaymentMethodType = "card";
 
-interface Province {
-  id: number;
-  name_th: string;
-}
-interface District {
-  id: number;
-  name_th: string;
-  province_id: number;
-}
-interface SubDistrict {
-  id: number;
-  name_th: string;
-  district_id: number;
-  zip_code: number;
+// earthchie/jquery.Thailand.js flat dataset row.
+// NOTE field naming: district = แขวง/ตำบล (tambon), amphoe = เขต/อำเภอ
+interface AddressRow {
+  district: string;
+  amphoe: string;
+  province: string;
+  zipcode: number;
 }
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, getCartTotal, clearCart } = useCart();
-  const { user } = useAuth();
+  const { authorized, user } = useRequireAuth();
 
   const paymentMethod: PaymentMethodType = "card";
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
 
-  const [provinces, setProvinces] = useState<Province[]>([]);
-  const [districts, setDistricts] = useState<District[]>([]);
-  const [subDistricts, setSubDistricts] = useState<SubDistrict[]>([]);
-  const [filteredDistricts, setFilteredDistricts] = useState<District[]>([]);
-  const [filteredSubDistricts, setFilteredSubDistricts] = useState<SubDistrict[]>([]);
+  const [addressRows, setAddressRows] = useState<AddressRow[]>([]);
 
   const [shippingForm, setShippingForm] = useState({
     fullName: "",
     phone: "",
     email: "",
     street: "",
-    district: "",
-    districtId: 0,
-    subDistrict: "",
+    district: "", // เขต/อำเภอ (= amphoe)
+    subDistrict: "", // แขวง/ตำบล (= district)
     province: "",
-    provinceId: 0,
     postalCode: "",
   });
 
@@ -80,7 +68,45 @@ export default function CheckoutPage() {
       : shippingSettings.freeShippingThreshold - subtotal;
   const total = subtotal + shipping;
 
+  // Derive cascading options from the flat dataset (sorted Thai)
+  const thSort = (a: string, b: string) => a.localeCompare(b, "th");
+  const provinceOptions = useMemo(
+    () => [...new Set(addressRows.map((r) => r.province))].sort(thSort),
+    [addressRows]
+  );
+  const amphoeOptions = useMemo(
+    () =>
+      shippingForm.province
+        ? [
+            ...new Set(
+              addressRows
+                .filter((r) => r.province === shippingForm.province)
+                .map((r) => r.amphoe)
+            ),
+          ].sort(thSort)
+        : [],
+    [addressRows, shippingForm.province]
+  );
+  const tambonOptions = useMemo(
+    () =>
+      shippingForm.province && shippingForm.district
+        ? [
+            ...new Set(
+              addressRows
+                .filter(
+                  (r) =>
+                    r.province === shippingForm.province &&
+                    r.amphoe === shippingForm.district
+                )
+                .map((r) => r.district)
+            ),
+          ].sort(thSort)
+        : [],
+    [addressRows, shippingForm.province, shippingForm.district]
+  );
+
   useEffect(() => {
+    if (!authorized) return;
     const fetchShippingSettings = async () => {
       try {
         const res = await fetch("/api/settings/shipping");
@@ -91,42 +117,23 @@ export default function CheckoutPage() {
       }
     };
     fetchShippingSettings();
-  }, []);
+  }, [authorized]);
 
   useEffect(() => {
+    if (!authorized) return;
     const fetchAddressData = async () => {
       try {
-        const [provRes, distRes, subDistRes] = await Promise.all([
-          fetch("https://raw.githubusercontent.com/kongvut/thai-province-data/refs/heads/master/api/latest/province.json"),
-          fetch("https://raw.githubusercontent.com/kongvut/thai-province-data/refs/heads/master/api/latest/district.json"),
-          fetch("https://raw.githubusercontent.com/kongvut/thai-province-data/refs/heads/master/api/latest/sub_district.json"),
-        ]);
-        setProvinces(await provRes.json());
-        setDistricts(await distRes.json());
-        setSubDistricts(await subDistRes.json());
+        // Single flat dataset (earthchie/jquery.Thailand.js) — province/amphoe/district/zipcode
+        const res = await fetch(
+          "https://raw.githubusercontent.com/earthchie/jquery.Thailand.js/master/jquery.Thailand.js/database/raw_database/raw_database.json"
+        );
+        setAddressRows(await res.json());
       } catch (error) {
         console.error("Error fetching address data:", error);
       }
     };
     fetchAddressData();
-  }, []);
-
-  useEffect(() => {
-    if (shippingForm.provinceId > 0) {
-      setFilteredDistricts(districts.filter((d) => d.province_id === shippingForm.provinceId));
-    } else {
-      setFilteredDistricts([]);
-    }
-    setFilteredSubDistricts([]);
-  }, [shippingForm.provinceId, districts]);
-
-  useEffect(() => {
-    if (shippingForm.districtId > 0) {
-      setFilteredSubDistricts(subDistricts.filter((s) => s.district_id === shippingForm.districtId));
-    } else {
-      setFilteredSubDistricts([]);
-    }
-  }, [shippingForm.districtId, subDistricts]);
+  }, [authorized]);
 
   useEffect(() => {
     if (user) {
@@ -151,18 +158,6 @@ export default function CheckoutPage() {
               province: addr.province || prev.province,
               postalCode: addr.postalCode || prev.postalCode,
             }));
-            const matchedProvince = provinces.find((p) => p.name_th === addr.province);
-            if (matchedProvince) {
-              setShippingForm((prev) => ({ ...prev, provinceId: matchedProvince.id }));
-              setTimeout(() => {
-                const matchedDistrict = districts.find(
-                  (d) => d.name_th === addr.district && d.province_id === matchedProvince.id
-                );
-                if (matchedDistrict) {
-                  setShippingForm((prev) => ({ ...prev, districtId: matchedDistrict.id }));
-                }
-              }, 100);
-            }
           }
         } catch (error) {
           console.error("Error fetching saved address:", error);
@@ -170,7 +165,7 @@ export default function CheckoutPage() {
       };
       fetchSavedAddress();
     }
-  }, [districts, provinces, user]);
+  }, [user]);
 
   const createOrder = async (): Promise<string | null> => {
     if (!user) {
@@ -274,6 +269,14 @@ export default function CheckoutPage() {
     }
   };
 
+  if (!authorized) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Spinner className="h-8 w-8" />
+      </div>
+    );
+  }
+
   if (items.length === 0 && !orderComplete) {
     return (
       <PageContainer>
@@ -373,24 +376,20 @@ export default function CheckoutPage() {
                   list="province-list"
                   placeholder="พิมพ์หรือเลือกจังหวัด"
                   value={shippingForm.province}
-                  onChange={(e) => {
-                    const inputValue = e.target.value;
-                    const selected = provinces.find((p) => p.name_th === inputValue);
+                  onChange={(e) =>
                     setShippingForm({
                       ...shippingForm,
-                      province: inputValue,
-                      provinceId: selected?.id || 0,
+                      province: e.target.value,
                       district: "",
-                      districtId: 0,
                       subDistrict: "",
                       postalCode: "",
-                    });
-                  }}
+                    })
+                  }
                   required
                 />
                 <datalist id="province-list">
-                  {provinces.map((p) => (
-                    <option key={p.id} value={p.name_th} />
+                  {provinceOptions.map((name) => (
+                    <option key={name} value={name} />
                   ))}
                 </datalist>
               </Field>
@@ -399,23 +398,20 @@ export default function CheckoutPage() {
                   list="district-list"
                   placeholder="พิมพ์หรือเลือกเขต/อำเภอ"
                   value={shippingForm.district}
-                  disabled={shippingForm.provinceId === 0}
-                  onChange={(e) => {
-                    const inputValue = e.target.value;
-                    const selected = filteredDistricts.find((d) => d.name_th === inputValue);
+                  disabled={!shippingForm.province}
+                  onChange={(e) =>
                     setShippingForm({
                       ...shippingForm,
-                      district: inputValue,
-                      districtId: selected?.id || 0,
+                      district: e.target.value,
                       subDistrict: "",
                       postalCode: "",
-                    });
-                  }}
+                    })
+                  }
                   required
                 />
                 <datalist id="district-list">
-                  {filteredDistricts.map((d) => (
-                    <option key={d.id} value={d.name_th} />
+                  {amphoeOptions.map((name) => (
+                    <option key={name} value={name} />
                   ))}
                 </datalist>
               </Field>
@@ -424,21 +420,26 @@ export default function CheckoutPage() {
                   list="subdistrict-list"
                   placeholder="พิมพ์หรือเลือกแขวง/ตำบล"
                   value={shippingForm.subDistrict}
-                  disabled={shippingForm.districtId === 0}
+                  disabled={!shippingForm.district}
                   onChange={(e) => {
                     const inputValue = e.target.value;
-                    const selected = filteredSubDistricts.find((s) => s.name_th === inputValue);
+                    const match = addressRows.find(
+                      (r) =>
+                        r.province === shippingForm.province &&
+                        r.amphoe === shippingForm.district &&
+                        r.district === inputValue
+                    );
                     setShippingForm({
                       ...shippingForm,
                       subDistrict: inputValue,
-                      postalCode: selected?.zip_code?.toString() || shippingForm.postalCode,
+                      postalCode: match ? String(match.zipcode) : shippingForm.postalCode,
                     });
                   }}
                   required
                 />
                 <datalist id="subdistrict-list">
-                  {filteredSubDistricts.map((s) => (
-                    <option key={s.id} value={s.name_th} />
+                  {tambonOptions.map((name) => (
+                    <option key={name} value={name} />
                   ))}
                 </datalist>
               </Field>
@@ -559,7 +560,7 @@ export default function CheckoutPage() {
               <Truck className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
               <span>
                 สั่งซื้อเพิ่มอีก{" "}
-                <strong className="text-warning">฿{amountForFreeShipping.toLocaleString()}</strong>{" "}
+                <strong className="text-warning">{amountForFreeShipping.toLocaleString()} บาท</strong>{" "}
                 เพื่อรับส่งฟรี!
               </span>
             </div>

@@ -25,8 +25,15 @@ const navLinks = [
 ];
 
 export default function Header() {
-  const { getCartCount } = useCart();
+  const { getCartCount, clearCart } = useCart();
   const { user, isAuthenticated, logout } = useAuth();
+
+  // Clear the (localStorage-backed) cart on logout so it doesn't persist
+  // across sessions / to the next user on the same browser.
+  const handleLogout = () => {
+    clearCart();
+    logout();
+  };
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -135,7 +142,7 @@ export default function Header() {
                     </Link>
                     <button
                       onClick={() => {
-                        logout();
+                        handleLogout();
                         setShowUserMenu(false);
                       }}
                       className="flex w-full items-center gap-2.5 border-t border-line px-4 py-2.5 text-left text-sm text-danger transition-colors hover:bg-danger/10"
@@ -244,7 +251,7 @@ export default function Header() {
                 </Link>
                 <button
                   onClick={() => {
-                    logout();
+                    handleLogout();
                     setIsMenuOpen(false);
                   }}
                   className="flex items-center gap-2 border-t border-line py-3 text-left text-sm text-danger"

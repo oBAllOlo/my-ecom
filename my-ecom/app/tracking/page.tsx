@@ -154,7 +154,7 @@ function TrackingContent() {
   };
 
   const formatPrice = (price: number) =>
-    new Intl.NumberFormat("th-TH", { style: "currency", currency: "THB", minimumFractionDigits: 0 }).format(price);
+    `${new Intl.NumberFormat("th-TH", { maximumFractionDigits: 0 }).format(price)} บาท`;
   const formatDate = (dateStr: string) =>
     new Date(dateStr).toLocaleDateString("th-TH", {
       year: "numeric",

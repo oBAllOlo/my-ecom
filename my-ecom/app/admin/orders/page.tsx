@@ -149,7 +149,7 @@ export default function AdminOrders() {
 
   const fetchOrders = async () => {
     try {
-      const res = await fetch("/api/orders");
+      const res = await fetch("/api/orders?scope=all");
       const data = await res.json();
       if (data.success) setOrders(data.data);
     } catch (error) {
@@ -231,7 +231,7 @@ export default function AdminOrders() {
   };
 
   const formatPrice = (price: number) =>
-    new Intl.NumberFormat("th-TH", { style: "currency", currency: "THB", minimumFractionDigits: 0 }).format(price);
+    `${new Intl.NumberFormat("th-TH", { maximumFractionDigits: 0 }).format(price)} บาท`;
   const formatDate = (dateStr: string) =>
     new Date(dateStr).toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 

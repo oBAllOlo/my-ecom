@@ -3,8 +3,6 @@
 import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { SlidersHorizontal, X, Search } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
-import { toast } from "sonner";
 import ProductCard from "@/components/ProductCard";
 import {
   PageContainer,
@@ -43,7 +41,6 @@ interface Category {
 function ProductsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const categoryParam = searchParams.get("category");
   const searchParam = searchParams.get("search");
   const newParam = searchParams.get("new");
@@ -56,13 +53,6 @@ function ProductsContent() {
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
   const [sortBy, setSortBy] = useState<string>("featured");
   const [showFilters, setShowFilters] = useState(false);
-
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      toast.error("กรุณาเข้าสู่ระบบก่อนดูสินค้า", { id: "products-auth-required" });
-      router.push("/login");
-    }
-  }, [isAuthenticated, authLoading, router]);
 
   useEffect(() => {
     const fetchCategories = async () => {

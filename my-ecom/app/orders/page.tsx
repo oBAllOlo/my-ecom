@@ -194,7 +194,7 @@ export default function OrdersPage() {
   }, [user]);
 
   const formatPrice = (price: number) =>
-    new Intl.NumberFormat("th-TH", { style: "currency", currency: "THB", minimumFractionDigits: 0 }).format(price);
+    `${new Intl.NumberFormat("th-TH", { maximumFractionDigits: 0 }).format(price)} บาท`;
   const formatDate = (dateStr: string) =>
     new Date(dateStr).toLocaleDateString("th-TH", {
       year: "numeric",
@@ -561,6 +561,24 @@ export default function OrdersPage() {
                     {carrierNames[selectedOrder.carrier || "other"] || selectedOrder.carrier}
                   </p>
                 </div>
+              )}
+
+              {selectedOrder.status === "shipped" ? (
+                <Button
+                  variant="primary"
+                  onClick={() => router.push(`/tracking?order=${selectedOrder._id}`)}
+                  className="mt-4 w-full bg-success hover:opacity-90"
+                >
+                  <CheckCircle2 className="h-4 w-4" /> ยืนยันรับสินค้า / ติดตามพัสดุ
+                </Button>
+              ) : (
+                <Button
+                  variant="secondary"
+                  onClick={() => router.push(`/tracking?order=${selectedOrder._id}`)}
+                  className="mt-4 w-full"
+                >
+                  <Truck className="h-4 w-4" /> ติดตามพัสดุ
+                </Button>
               )}
             </div>
           </Card>

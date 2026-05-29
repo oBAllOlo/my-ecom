@@ -103,6 +103,28 @@ npm run dev
 
 เปิด [http://localhost:3000](http://localhost:3000)
 
+### 4. Seed ข้อมูลตัวอย่าง (จำเป็น — ไม่งั้นหน้าเว็บจะว่างเปล่า)
+
+รันครั้งเดียวหลังเซิร์ฟเวอร์ขึ้น เพื่อสร้างสินค้า / หมวดหมู่ / ชิ้นส่วน custom + บัญชี demo:
+
+```bash
+curl -X POST http://localhost:3000/api/seed
+curl -X POST http://localhost:3000/api/custom-parts/seed
+```
+
+### 5. เข้าสู่ระบบด้วยบัญชี demo
+
+`POST /api/seed` สร้างบัญชีพร้อมใช้ให้ (ยืนยันอีเมลแล้ว login ได้เลย) — ในหน้า `/login`
+มีปุ่มกดกรอกอัตโนมัติให้ด้วย:
+
+| บทบาท | อีเมล | รหัสผ่าน |
+| --- | --- | --- |
+| 🛡️ Admin | `admin@keyboardth.com` | `Admin123!` |
+| 👤 User | `user@keyboardth.com` | `User1234!` |
+
+> โหมดสาธิต: ถ้าสมัครสมาชิกใหม่ ระบบไม่ส่งอีเมลจริง — รหัส OTP จะถูกกรอกให้อัตโนมัติในหน้ายืนยัน
+> และการชำระเงินเป็นการจำลอง (ไม่ตัดเงินจริง)
+
 ## Available Scripts
 
 | Script | Description |
@@ -152,12 +174,9 @@ flow หลัก:
 
 ## Seed Data
 
-ใช้เฉพาะ local/non-production:
-
-```bash
-curl -X POST http://localhost:3000/api/custom-parts/seed
-curl -X POST http://localhost:3000/api/seed
-```
+ดูขั้นตอนที่ [Getting Started ข้อ 4–5](#4-seed-ข้อมูลตัวอย่าง-จำเป็น--ไม่งั้นหน้าเว็บจะว่างเปล่า) — endpoint seed
+ใช้ได้เฉพาะ local/non-production และ `POST /api/seed` จะสร้างทั้งสินค้า หมวดหมู่ และบัญชี demo
+(admin@keyboardth.com / user@keyboardth.com)
 
 ## Deployment Notes
 

@@ -30,7 +30,9 @@ function VerifyContent() {
 
   useEffect(() => {
     if (/^\d{6}$/.test(devOtp)) {
-      toast.info(`โหมดสาธิต: กรอกรหัส OTP ให้อัตโนมัติแล้ว (${devOtp})`);
+      toast.info(`โหมดสาธิต: กรอกรหัส OTP ให้อัตโนมัติแล้ว (${devOtp})`, {
+        id: "demo-otp",
+      });
     }
   }, [devOtp]);
 
@@ -99,7 +101,9 @@ function VerifyContent() {
         setCountdown(60);
         if (data.devOtp && /^\d{6}$/.test(data.devOtp)) {
           setOtp(data.devOtp.split(""));
-          toast.info(`โหมดสาธิต: รหัส OTP ใหม่คือ ${data.devOtp}`);
+          toast.info(`โหมดสาธิต: รหัส OTP ใหม่คือ ${data.devOtp}`, {
+            id: "demo-otp",
+          });
         } else {
           toast.success("ส่งรหัส OTP ใหม่แล้ว!");
           setOtp(["", "", "", "", "", ""]);
