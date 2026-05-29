@@ -227,7 +227,9 @@ export default function AdminDashboard() {
           totalProducts: allProducts.length || 0,
           totalOrders: fetchedOrders.length || 0,
           totalUsers: users.data?.length || 0,
-          pendingOrders: statusCounts.pending,
+          // "ต้องจัดการ" = ออเดอร์ที่รอชำระ (pending) + จ่ายแล้วรอจัดส่ง (processing).
+          // payment โหมดสาธิตข้าม pending ไป processing ทันที จึงต้องนับ processing ด้วย
+          pendingOrders: statusCounts.pending + statusCounts.processing,
           totalRevenue,
         });
       } catch (error) {
