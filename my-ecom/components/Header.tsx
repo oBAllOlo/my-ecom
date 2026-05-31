@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import {
   Keyboard,
   Search,
@@ -17,6 +19,15 @@ import {
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { buttonClasses } from "@/components/ui";
+import { formatPrice } from "@/lib/mockData";
+
+interface SearchSuggestion {
+  _id: string;
+  name: string;
+  brand: string;
+  image: string;
+  price: number;
+}
 
 const navLinks = [
   { href: "/", label: "หน้าแรก" },
@@ -25,6 +36,7 @@ const navLinks = [
 ];
 
 export default function Header() {
+  const router = useRouter();
   const { getCartCount, clearCart } = useCart();
   const { user, isAuthenticated, logout } = useAuth();
 
@@ -43,6 +55,127 @@ export default function Header() {
     ? `/products?search=${encodeURIComponent(searchQuery)}`
     : "/products";
 
+  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const desktopSearchRef = useRef<HTMLFormElement>(null);
+  const mobileSearchRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    const query = searchQuery.trim();
+    if (!query) {
+      setSuggestions([]);
+      setIsLoadingSuggestions(false);
+      return;
+    }
+    setIsLoadingSuggestions(true);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `/api/products?search=${encodeURIComponent(query)}`,
+          { signal: controller.signal }
+        );
+        const data = await res.json();
+        if (data.success) {
+          setSuggestions(((data.data ?? []) as SearchSuggestion[]).slice(0, 6));
+        }
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") {
+          console.error("Search suggestions error:", err);
+        }
+      } finally {
+        setIsLoadingSuggestions(false);
+      }
+    }, 250);
+    return () => {
+      controller.abort();
+      clearTimeout(timeoutId);
+    };
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      const insideDesktop = desktopSearchRef.current?.contains(target);
+      const insideMobile = mobileSearchRef.current?.contains(target);
+      if (!insideDesktop && !insideMobile) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    router.push(searchHref);
+    setShowSuggestions(false);
+    setIsMenuOpen(false);
+  };
+
+  const handleSuggestionClick = (id: string) => {
+    router.push(`/products/${id}`);
+    setShowSuggestions(false);
+    setIsMenuOpen(false);
+    setSearchQuery("");
+  };
+
+  const renderSuggestionsDropdown = () => {
+    if (!showSuggestions || !searchQuery.trim()) return null;
+    return (
+      <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-30 overflow-hidden rounded-lg border border-line bg-surface shadow-xl">
+        {isLoadingSuggestions ? (
+          <div className="px-4 py-3 text-sm text-fg-subtle">กำลังค้นหา...</div>
+        ) : suggestions.length === 0 ? (
+          <div className="px-4 py-3 text-sm text-fg-subtle">ไม่พบสินค้าที่ตรงกับ &quot;{searchQuery}&quot;</div>
+        ) : (
+          <ul className="max-h-96 overflow-y-auto">
+            {suggestions.map((item) => (
+              <li key={item._id}>
+                <button
+                  type="button"
+                  onClick={() => handleSuggestionClick(item._id)}
+                  className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-white/5"
+                >
+                  <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-bg-deep">
+                    {item.image && (
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        sizes="40px"
+                        className="object-cover"
+                      />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-fg">{item.name}</p>
+                    <p className="truncate text-xs text-fg-subtle">{item.brand}</p>
+                  </div>
+                  <span className="shrink-0 text-sm font-semibold text-brand">
+                    {formatPrice(item.price)}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <button
+          type="button"
+          onClick={() => {
+            router.push(searchHref);
+            setShowSuggestions(false);
+            setIsMenuOpen(false);
+          }}
+          className="block w-full border-t border-line bg-bg-deep px-4 py-2.5 text-center text-sm font-medium text-brand transition-colors hover:bg-white/5"
+        >
+          ดูผลทั้งหมด &quot;{searchQuery}&quot;
+        </button>
+      </div>
+    );
+  };
+
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-surface/85 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-screen-xl items-center gap-4 px-4 sm:px-6 lg:px-8">
@@ -57,16 +190,23 @@ export default function Header() {
         </Link>
 
         {/* Search - desktop */}
-        <div className="relative hidden flex-1 md:block">
+        <form
+          ref={desktopSearchRef}
+          role="search"
+          onSubmit={handleSearchSubmit}
+          className="relative hidden flex-1 md:block"
+        >
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
           <input
-            type="text"
+            type="search"
             placeholder="ค้นหาคีย์บอร์ด..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => setShowSuggestions(true)}
             className="w-full rounded-full border border-line bg-bg-deep py-2 pl-10 pr-4 text-sm text-fg placeholder:text-fg-subtle focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
           />
-        </div>
+          {renderSuggestionsDropdown()}
+        </form>
 
         {/* Nav - desktop */}
         <nav className="ml-auto hidden items-center gap-1 md:flex">
@@ -192,22 +332,23 @@ export default function Header() {
       {/* Mobile menu */}
       {isMenuOpen && (
         <div className="border-t border-line bg-bg-deep px-4 py-4 md:hidden">
-          <div className="relative mb-3">
+          <form
+            ref={mobileSearchRef}
+            role="search"
+            onSubmit={handleSearchSubmit}
+            className="relative mb-3"
+          >
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-subtle" />
-            <Link
-              href={searchHref}
-              onClick={() => setIsMenuOpen(false)}
-              className="block"
-            >
-              <input
-                type="text"
-                placeholder="ค้นหาคีย์บอร์ด..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-full border border-line bg-surface py-2 pl-10 pr-4 text-sm text-fg placeholder:text-fg-subtle focus:border-brand focus:outline-none"
-              />
-            </Link>
-          </div>
+            <input
+              type="search"
+              placeholder="ค้นหาคีย์บอร์ด..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setShowSuggestions(true)}
+              className="w-full rounded-full border border-line bg-surface py-2 pl-10 pr-4 text-sm text-fg placeholder:text-fg-subtle focus:border-brand focus:outline-none"
+            />
+            {renderSuggestionsDropdown()}
+          </form>
 
           <nav className="flex flex-col">
             {navLinks.map((link) => (
